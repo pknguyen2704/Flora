@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   Stack,
-  Chip,
 } from "@mui/material";
 import {
   RecordVoiceOver,
@@ -17,7 +16,6 @@ import {
   Assessment,
   School,
   ArrowForward,
-  AutoAwesome,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import logo_white from "~/assets/logo_white.svg";
@@ -32,28 +30,28 @@ function Introduction() {
       title: "Pronunciation Practice",
       description:
         "AI-powered feedback on your English pronunciation with detailed error analysis",
-      color: "#0052D4",
+      colorKey: "primary.main",
     },
     {
       icon: <QuestionAnswer fontSize="large" />,
       title: "Situation Handling",
       description:
         "Practice real classroom scenarios and learn the best ways to respond",
-      color: "#00AA66",
+      colorKey: "success.main",
     },
     {
       icon: <Assessment fontSize="large" />,
       title: "Progress Tracking",
       description:
         "Track your improvement with detailed statistics and performance insights",
-      color: "#FF6600",
+      colorKey: "warning.main",
     },
     {
       icon: <School fontSize="large" />,
       title: "Structured Learning",
       description:
         "Organized content groups covering different aspects of classroom instruction",
-      color: "#9900CC",
+      colorKey: "info.main",
     },
   ];
 
@@ -85,29 +83,47 @@ function Introduction() {
       maxWidth={false}
       sx={{
         minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
       }}
     >
-      {/* AppBar */}
+      {/* Hero Section with Integrated Navigation */}
       <Box
-        component={motion.div}
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
         sx={{
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: "center",
+          color: "white",
           bgcolor: "primary.main",
-          height: (theme) => theme.flora.appBarHeight,
-          px: 4,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          height: "80vh",
         }}
       >
-        <img src={logo_white} alt="Flora Logo" style={{ height: "56px" }} />
+        <img src={logo_white} alt="Flora Logo" style={{ height: "128px" }} />
+        <Typography
+          variant="h2"
+          component="h1"
+          gutterBottom
+          fontWeight="700"
+          sx={{
+            fontSize: { xs: "2.5rem", md: "3.5rem" },
+          }}
+        >
+          Classroom Instructions Support
+        </Typography>
+        <Typography
+          variant="h5"
+          sx={{
+            mb: 4,
+            opacity: 0.95,
+            lineHeight: 1.6,
+            fontSize: { xs: "1.1rem", md: "1.3rem" },
+          }}
+        >
+          Practice pronunciation and handle classroom situations with confidence
+          using AI-powered feedback
+        </Typography>
         <Button
           variant="contained"
+          size="large"
           onClick={() => navigate("/login")}
           endIcon={<ArrowForward />}
           sx={{
@@ -116,265 +132,86 @@ function Introduction() {
             borderRadius: 3,
             px: 4,
             py: 1.5,
+            fontSize: "1.1rem",
             fontWeight: 600,
             "&:hover": {
               bgcolor: "grey.100",
               transform: "translateY(-2px)",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
             },
             transition: "all 0.3s",
           }}
         >
-          Get Started
+          Start Learning
         </Button>
       </Box>
 
-      {/* Hero Section */}
+      {/* Features Section */}
       <Box
         sx={{
-          position: "relative",
-          overflow: "hidden",
-          py: { xs: 8, md: 12 },
-          background: "#0052D4",
+          display: "flex",
+          flexDirection: "column",
+          py: { xs: 4, md: 6 },
+          bgcolor: "background.default",
+          height: "80vh",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
-        {/* Animated Background Gradient Waves */}
         <Box
           component={motion.div}
-          animate={{
-            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background:
-              "linear-gradient(-45deg, #0052D4, #4A90E2, #00BFFF, #1E90FF)",
-            backgroundSize: "400% 400%",
-          }}
-        />
-
-        {/* Animated Overlay Shapes */}
-        <Box
-          component={motion.div}
-          animate={{
-            rotate: [0, 360],
-          }}
-          transition={{
-            duration: 30,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          sx={{
-            position: "absolute",
-            top: "-10%",
-            right: "-10%",
-            width: "40%",
-            height: "40%",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(74, 144, 226, 0.3) 0%, transparent 70%)",
-            filter: "blur(60px)",
-          }}
-        />
-
-        <Box
-          component={motion.div}
-          animate={{
-            rotate: [360, 0],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          sx={{
-            position: "absolute",
-            bottom: "-10%",
-            left: "-10%",
-            width: "50%",
-            height: "50%",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(0, 191, 255, 0.3) 0%, transparent 70%)",
-            filter: "blur(60px)",
-          }}
-        />
+          initial={{ y: 30, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          sx={{ textAlign: "center", mb: 6 }}
+        >
+          <Typography
+            variant="h3"
+            fontWeight="700"
+            gutterBottom
+            sx={{
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Why Choose Flora?
+          </Typography>
+          <Typography
+            variant="h6"
+            color="text.secondary"
+            sx={{ maxWidth: 600, mx: "auto" }}
+          >
+            Everything you need to improve your classroom English skills
+          </Typography>
+        </Box>
 
         <Container
-          maxWidth="lg"
-          sx={{ position: "relative", zIndex: 1, color: "white" }}
+          maxWidth="xl"
+          sx={{ display: "flex", justifyContent: "center" }}
         >
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={7}>
-              <Box
-                component={motion.div}
-                initial={{ x: -50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              >
-                <Chip
-                  icon={<AutoAwesome />}
-                  label="AI-Powered Learning Platform"
-                  sx={{
-                    bgcolor: "rgba(255,255,255,0.2)",
-                    color: "white",
-                    mb: 3,
-                    fontWeight: 600,
-                  }}
-                />
-                <Typography
-                  variant="h2"
-                  component="h1"
-                  gutterBottom
-                  fontWeight="700"
-                  sx={{
-                    fontSize: { xs: "2.5rem", md: "3.5rem" },
-                  }}
-                >
-                  Master Classroom English
-                </Typography>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    mb: 4,
-                    opacity: 0.95,
-                    lineHeight: 1.6,
-                    fontSize: { xs: "1.1rem", md: "1.3rem" },
-                  }}
-                >
-                  Practice pronunciation and handle classroom situations with
-                  confidence using AI-powered feedback
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={() => navigate("/login")}
-                    endIcon={<ArrowForward />}
-                    sx={{
-                      bgcolor: "white",
-                      color: "primary.main",
-                      borderRadius: 3,
-                      px: 4,
-                      py: 1.5,
-                      fontSize: "1.1rem",
-                      fontWeight: 600,
-                      "&:hover": {
-                        bgcolor: "grey.100",
-                        transform: "translateY(-2px)",
-                        boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
-                      },
-                      transition: "all 0.3s",
-                    }}
-                  >
-                    Start Learning
-                  </Button>
-                </Stack>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={5}>
-              <Box
-                component={motion.div}
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                sx={{
-                  display: { xs: "none", md: "block" },
-                  position: "relative",
-                }}
-              >
-                {/* Decorative elements */}
-                <Box
-                  sx={{
-                    width: 300,
-                    height: 300,
-                    borderRadius: "50%",
-                    bgcolor: "rgba(255,255,255,0.1)",
-                    position: "relative",
-                    mx: "auto",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 200,
-                      height: 200,
-                      borderRadius: "50%",
-                      bgcolor: "rgba(255,255,255,0.15)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <RecordVoiceOver sx={{ fontSize: 80, opacity: 0.9 }} />
-                  </Box>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
-
-      {/* Features Section */}
-      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "background.default" }}>
-        <Container maxWidth="lg">
-          <Box
-            component={motion.div}
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            sx={{ textAlign: "center", mb: 6 }}
-          >
-            <Typography
-              variant="h3"
-              fontWeight="700"
-              gutterBottom
-              sx={{
-                background: "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              Why Choose Flora?
-            </Typography>
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              sx={{ maxWidth: 600, mx: "auto" }}
-            >
-              Everything you need to improve your classroom English skills
-            </Typography>
-          </Box>
-
           <Grid
             container
-            spacing={4}
+            spacing={3}
             component={motion.div}
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
+            justifyContent="center"
+            wrap="nowrap"
+            sx={{ maxWidth: "1400px" }}
           >
             {features.map((feature, index) => (
               <Grid
                 item
-                xs={12}
-                sm={6}
-                md={3}
+                xs="auto"
                 key={index}
                 component={motion.div}
                 variants={itemVariants}
+                sx={{ minWidth: 280, maxWidth: 320 }}
               >
                 <Card
                   component={motion.div}
@@ -385,43 +222,73 @@ function Introduction() {
                   elevation={0}
                   sx={{
                     height: "100%",
-                    border: "1px solid",
-                    borderColor: "divider",
+                    display: "flex",
+                    flexDirection: "column",
+                    bgcolor: feature.colorKey,
+                    color: "white",
                     borderRadius: 4,
                     transition: "all 0.3s",
+                    border: "none",
+                    position: "relative",
+                    overflow: "hidden",
                     "&:hover": {
-                      borderColor: feature.color,
-                      boxShadow: `0 12px 24px ${feature.color}20`,
+                      boxShadow: (theme) => theme.shadows[8],
+                      transform: "translateY(-4px)",
                     },
                   }}
                 >
-                  <CardContent sx={{ textAlign: "center", p: 4 }}>
-                    <Box
-                      sx={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: 3,
-                        bgcolor: `${feature.color}15`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: feature.color,
-                        mx: "auto",
-                        mb: 3,
-                      }}
+                  <CardContent
+                    sx={{
+                      textAlign: "left",
+                      p: 4,
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                      position: "relative",
+                    }}
+                  >
+                    <Typography
+                      variant="h5"
+                      fontWeight="700"
+                      gutterBottom
+                      sx={{ mb: 2, color: "white" }}
                     >
-                      {feature.icon}
-                    </Box>
-                    <Typography variant="h6" fontWeight="600" gutterBottom>
                       {feature.title}
                     </Typography>
                     <Typography
                       variant="body2"
-                      color="text.secondary"
-                      sx={{ lineHeight: 1.7 }}
+                      sx={{
+                        lineHeight: 1.7,
+                        flex: 1,
+                        minHeight: "100px",
+                        color: "rgba(255, 255, 255, 0.9)",
+                        mb: 4,
+                      }}
                     >
                       {feature.description}
                     </Typography>
+
+                    {/* Circular arrow icon at bottom */}
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%",
+                        border: "2px solid rgba(255, 255, 255, 0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "white",
+                        mt: "auto",
+                        transition: "all 0.3s",
+                        "&:hover": {
+                          bgcolor: "rgba(255, 255, 255, 0.2)",
+                          borderColor: "white",
+                        },
+                      }}
+                    >
+                      <ArrowForward />
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
@@ -433,7 +300,8 @@ function Introduction() {
       {/* CTA Section */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
+          background: (theme) =>
+            `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 50%, ${theme.palette.primary.light} 100%)`,
           color: "white",
           py: 8,
         }}
@@ -480,6 +348,7 @@ function Introduction() {
         </Container>
       </Box>
 
+      {/* Footer */}
       <Footer />
     </Container>
   );

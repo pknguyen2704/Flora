@@ -353,26 +353,6 @@ export default function GroupDetail() {
                 </CardActionArea>
               </Card>
             </Box>
-
-            {/* Progress Button */}
-            <Box sx={{ textAlign: "center" }}>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => navigate(`/dashboard/progress/${groupId}`)}
-                sx={{
-                  borderRadius: 3,
-                  px: 4,
-                  py: 1.5,
-                  borderWidth: 2,
-                  "&:hover": {
-                    borderWidth: 2,
-                  },
-                }}
-              >
-                View Detailed Progress
-              </Button>
-            </Box>
           </Container>
         </Box>
       </Box>

@@ -6,11 +6,13 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import { Mic, Stop, PlayArrow } from "@mui/icons-material";
+import { Mic, Stop, PlayArrow, Send } from "@mui/icons-material";
 
 export default function AudioRecorder({
   onRecordingComplete,
   onRecordingReady,
+  onSubmit,
+  recordedAudio,
   maxDuration = 30,
   autoStart = false,
 }) {
@@ -112,11 +114,27 @@ export default function AudioRecorder({
         <Box>
           <Button
             variant="contained"
-            color={isRecording ? "error" : "primary"}
             size="large"
             startIcon={isRecording ? <Stop /> : <Mic />}
             onClick={isRecording ? stopRecording : startRecording}
-            sx={{ minWidth: 200 }}
+            sx={{
+              py: 1.5,
+              px: 4,
+              fontSize: "1rem",
+              fontWeight: 700,
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.light} 100%)`,
+              boxShadow: (theme) => theme.shadows[6],
+              borderRadius: 3,
+              textTransform: "none",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: (theme) => theme.shadows[10],
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.main} 100%)`,
+              },
+            }}
           >
             {isRecording ? "Stop Recording" : "Start Recording"}
           </Button>
@@ -171,15 +189,18 @@ export default function AudioRecorder({
                 py: 1.5,
                 px: 4,
                 fontSize: "1rem",
-                fontWeight: 600,
-                background: "linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)",
-                boxShadow: "0px 4px 16px rgba(59, 130, 246, 0.3)",
+                fontWeight: 700,
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.light} 100%)`,
+                boxShadow: (theme) => theme.shadows[6],
+                borderRadius: 3,
+                textTransform: "none",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  transform: "translateY(-2px)",
-                  boxShadow: "0px 6px 20px rgba(59, 130, 246, 0.4)",
-                  background:
-                    "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
+                  transform: "translateY(-4px)",
+                  boxShadow: (theme) => theme.shadows[10],
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.info.dark} 0%, ${theme.palette.info.main} 100%)`,
                 },
               }}
             >
@@ -200,20 +221,51 @@ export default function AudioRecorder({
                 py: 1.5,
                 px: 4,
                 fontSize: "1rem",
-                fontWeight: 600,
-                background: "linear-gradient(135deg, #EF4444 0%, #F87171 100%)",
-                boxShadow: "0px 4px 16px rgba(239, 68, 68, 0.3)",
+                fontWeight: 700,
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.light} 100%)`,
+                boxShadow: (theme) => theme.shadows[6],
+                borderRadius: 3,
+                textTransform: "none",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  transform: "translateY(-2px)",
-                  boxShadow: "0px 6px 20px rgba(239, 68, 68, 0.4)",
-                  background:
-                    "linear-gradient(135deg, #DC2626 0%, #EF4444 100%)",
+                  transform: "translateY(-4px)",
+                  boxShadow: (theme) => theme.shadows[10],
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.main} 100%)`,
                 },
               }}
             >
               Re-record
             </Button>
+            {recordedAudio && onSubmit && (
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<Send />}
+                onClick={onSubmit}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.light} 100%)`,
+                  boxShadow: (theme) => theme.shadows[6],
+                  borderRadius: 3,
+                  textTransform: "none",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: (theme) => theme.shadows[10],
+                    background: (theme) =>
+                      `linear-gradient(135deg, ${theme.palette.success.dark} 0%, ${theme.palette.success.main} 100%)`,
+                  },
+                }}
+              >
+                Submit for Analysis
+              </Button>
+            )}
           </Box>
         </Box>
       )}

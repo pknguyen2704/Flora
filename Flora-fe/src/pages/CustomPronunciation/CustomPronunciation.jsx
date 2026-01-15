@@ -12,7 +12,16 @@ import {
   LinearProgress,
   Paper,
 } from "@mui/material";
-import { Mic, Stop, VolumeUp } from "@mui/icons-material";
+import {
+  Mic,
+  Stop,
+  VolumeUp,
+  Assessment,
+  EditNote,
+  RecordVoiceOver,
+  Error,
+  Search,
+} from "@mui/icons-material";
 import AudioRecorder from "~/components/shared/AudioRecorder";
 import { pronunciationService } from "~/services/pronunciationService";
 import { useNotification } from "~/contexts/NotificationContext";
@@ -171,9 +180,9 @@ export default function CustomPronunciation() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
             overflow: "auto",
-            py: { xs: 4, sm: 6, md: 8 },
+            pt: { xs: 4, sm: 6, md: 8 },
+            pb: { xs: 4, sm: 6, md: 8 },
           }}
         >
           <Container
@@ -207,17 +216,21 @@ export default function CustomPronunciation() {
                 variant="h3"
                 sx={{
                   fontWeight: 700,
-                  background:
-                    "linear-gradient(135deg, #0052D4 0%, #00C9FF 100%)",
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                   backgroundClip: "text",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  mb: 1,
+                  mb: 2,
                 }}
               >
                 Custom Instructions Pronunciation Practice
               </Typography>
-              <Typography variant="body1" color="text.secondary">
+              <Typography
+                variant="h6"
+                color="text.secondary"
+                sx={{ maxWidth: 800, mx: "auto" }}
+              >
                 Practice any instructions and get instant AI-powered feedback
               </Typography>
             </Box>
@@ -226,22 +239,23 @@ export default function CustomPronunciation() {
             <Box
               sx={{
                 mb: 4,
-                p: 3,
-                borderRadius: 2,
-                background: "linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)",
+                p: 4,
+                borderRadius: 3,
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
                 color: "white",
-                boxShadow: "0px 8px 24px rgba(59, 130, 246, 0.25)",
-                animation: "fadeIn 0.8s ease-out",
-                "@keyframes fadeIn": {
-                  from: { opacity: 0 },
-                  to: { opacity: 1 },
-                },
+                boxShadow: (theme) => theme.shadows[4],
+                maxWidth: "900px",
+                width: "100%",
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
                 How it works
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.95 }}>
+              <Typography
+                variant="body1"
+                sx={{ opacity: 0.95, lineHeight: 1.6 }}
+              >
                 Enter any instruction you want to practice, then record yourself
                 speaking it. Our AI will analyze your pronunciation and provide
                 detailed feedback!
@@ -249,357 +263,313 @@ export default function CustomPronunciation() {
             </Box>
 
             {/* Combined Text Input and Recording Card */}
-            <Card
-              sx={{
-                mb: 4,
-                background: "rgba(255, 255, 255, 0.9)",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255, 255, 255, 0.3)",
-                transition: "all 0.3s ease",
-                animation: "slideInLeft 0.6s ease-out",
-                "@keyframes slideInLeft": {
-                  from: {
-                    opacity: 0,
-                    transform: "translateX(-30px)",
+            {!assessment && (
+              <Card
+                elevation={0}
+                sx={{
+                  mb: 4,
+                  borderRadius: 4,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  transition: "all 0.3s ease",
+                  maxWidth: "900px",
+                  width: "100%",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    boxShadow: (theme) => theme.shadows[4],
                   },
-                  to: {
-                    opacity: 1,
-                    transform: "translateX(0)",
-                  },
-                },
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0px 12px 32px rgba(0, 82, 212, 0.15)",
-                },
-              }}
-            >
-              <CardContent sx={{ p: 2 }}>
-                {/* Text Input Section */}
-                {!showRecorder && (
-                  <>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        mb: 3,
-                        gap: 1,
-                      }}
-                    >
-                      <ChatIcon sx={{ fontSize: 24 }} />
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: 600,
-                          background:
-                            "linear-gradient(135deg, #0052D4 0%, #00C9FF 100%)",
-                          backgroundClip: "text",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                        }}
-                      >
-                        Enter Your Text
-                      </Typography>
-                    </Box>
-
-                    <TextField
-                      fullWidth
-                      rows={5}
-                      placeholder="Type or paste the text you want to practice..."
-                      value={customText}
-                      onChange={handleTextChange}
-                      variant="outlined"
-                      sx={{
-                        mb: 2,
-                        "& .MuiOutlinedInput-root": {
-                          fontSize: "1.1rem",
-                          transition: "all 0.3s ease",
-                          "&:hover": {
-                            boxShadow: "0px 4px 12px rgba(0, 82, 212, 0.1)",
-                          },
-                          "&.Mui-focused": {
-                            boxShadow: "0px 4px 16px rgba(0, 82, 212, 0.2)",
-                          },
-                        },
-                      }}
-                      helperText={
-                        <span
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            marginTop: "4px",
-                          }}
-                        >
-                          <span>{customText.length} characters</span>
-                          {customText.length > 0 && (
-                            <span style={{ color: "#10B981" }}>
-                              ✓ Ready to record
-                            </span>
-                          )}
-                        </span>
-                      }
-                    />
-
-                    {/* Quick Examples */}
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ mb: 2, fontWeight: 600, color: "text.secondary" }}
-                      >
-                        Quick examples:
-                      </Typography>
-                      <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-                        {[
-                          "Hello, how are you today?",
-                          "Sit down, please",
-                          "Open the door, please",
-                        ].map((example, index) => (
-                          <Chip
-                            key={index}
-                            label={example}
-                            onClick={() => setCustomText(example)}
-                            sx={{
-                              cursor: "pointer",
-                              fontSize: "0.9rem",
-                              py: 2.5,
-                              px: 1,
-                              background:
-                                "linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 100%)",
-                              border: "1px solid #E2E8F0",
-                              transition: "all 0.3s ease",
-                              "&:hover": {
-                                background:
-                                  "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
-                                color: "white",
-                                transform: "translateY(-2px)",
-                                boxShadow:
-                                  "0px 4px 12px rgba(0, 82, 212, 0.25)",
-                              },
-                            }}
-                          />
-                        ))}
-                      </Box>
-                    </Box>
-
-                    {/* Listen and Start Recording Buttons */}
-                    {customText.trim() && (
+                }}
+              >
+                <CardContent sx={{ p: 4 }}>
+                  {/* Text Input Section */}
+                  {!showRecorder && (
+                    <>
                       <Box
                         sx={{
-                          display: "flex",
-                          gap: 2,
-                          justifyContent: "center",
-                          mt: 4,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {/* Listen Button */}
-                        <Button
-                          variant="contained"
-                          size="large"
-                          startIcon={<VolumeUp />}
-                          onClick={handleListenText}
-                          sx={{
-                            py: 2,
-                            px: 4,
-                            fontSize: "1.1rem",
-                            fontWeight: 600,
-                            background:
-                              "linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)",
-                            boxShadow: "0px 8px 24px rgba(139, 92, 246, 0.3)",
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                              transform: "translateY(-2px)",
-                              boxShadow:
-                                "0px 12px 32px rgba(139, 92, 246, 0.4)",
-                              background:
-                                "linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)",
-                            },
-                          }}
-                        >
-                          Listen
-                        </Button>
-
-                        {/* Start Recording Button */}
-                        <Button
-                          variant="contained"
-                          size="large"
-                          startIcon={<Mic />}
-                          onClick={handleStartRecording}
-                          sx={{
-                            py: 2,
-                            px: 4,
-                            fontSize: "1.1rem",
-                            fontWeight: 600,
-                            background:
-                              "linear-gradient(135deg, #EF4444 0%, #F87171 100%)",
-                            boxShadow: "0px 8px 24px rgba(239, 68, 68, 0.3)",
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                              transform: "translateY(-2px)",
-                              boxShadow: "0px 12px 32px rgba(239, 68, 68, 0.4)",
-                              background:
-                                "linear-gradient(135deg, #DC2626 0%, #EF4444 100%)",
-                            },
-                          }}
-                        >
-                          Start Recording
-                        </Button>
-                      </Box>
-                    )}
-                  </>
-                )}
-
-                {/* Recording Section - Only shown after clicking Start Recording and before assessment */}
-                {showRecorder && !assessment && (
-                  <>
-                    <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                      <Box
-                        sx={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 2,
-                          background:
-                            "linear-gradient(135deg, #EF4444 0%, #F87171 100%)",
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "center",
-                          mr: 2,
-                          boxShadow: "0px 4px 12px rgba(239, 68, 68, 0.3)",
+                          mb: 3,
+                          gap: 1,
                         }}
                       >
-                        <Mic sx={{ color: "white", fontSize: 28 }} />
+                        <ChatIcon sx={{ fontSize: 24 }} />
+                        <Typography
+                          variant="h5"
+                          sx={{
+                            fontWeight: 700,
+                            background: (theme) =>
+                              `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                            backgroundClip: "text",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                          }}
+                        >
+                          Enter Your Text
+                        </Typography>
                       </Box>
-                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        Recording
-                      </Typography>
-                    </Box>
 
-                    <Paper
-                      elevation={0}
+                      <TextField
+                        fullWidth
+                        rows={5}
+                        placeholder="Type or paste the text you want to practice..."
+                        value={customText}
+                        onChange={handleTextChange}
+                        variant="outlined"
+                        sx={{
+                          mb: 2,
+                          "& .MuiOutlinedInput-root": {
+                            fontSize: "1.1rem",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              boxShadow: "0px 4px 12px rgba(0, 82, 212, 0.1)",
+                            },
+                            "&.Mui-focused": {
+                              boxShadow: "0px 4px 16px rgba(0, 82, 212, 0.2)",
+                            },
+                          },
+                        }}
+                        helperText={
+                          <span
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              marginTop: "4px",
+                            }}
+                          >
+                            <span>{customText.length} characters</span>
+                            {customText.length > 0 && (
+                              <span style={{ color: "#10B981" }}>
+                                ✓ Ready to record
+                              </span>
+                            )}
+                          </span>
+                        }
+                      />
+
+                      {/* Quick Examples */}
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            mb: 2,
+                            fontWeight: 600,
+                            color: "text.secondary",
+                          }}
+                        >
+                          Quick examples:
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}
+                        >
+                          {[
+                            "Hello, how are you today?",
+                            "Sit down, please",
+                            "Open the door, please",
+                          ].map((example, index) => (
+                            <Chip
+                              key={index}
+                              label={example}
+                              onClick={() => setCustomText(example)}
+                              sx={{
+                                cursor: "pointer",
+                                fontSize: "0.9rem",
+                                py: 2.5,
+                                px: 1,
+                                background:
+                                  "linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 100%)",
+                                border: "1px solid #E2E8F0",
+                                transition: "all 0.3s ease",
+                                "&:hover": {
+                                  background:
+                                    "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
+                                  color: "white",
+                                  transform: "translateY(-2px)",
+                                  boxShadow:
+                                    "0px 4px 12px rgba(0, 82, 212, 0.25)",
+                                },
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+
+                      {/* Listen and Start Recording Buttons */}
+                      {customText.trim() && (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 3,
+                            justifyContent: "center",
+                            mt: 4,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {/* Listen Button */}
+                          <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<VolumeUp />}
+                            onClick={handleListenText}
+                            sx={{
+                              py: 1.5,
+                              px: 4,
+                              fontSize: "1rem",
+                              fontWeight: 700,
+                              background: (theme) =>
+                                `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.light} 100%)`,
+                              boxShadow: (theme) => theme.shadows[6],
+                              borderRadius: 3,
+                              textTransform: "none",
+                              transition: "all 0.3s ease",
+                              "&:hover": {
+                                transform: "translateY(-4px)",
+                                boxShadow: (theme) => theme.shadows[10],
+                                background: (theme) =>
+                                  `linear-gradient(135deg, ${theme.palette.info.dark} 0%, ${theme.palette.info.main} 100%)`,
+                              },
+                            }}
+                          >
+                            Listen
+                          </Button>
+
+                          {/* Start Recording Button */}
+                          <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<Mic />}
+                            onClick={handleStartRecording}
+                            sx={{
+                              py: 1.5,
+                              px: 4,
+                              fontSize: "1rem",
+                              fontWeight: 700,
+                              background: (theme) =>
+                                `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.light} 100%)`,
+                              boxShadow: (theme) => theme.shadows[6],
+                              borderRadius: 3,
+                              textTransform: "none",
+                              transition: "all 0.3s ease",
+                              "&:hover": {
+                                transform: "translateY(-4px)",
+                                boxShadow: (theme) => theme.shadows[10],
+                                background: (theme) =>
+                                  `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.main} 100%)`,
+                              },
+                            }}
+                          >
+                            Start Recording
+                          </Button>
+                        </Box>
+                      )}
+                    </>
+                  )}
+
+                  {/* Recording Section - Only shown after clicking Start Recording and before assessment */}
+                  {showRecorder && !assessment && (
+                    <>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 3 }}
+                      >
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 3,
+                            bgcolor: "error.main",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            mr: 2,
+                            boxShadow: (theme) => theme.shadows[3],
+                          }}
+                        >
+                          <Mic sx={{ color: "white", fontSize: 28 }} />
+                        </Box>
+                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                          Recording
+                        </Typography>
+                      </Box>
+
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          mb: 3,
+                          borderRadius: 3,
+                          background: (theme) =>
+                            `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                          color: "white",
+                          boxShadow: (theme) => theme.shadows[4],
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 500,
+                            lineHeight: 1.6,
+                            position: "relative",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          "{customText}"
+                        </Typography>
+                      </Paper>
+
+                      <AudioRecorder
+                        onRecordingReady={handleRecordingReady}
+                        onSubmit={handleSubmitRecording}
+                        recordedAudio={recordedAudio}
+                        maxDuration={60}
+                      />
+                    </>
+                  )}
+
+                  {/* Loading State */}
+                  {loading && (
+                    <Box
                       sx={{
+                        mt: 3,
                         p: 3,
-                        mb: 3,
                         borderRadius: 2,
                         background:
-                          "linear-gradient(135deg, #0052D4 0%, #00C9FF 100%)",
-                        color: "white",
-                        boxShadow: "0px 8px 24px rgba(0, 82, 212, 0.25)",
-                        position: "relative",
-                        overflow: "hidden",
-                        "&::before": {
-                          content: '""',
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          background:
-                            "radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, transparent 60%)",
-                        },
+                          "linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 100%)",
                       }}
                     >
                       <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 500,
-                          lineHeight: 1.6,
-                          position: "relative",
-                          fontStyle: "italic",
-                        }}
+                        variant="body1"
+                        color="primary"
+                        gutterBottom
+                        sx={{ fontWeight: 600 }}
                       >
-                        "{customText}"
+                        <Search sx={{ fontSize: 20, mr: 1 }} />
+                        Analyzing your pronunciation...
                       </Typography>
-                    </Paper>
-
-                    <AudioRecorder
-                      onRecordingReady={handleRecordingReady}
-                      maxDuration={60}
-                    />
-
-                    {/* Submit Button - Shows after recording is complete */}
-                    {recordedAudio && !loading && (
-                      <Box sx={{ mt: 3, textAlign: "center" }}>
-                        <Button
-                          variant="contained"
-                          size="large"
-                          onClick={handleSubmitRecording}
-                          sx={{
-                            py: 2,
-                            px: 5,
-                            fontSize: "1.1rem",
-                            fontWeight: 600,
-                            background:
-                              "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-                            boxShadow: "0px 8px 24px rgba(16, 185, 129, 0.3)",
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                              transform: "translateY(-2px)",
-                              boxShadow:
-                                "0px 12px 32px rgba(16, 185, 129, 0.4)",
-                              background:
-                                "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-                            },
-                          }}
-                        >
-                          Submit for Analysis
-                        </Button>
-                      </Box>
-                    )}
-                  </>
-                )}
-
-                {/* Loading State */}
-                {loading && (
-                  <Box
-                    sx={{
-                      mt: 3,
-                      p: 3,
-                      borderRadius: 2,
-                      background:
-                        "linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 100%)",
-                    }}
-                  >
-                    <Typography
-                      variant="body1"
-                      color="primary"
-                      gutterBottom
-                      sx={{ fontWeight: 600 }}
-                    >
-                      🔍 Analyzing your pronunciation...
-                    </Typography>
-                    <LinearProgress
-                      sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        background: "rgba(0, 82, 212, 0.1)",
-                        "& .MuiLinearProgress-bar": {
-                          background:
-                            "linear-gradient(90deg, #0052D4 0%, #00C9FF 100%)",
-                        },
-                      }}
-                    />
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
+                      <LinearProgress
+                        sx={{
+                          height: 8,
+                          borderRadius: 4,
+                          bgcolor: "rgba(0, 82, 212, 0.1)",
+                          "& .MuiLinearProgress-bar": {
+                            bgcolor: "primary.main",
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Assessment Results */}
             {assessment && (
               <Card
+                elevation={0}
                 sx={{
-                  background: "rgba(255, 255, 255, 0.95)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255, 255, 255, 0.3)",
-                  animation: "scaleIn 0.5s ease-out",
-                  "@keyframes scaleIn": {
-                    from: {
-                      opacity: 0,
-                      transform: "scale(0.95)",
-                    },
-                    to: {
-                      opacity: 1,
-                      transform: "scale(1)",
-                    },
-                  },
+                  borderRadius: 4,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  maxWidth: "900px",
+                  width: "100%",
                 }}
               >
                 <CardContent sx={{ p: 4 }}>
@@ -608,19 +578,16 @@ export default function CustomPronunciation() {
                       sx={{
                         width: 48,
                         height: 48,
-                        borderRadius: 2,
-                        background:
-                          "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
+                        borderRadius: 3,
+                        bgcolor: "success.main",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         mr: 2,
-                        boxShadow: "0px 4px 12px rgba(16, 185, 129, 0.3)",
+                        boxShadow: (theme) => theme.shadows[3],
                       }}
                     >
-                      <Typography variant="h5" sx={{ color: "white" }}>
-                        📊
-                      </Typography>
+                      <Assessment sx={{ color: "white", fontSize: 28 }} />
                     </Box>
                     <Typography variant="h5" sx={{ fontWeight: 600 }}>
                       Assessment Results
@@ -735,7 +702,8 @@ export default function CustomPronunciation() {
                           gap: 1,
                         }}
                       >
-                        📝 AI Feedback
+                        <EditNote sx={{ fontSize: 20 }} />
+                        AI Feedback
                       </Typography>
                       <Typography
                         variant="body1"
@@ -770,7 +738,8 @@ export default function CustomPronunciation() {
                           gap: 1,
                         }}
                       >
-                        🗣️ What we heard
+                        <RecordVoiceOver sx={{ fontSize: 20 }} />
+                        What we heard
                       </Typography>
                       <Typography
                         variant="body1"
@@ -908,15 +877,19 @@ export default function CustomPronunciation() {
                       sx={{
                         py: 1.5,
                         px: 4,
-                        fontSize: "1.1rem",
-                        fontWeight: 600,
-                        background:
-                          "linear-gradient(135deg, #0052D4 0%, #00C9FF 100%)",
-                        boxShadow: "0px 8px 24px rgba(0, 82, 212, 0.3)",
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                        background: (theme) =>
+                          `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                        boxShadow: (theme) => theme.shadows[6],
+                        borderRadius: 3,
+                        textTransform: "none",
                         transition: "all 0.3s ease",
                         "&:hover": {
-                          transform: "translateY(-2px)",
-                          boxShadow: "0px 12px 32px rgba(0, 82, 212, 0.4)",
+                          transform: "translateY(-4px)",
+                          boxShadow: (theme) => theme.shadows[10],
+                          background: (theme) =>
+                            `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
                         },
                       }}
                     >

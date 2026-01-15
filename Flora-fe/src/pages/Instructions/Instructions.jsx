@@ -123,23 +123,27 @@ export default function Groups() {
               <Box
                 component={motion.div}
                 variants={itemVariants}
-                sx={{ mb: 4 }}
+                sx={{ mb: 6, textAlign: "center" }}
               >
                 <Typography
-                  variant="h4"
+                  variant="h3"
                   fontWeight="700"
                   sx={{
-                    mb: 1,
-                    background:
-                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    mb: 2,
+                    background: (theme) =>
+                      `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                   }}
                 >
                   Instruction Groups
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Choose a group to start practicing
+                <Typography
+                  variant="h6"
+                  color="text.secondary"
+                  sx={{ maxWidth: 600, mx: "auto" }}
+                >
+                  Choose a group to start practicing classroom instructions
                 </Typography>
               </Box>
 
@@ -153,38 +157,48 @@ export default function Groups() {
                   {error}
                 </Alert>
               ) : (
-                <Grid
+                <Box
                   component={motion.div}
                   variants={containerVariants}
-                  container
-                  spacing={3}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    gap: 3,
+                    width: "100%",
+                    justifyContent: "center",
+                  }}
                 >
                   {groups.map((group, index) => (
-                    <Grid
+                    <Box
                       component={motion.div}
                       variants={itemVariants}
-                      item
-                      xs={12}
-                      sm={6}
-                      md={4}
                       key={group.id || group._id || index}
+                      sx={{
+                        width: {
+                          xs: "100%",
+                          sm: "calc(50% - 12px)",
+                          md: "calc(33.333% - 16px)",
+                        },
+                      }}
                     >
                       <Card
                         component={motion.div}
                         whileHover={{
-                          scale: 1.03,
-                          transition: { duration: 0.2 },
+                          y: -8,
+                          transition: { duration: 0.3 },
                         }}
                         elevation={0}
                         sx={{
                           height: "100%",
-                          borderRadius: 3,
+                          borderRadius: 4,
                           border: "1px solid",
                           borderColor: "divider",
                           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          overflow: "hidden",
                           "&:hover": {
                             borderColor: group.color_hex,
-                            boxShadow: `0 12px 24px ${group.color_hex}20`,
+                            boxShadow: (theme) => theme.shadows[8],
                           },
                         }}
                       >
@@ -194,20 +208,20 @@ export default function Groups() {
                           }
                           sx={{
                             height: "100%",
-                            p: 3,
+                            p: 4,
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "flex-start",
                           }}
                         >
-                          {/* Color Indicator */}
+                          {/* Color Indicator Bar */}
                           <Box
                             sx={{
-                              width: 48,
-                              height: 6,
-                              borderRadius: 3,
+                              width: 60,
+                              height: 8,
+                              borderRadius: 4,
                               bgcolor: group.color_hex,
-                              mb: 2,
+                              mb: 3,
                             }}
                           />
 
@@ -216,20 +230,21 @@ export default function Groups() {
                             label={`Group ${group.group_number}`}
                             size="small"
                             sx={{
-                              mb: 2,
+                              mb: 3,
                               bgcolor: `${group.color_hex}15`,
                               color: group.color_hex,
                               fontWeight: 600,
                               border: "none",
+                              fontSize: "0.875rem",
                             }}
                           />
 
                           {/* Group Info */}
                           <Typography
-                            variant="h6"
-                            fontWeight="600"
+                            variant="h5"
+                            fontWeight="700"
                             gutterBottom
-                            sx={{ mb: 1 }}
+                            sx={{ mb: 2 }}
                           >
                             {group.name}
                           </Typography>
@@ -238,51 +253,55 @@ export default function Groups() {
                             variant="body2"
                             color="text.secondary"
                             sx={{
-                              mb: 3,
+                              mb: 4,
                               flex: 1,
-                              lineHeight: 1.6,
+                              lineHeight: 1.7,
                             }}
                           >
                             {group.description}
                           </Typography>
 
-                          {/* Stats */}
+                          {/* Stats with modern styling */}
                           <Box
                             sx={{
                               display: "flex",
-                              gap: 3,
+                              gap: 4,
                               width: "100%",
-                              pt: 2,
+                              pt: 3,
                               borderTop: "1px solid",
                               borderColor: "divider",
                             }}
                           >
                             <Box>
                               <Typography
-                                variant="h6"
-                                fontWeight="600"
+                                variant="h5"
+                                fontWeight="700"
                                 color={group.color_hex}
+                                sx={{ mb: 0.5 }}
                               >
                                 {group.instruction_count}
                               </Typography>
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
+                                sx={{ fontSize: "0.875rem" }}
                               >
                                 Instructions
                               </Typography>
                             </Box>
                             <Box>
                               <Typography
-                                variant="h6"
-                                fontWeight="600"
+                                variant="h5"
+                                fontWeight="700"
                                 color={group.color_hex}
+                                sx={{ mb: 0.5 }}
                               >
                                 {group.situation_count}
                               </Typography>
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
+                                sx={{ fontSize: "0.875rem" }}
                               >
                                 Situations
                               </Typography>
@@ -290,9 +309,9 @@ export default function Groups() {
                           </Box>
                         </CardActionArea>
                       </Card>
-                    </Grid>
+                    </Box>
                   ))}
-                </Grid>
+                </Box>
               )}
             </Box>
           </Container>
