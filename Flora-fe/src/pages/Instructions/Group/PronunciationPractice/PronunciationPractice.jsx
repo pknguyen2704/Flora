@@ -26,6 +26,9 @@ import {
   KeyboardDoubleArrowRight,
   FormatListBulleted,
   EmojiEvents,
+  Assessment,
+  EditNote,
+  RecordVoiceOver,
 } from "@mui/icons-material";
 import AudioRecorder from "~/components/shared/AudioRecorder";
 import { pronunciationService } from "~/services/pronunciationService";
@@ -128,10 +131,6 @@ export default function PronunciationPractice() {
 
       if (response.success) {
         setAssessment(response.data.assessment);
-        showNotification(
-          `Score: ${response.data.assessment.total_score}/100`,
-          "success"
-        );
       }
     } catch {
       showNotification("Assessment failed", "error");
@@ -550,7 +549,6 @@ export default function PronunciationPractice() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
             overflow: "auto",
             py: { xs: 4, sm: 6, md: 8 },
           }}
@@ -580,11 +578,13 @@ export default function PronunciationPractice() {
               >
                 Pronunciation Practice
               </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {panelExpanded
-                  ? "Select an instruction from the list to practice"
-                  : "Click the arrow to expand the instruction list"}
-              </Typography>
+              {!assessment && (
+                <Typography variant="body1" color="text.secondary">
+                  {panelExpanded
+                    ? "Select an instruction from the list to practice"
+                    : "Click the arrow to expand the instruction list"}
+                </Typography>
+              )}
             </Box>
 
             {/* No Selection Message */}
@@ -630,253 +630,237 @@ export default function PronunciationPractice() {
             {/* Practice Area - Shows when instruction is selected */}
             {selectedInstruction && (
               <Box sx={{ maxWidth: 700, width: "100%" }}>
-                <Card
-                  sx={{
-                    mb: 3,
-                    background: "rgba(255, 255, 255, 0.95)",
-                    backdropFilter: "blur(10px)",
-                    borderRadius: 4,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    boxShadow: "0 8px 32px rgba(0, 82, 212, 0.08)",
-                  }}
-                >
-                  <CardContent sx={{ p: 4 }}>
-                    {/* Instruction Display & Recording Controls */}
-                    {!showRecorder && !assessment && (
-                      <>
-                        <Box sx={{ textAlign: "center", mb: 4 }}>
-                          <Chip
-                            label={`Instruction #${selectedInstruction.instruction_number}`}
-                            sx={{
-                              mb: 2,
-                              px: 2,
-                              fontWeight: 600,
-                              background:
-                                "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
-                              color: "white",
-                            }}
-                          />
-                          <Typography
-                            variant="h4"
-                            sx={{
-                              fontWeight: 600,
-                              color: "primary.main",
-                              lineHeight: 1.4,
-                            }}
-                          >
-                            "{selectedInstruction.text}"
-                          </Typography>
-                          {selectedInstruction.user_stats?.best_score !=
-                            null && (
-                            <Box
+                {/* Instruction Display & Recording Controls */}
+                {!assessment && (
+                  <Card
+                    sx={{
+                      mb: 3,
+                      background: "rgba(255, 255, 255, 0.95)",
+                      backdropFilter: "blur(10px)",
+                      borderRadius: 4,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      boxShadow: "0 8px 32px rgba(0, 82, 212, 0.08)",
+                    }}
+                  >
+                    <CardContent sx={{ p: 4 }}>
+                      {!showRecorder && (
+                        <>
+                          <Box sx={{ textAlign: "center", mb: 4 }}>
+                            <Chip
+                              label={`Instruction #${selectedInstruction.instruction_number}`}
                               sx={{
-                                mt: 3,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 1,
-                                px: 3,
-                                py: 1.5,
-                                borderRadius: 3,
-                                background: getScoreGradient(
-                                  selectedInstruction.user_stats.best_score
-                                ),
+                                mb: 2,
+                                px: 2,
+                                fontWeight: 600,
+                                background:
+                                  "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
+                                color: "white",
+                              }}
+                            />
+                            <Typography
+                              variant="h4"
+                              sx={{
+                                fontWeight: 600,
+                                color: "primary.main",
+                                lineHeight: 1.4,
                               }}
                             >
-                              <EmojiEvents sx={{ color: "white" }} />
-                              <Typography
-                                variant="body1"
-                                sx={{ color: "white", fontWeight: 600 }}
+                              "{selectedInstruction.text}"
+                            </Typography>
+                            {selectedInstruction.user_stats?.best_score !=
+                              null && (
+                              <Box
+                                sx={{
+                                  mt: 3,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                  px: 3,
+                                  py: 1.5,
+                                  borderRadius: 3,
+                                  background: getScoreGradient(
+                                    selectedInstruction.user_stats.best_score
+                                  ),
+                                }}
                               >
-                                Your Best:{" "}
-                                {selectedInstruction.user_stats.best_score}/100
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
+                                <EmojiEvents sx={{ color: "white" }} />
+                                <Typography
+                                  variant="body1"
+                                  sx={{ color: "white", fontWeight: 600 }}
+                                >
+                                  Your Best:{" "}
+                                  {selectedInstruction.user_stats.best_score}
+                                  /100
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
 
-                        <Box
-                          sx={{
-                            display: "flex",
-                            gap: 2,
-                            justifyContent: "center",
-                            mt: 4,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <Button
-                            variant="contained"
-                            size="large"
-                            startIcon={<VolumeUp />}
-                            onClick={handleListenText}
-                            sx={{
-                              py: 2,
-                              px: 4,
-                              fontSize: "1.1rem",
-                              fontWeight: 600,
-                              borderRadius: 3,
-                              background:
-                                "linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)",
-                              boxShadow: "0px 8px 24px rgba(139, 92, 246, 0.3)",
-                              transition: "all 0.3s ease",
-                              "&:hover": {
-                                transform: "translateY(-2px)",
-                                boxShadow:
-                                  "0px 12px 32px rgba(139, 92, 246, 0.4)",
-                              },
-                            }}
-                          >
-                            Listen
-                          </Button>
-                          <Button
-                            variant="contained"
-                            size="large"
-                            startIcon={<Mic />}
-                            onClick={handleStartRecording}
-                            sx={{
-                              py: 2,
-                              px: 4,
-                              fontSize: "1.1rem",
-                              fontWeight: 600,
-                              borderRadius: 3,
-                              background:
-                                "linear-gradient(135deg, #EF4444 0%, #F87171 100%)",
-                              boxShadow: "0px 8px 24px rgba(239, 68, 68, 0.3)",
-                              transition: "all 0.3s ease",
-                              "&:hover": {
-                                transform: "translateY(-2px)",
-                                boxShadow:
-                                  "0px 12px 32px rgba(239, 68, 68, 0.4)",
-                              },
-                            }}
-                          >
-                            Start Recording
-                          </Button>
-                        </Box>
-                      </>
-                    )}
-
-                    {/* Recording Section */}
-                    {showRecorder && !assessment && (
-                      <>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", mb: 3 }}
-                        >
                           <Box
                             sx={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: 2,
-                              background:
-                                "linear-gradient(135deg, #EF4444 0%, #F87171 100%)",
                               display: "flex",
-                              alignItems: "center",
+                              gap: 2,
                               justifyContent: "center",
-                              mr: 2,
-                              boxShadow: "0px 4px 12px rgba(239, 68, 68, 0.3)",
+                              mt: 4,
+                              flexWrap: "wrap",
                             }}
                           >
-                            <Mic sx={{ color: "white", fontSize: 28 }} />
-                          </Box>
-                          <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                            Recording
-                          </Typography>
-                        </Box>
-
-                        <Paper
-                          elevation={0}
-                          sx={{
-                            p: 3,
-                            mb: 3,
-                            borderRadius: 3,
-                            background:
-                              "linear-gradient(135deg, #0052D4 0%, #00C9FF 100%)",
-                            color: "white",
-                            boxShadow: "0px 8px 24px rgba(0, 82, 212, 0.25)",
-                          }}
-                        >
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 500,
-                              lineHeight: 1.6,
-                              fontStyle: "italic",
-                            }}
-                          >
-                            "{selectedInstruction.text}"
-                          </Typography>
-                        </Paper>
-
-                        <AudioRecorder
-                          onRecordingReady={handleRecordingReady}
-                          maxDuration={60}
-                        />
-
-                        {recordedAudio && !submitting && (
-                          <Box sx={{ mt: 3, textAlign: "center" }}>
                             <Button
                               variant="contained"
                               size="large"
-                              onClick={handleSubmitRecording}
+                              startIcon={<VolumeUp />}
+                              onClick={handleListenText}
                               sx={{
-                                py: 2,
-                                px: 5,
-                                fontSize: "1.1rem",
-                                fontWeight: 600,
+                                py: 1.5,
+                                px: 4,
+                                fontSize: "1rem",
+                                fontWeight: 700,
+                                background: (theme) =>
+                                  `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.light} 100%)`,
+                                boxShadow: (theme) => theme.shadows[6],
                                 borderRadius: 3,
-                                background:
-                                  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-                                boxShadow:
-                                  "0px 8px 24px rgba(16, 185, 129, 0.3)",
+                                textTransform: "none",
                                 transition: "all 0.3s ease",
                                 "&:hover": {
-                                  transform: "translateY(-2px)",
-                                  boxShadow:
-                                    "0px 12px 32px rgba(16, 185, 129, 0.4)",
+                                  transform: "translateY(-4px)",
+                                  boxShadow: (theme) => theme.shadows[10],
+                                  background: (theme) =>
+                                    `linear-gradient(135deg, ${theme.palette.info.dark} 0%, ${theme.palette.info.main} 100%)`,
                                 },
                               }}
                             >
-                              Submit for Analysis
+                              Listen
+                            </Button>
+                            <Button
+                              variant="contained"
+                              size="large"
+                              startIcon={<Mic />}
+                              onClick={handleStartRecording}
+                              sx={{
+                                py: 1.5,
+                                px: 4,
+                                fontSize: "1rem",
+                                fontWeight: 700,
+                                background: (theme) =>
+                                  `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.light} 100%)`,
+                                boxShadow: (theme) => theme.shadows[6],
+                                borderRadius: 3,
+                                textTransform: "none",
+                                transition: "all 0.3s ease",
+                                "&:hover": {
+                                  transform: "translateY(-4px)",
+                                  boxShadow: (theme) => theme.shadows[10],
+                                  background: (theme) =>
+                                    `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.main} 100%)`,
+                                },
+                              }}
+                            >
+                              Start Recording
                             </Button>
                           </Box>
-                        )}
-                      </>
-                    )}
+                        </>
+                      )}
 
-                    {/* Loading State */}
-                    {submitting && (
-                      <Box
-                        sx={{
-                          mt: 3,
-                          p: 3,
-                          borderRadius: 3,
-                          background:
-                            "linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 100%)",
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          color="primary"
-                          gutterBottom
-                          sx={{ fontWeight: 600 }}
-                        >
-                          🔍 Analyzing your pronunciation...
-                        </Typography>
-                        <LinearProgress
+                      {/* Recording Section */}
+                      {showRecorder && (
+                        <>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 3,
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 2,
+                                background: (theme) =>
+                                  `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.light} 100%)`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                mr: 2,
+                                boxShadow: (theme) => theme.shadows[3],
+                              }}
+                            >
+                              <Mic sx={{ color: "white", fontSize: 28 }} />
+                            </Box>
+                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                              Recording
+                            </Typography>
+                          </Box>
+
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 3,
+                              mb: 3,
+                              borderRadius: 3,
+                              background: (theme) =>
+                                `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                              color: "white",
+                              boxShadow: (theme) => theme.shadows[4],
+                            }}
+                          >
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontWeight: 500,
+                                lineHeight: 1.6,
+                                fontStyle: "italic",
+                              }}
+                            >
+                              "{selectedInstruction.text}"
+                            </Typography>
+                          </Paper>
+
+                          <AudioRecorder
+                            onRecordingReady={handleRecordingReady}
+                            onSubmit={handleSubmitRecording}
+                            recordedAudio={recordedAudio}
+                            maxDuration={60}
+                          />
+                        </>
+                      )}
+
+                      {/* Loading State */}
+                      {submitting && (
+                        <Box
                           sx={{
-                            height: 8,
-                            borderRadius: 4,
-                            background: "rgba(0, 82, 212, 0.1)",
-                            "& .MuiLinearProgress-bar": {
-                              background:
-                                "linear-gradient(90deg, #0052D4 0%, #00C9FF 100%)",
-                            },
+                            mt: 3,
+                            p: 3,
+                            borderRadius: 3,
+                            background:
+                              "linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 100%)",
                           }}
-                        />
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
+                        >
+                          <Typography
+                            variant="body1"
+                            color="primary"
+                            gutterBottom
+                            sx={{ fontWeight: 600 }}
+                          >
+                            🔍 Analyzing your pronunciation...
+                          </Typography>
+                          <LinearProgress
+                            sx={{
+                              height: 8,
+                              borderRadius: 4,
+                              background: "rgba(0, 82, 212, 0.1)",
+                              "& .MuiLinearProgress-bar": {
+                                background:
+                                  "linear-gradient(90deg, #0052D4 0%, #00C9FF 100%)",
+                              },
+                            }}
+                          />
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Assessment Results */}
                 {assessment && (
@@ -897,18 +881,16 @@ export default function PronunciationPractice() {
                           sx={{
                             width: 48,
                             height: 48,
-                            borderRadius: 2,
-                            background:
-                              "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
+                            borderRadius: 3,
+                            bgcolor: "success.main",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             mr: 2,
+                            boxShadow: (theme) => theme.shadows[3],
                           }}
                         >
-                          <Typography variant="h5" sx={{ color: "white" }}>
-                            📊
-                          </Typography>
+                          <Assessment sx={{ color: "white", fontSize: 28 }} />
                         </Box>
                         <Typography variant="h5" sx={{ fontWeight: 600 }}>
                           Assessment Results
@@ -924,18 +906,50 @@ export default function PronunciationPractice() {
                           background: getScoreGradient(assessment.total_score),
                           textAlign: "center",
                           color: "white",
+                          boxShadow: `0px 4px 16px ${
+                            assessment.total_score >= 90
+                              ? "rgba(16, 185, 129, 0.3)"
+                              : assessment.total_score >= 70
+                              ? "rgba(245, 158, 11, 0.3)"
+                              : "rgba(239, 68, 68, 0.3)"
+                          }`,
+                          position: "relative",
+                          overflow: "hidden",
+                          "&::before": {
+                            content: '""',
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background:
+                              "radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, transparent 60%)",
+                          },
                         }}
                       >
                         <Typography
                           variant="h2"
-                          sx={{ fontWeight: 700, fontSize: "3rem", mb: 0.5 }}
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "2.5rem",
+                            mb: 0.5,
+                            position: "relative",
+                            textShadow: "0px 2px 8px rgba(0,0,0,0.1)",
+                          }}
                         >
                           {assessment.total_score}
                         </Typography>
-                        <Typography variant="body1" sx={{ opacity: 0.95 }}>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            opacity: 0.95,
+                            position: "relative",
+                            fontWeight: 500,
+                          }}
+                        >
                           out of 100
                         </Typography>
-                        <Box sx={{ mt: 2 }}>
+                        <Box sx={{ mt: 2, position: "relative" }}>
                           <LinearProgress
                             variant="determinate"
                             value={assessment.total_score}
@@ -952,7 +966,11 @@ export default function PronunciationPractice() {
                         </Box>
                         <Typography
                           variant="body1"
-                          sx={{ mt: 1.5, fontWeight: 600 }}
+                          sx={{
+                            mt: 1.5,
+                            position: "relative",
+                            fontWeight: 600,
+                          }}
                         >
                           {assessment.total_score >= 90
                             ? "🎉 Excellent!"
@@ -977,11 +995,22 @@ export default function PronunciationPractice() {
                         >
                           <Typography
                             variant="subtitle1"
-                            sx={{ fontWeight: 600, mb: 1 }}
+                            sx={{
+                              fontWeight: 600,
+                              mb: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
                           >
-                            📝 AI Feedback
+                            <EditNote sx={{ fontSize: 20 }} />
+                            AI Feedback
                           </Typography>
-                          <Typography variant="body1" color="text.secondary">
+                          <Typography
+                            variant="body1"
+                            color="text.secondary"
+                            sx={{ lineHeight: 1.6 }}
+                          >
                             {assessment.overall_feedback}
                           </Typography>
                         </Paper>
@@ -1002,14 +1031,21 @@ export default function PronunciationPractice() {
                         >
                           <Typography
                             variant="subtitle1"
-                            sx={{ fontWeight: 600, mb: 1 }}
+                            sx={{
+                              fontWeight: 600,
+                              mb: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
                           >
-                            🗣️ What we heard
+                            <RecordVoiceOver sx={{ fontSize: 20 }} />
+                            What we heard
                           </Typography>
                           <Typography
                             variant="body1"
                             color="text.secondary"
-                            sx={{ fontStyle: "italic" }}
+                            sx={{ fontStyle: "italic", fontSize: "1.1rem" }}
                           >
                             "{assessment.asr_transcript}"
                           </Typography>
@@ -1074,10 +1110,24 @@ export default function PronunciationPractice() {
                           variant="contained"
                           onClick={handleTryAgain}
                           startIcon={<Mic />}
+                          size="large"
                           sx={{
+                            py: 1.5,
+                            px: 4,
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            background: (theme) =>
+                              `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                            boxShadow: (theme) => theme.shadows[6],
                             borderRadius: 3,
-                            background:
-                              "linear-gradient(135deg, #0052D4 0%, #00C9FF 100%)",
+                            textTransform: "none",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              transform: "translateY(-4px)",
+                              boxShadow: (theme) => theme.shadows[10],
+                              background: (theme) =>
+                                `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+                            },
                           }}
                         >
                           Try Again

@@ -56,7 +56,6 @@ export default function Appbar({
     // TODO: Implement actual language change logic for the entire app
   };
 
-
   const handleLogout = async () => {
     handleClose();
     await logout();
@@ -133,7 +132,7 @@ export default function Appbar({
               color: "inherit",
             }}
           >
-            Hi, {user?.full_name || user?.username}
+            Hi, {user?.full_name}
           </Typography>
 
           <IconButton
@@ -243,8 +242,8 @@ export default function Appbar({
             >
               <Avatar
                 sx={{
-                  width: 56,
-                  height: 56,
+                  width: 48,
+                  height: 48,
                   bgcolor: "white",
                   color: "primary.main",
                   fontWeight: "bold",
@@ -264,7 +263,6 @@ export default function Appbar({
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
-                    mb: 0.5,
                     textShadow: "0 2px 4px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -277,21 +275,21 @@ export default function Appbar({
 
           {/* Menu Items */}
           <Box sx={{ px: 1, pb: 1 }}>
-
             {/* Sign Out */}
             <MenuItem
               onClick={handleLogout}
               sx={{
                 borderRadius: 2,
                 px: 2,
-                py: 1.5,
+                py: 2,
                 color: "error.main",
                 transition: "all 0.2s ease",
                 "&:hover": {
-                  bgcolor: "error.lighter",
+                  bgcolor: "error.main",
+                  color: "white",
                   transform: "translateX(4px)",
                   "& .MuiListItemIcon-root": {
-                    color: "error.main",
+                    color: "white",
                   },
                 },
               }}

@@ -1,6 +1,6 @@
 """API router aggregation."""
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, groups, pronunciation, situations, dashboard
+from app.api.v1.endpoints import auth, groups, pronunciation, situations, dashboard, admin
 
 api_router = APIRouter()
 
@@ -10,3 +10,4 @@ api_router.include_router(groups.router)
 api_router.include_router(pronunciation.router)
 api_router.include_router(situations.router)
 api_router.include_router(dashboard.router)
+api_router.include_router(admin.router)

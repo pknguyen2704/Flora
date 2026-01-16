@@ -26,8 +26,7 @@ import CustomPronunciation from "~/pages/CustomPronunciation/CustomPronunciation
 import SituationQuiz from "~/pages/Instructions/Group/Situation/SituationQuiz";
 
 // Admin Pages
-import AdminDashboard from "~/pages/Administration/AdminDashboard";
-import UserMonitoring from "~/pages/Administration/Usermonitoring/Usermonitoring";
+import Administration from "~/pages/Administration/Administration";
 import ContentManagement from "~/pages/Administration/ContentManagement/ContentManagement";
 
 // Shared Components
@@ -110,16 +109,8 @@ function App() {
                 <Route
                   path="/admin"
                   element={
-                    <ProtectedRoute>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/users"
-                  element={
-                    <ProtectedRoute>
-                      <UserMonitoring />
+                    <ProtectedRoute adminOnly={true}>
+                      <Administration />
                     </ProtectedRoute>
                   }
                 />

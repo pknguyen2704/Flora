@@ -46,7 +46,8 @@ async def login(
     token_data = {
         "sub": str(user["_id"]),
         "username": user["username"],
-        "role": user["role"]
+        "role": user["role"],
+        "full_name": user["full_name"]
     }
     
     access_token = create_access_token(token_data)

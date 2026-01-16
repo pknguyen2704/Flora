@@ -4,12 +4,12 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.mongodb import get_database
 from app.core.dependencies import get_current_user
 from app.schemas.auth import APIResponse
-from typing import Dict, Any
+from pydantic import BaseModel
+from typing import Dict, Any, List
 from bson import ObjectId
 from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
-
 
 @router.get("/stats", response_model=APIResponse)
 async def get_user_stats(
@@ -25,17 +25,14 @@ async def get_user_stats(
             "user_id": user_id
         }).to_list(length=10000)
         
-        pron_scores = [a["assessment"]["total_score"] for a in pronunciation_attempts if a["assessment"].get("total_score") is not None]
-        
-        # Count error types
-        error_distribution = {}
-        for attempt in pronunciation_attempts:
-            for error in attempt.get("assessment", {}).get("errors", []):
-                error_type = error.get("error_type", "unknown")
-                error_distribution[error_type] = error_distribution.get(error_type, 0) + 1
+        pron_scores = []
+        for a in pronunciation_attempts:
+            score = a.get("assessment", {}).get("total_score") if a.get("assessment") else None
+            if score is not None:
+                pron_scores.append(score)
         
         # Get recent attempts
-        recent_pron = sorted(pronunciation_attempts, key=lambda x: x["created_at"], reverse=True)[:5]
+        recent_pron = sorted(pronunciation_attempts, key=lambda x: x.get("created_at", datetime.min), reverse=True)[:5]
         recent_pron_list = []
         for attempt in recent_pron:
             inst_id = attempt.get("instruction_id")
@@ -47,8 +44,8 @@ async def get_user_stats(
             
             recent_pron_list.append({
                 "instruction_text": text,
-                "score": attempt["assessment"].get("total_score"),
-                "created_at": attempt["created_at"].isoformat()
+                "score": attempt.get("assessment", {}).get("total_score") if attempt.get("assessment") else None,
+                "created_at": attempt.get("created_at", datetime.utcnow()).isoformat()
             })
         
         # Get situation stats
@@ -56,17 +53,12 @@ async def get_user_stats(
             "user_id": user_id
         }).to_list(length=10000)
         
-        total_questions = sum(len(a.get("situations", [])) for a in situation_attempts)
-        perfect_answers = sum(a.get("perfect_count", 0) for a in situation_attempts)
-        acceptable_answers = sum(a.get("acceptable_count", 0) for a in situation_attempts)
-        poor_answers = sum(a.get("poor_count", 0) for a in situation_attempts)
-        
         situation_scores = [a.get("total_score", 0) for a in situation_attempts]
         max_scores = [len(a.get("situations", [])) * 100 for a in situation_attempts]
         avg_percentage = sum(s/m*100 for s,m in zip(situation_scores, max_scores) if m > 0) / len(situation_scores) if situation_scores else 0
         
         # Recent quizzes
-        recent_situations = sorted(situation_attempts, key=lambda x: x.get("submitted_at", datetime.min), reverse=True)[:5]
+        recent_situations = sorted(situation_attempts, key=lambda x: x.get("submitted_at", datetime.min) if isinstance(x.get("submitted_at"), datetime) else datetime.min, reverse=True)[:5]
         recent_sit_list = []
         for attempt in recent_situations:
             group_id = attempt.get("group_id")
@@ -79,15 +71,16 @@ async def get_user_stats(
             max_score = len(attempt.get("situations", [])) * 100
             percentage = (attempt.get("total_score", 0) / max_score * 100) if max_score > 0 else 0
             
+            submitted_at = attempt.get("submitted_at")
+            if not isinstance(submitted_at, datetime):
+                submitted_at = datetime.utcnow()
+            
             recent_sit_list.append({
                 "group_name": group_name,
                 "score": attempt.get("total_score", 0),
                 "percentage": round(percentage),
-                "submitted_at": attempt.get("submitted_at", datetime.utcnow()).isoformat()
+                "submitted_at": submitted_at.isoformat()
             })
-        
-        # Calculate total study time (estimate from attempts)
-        total_study_minutes = len(pronunciation_attempts) * 2 + len(situation_attempts) * 5  # Rough estimate
         
         return APIResponse(
             success=True,
@@ -95,30 +88,22 @@ async def get_user_stats(
                 "pronunciation": {
                     "total_attempts": len(pronunciation_attempts),
                     "average_score": round(sum(pron_scores) / len(pron_scores), 1) if pron_scores else 0,
-                    "best_score": max(pron_scores) if pron_scores else 0,
-                    "worst_score": min(pron_scores) if pron_scores else 0,
-                    "total_practice_time_minutes": len(pronunciation_attempts) * 2,
-                    "error_distribution": error_distribution,
                     "recent_attempts": recent_pron_list
                 },
                 "situations": {
                     "total_quizzes": len(situation_attempts),
-                    "total_questions": total_questions,
-                    "perfect_answers": perfect_answers,
-                    "acceptable_answers": acceptable_answers,
-                    "poor_answers": poor_answers,
                     "average_score_percentage": round(avg_percentage, 1),
                     "recent_quizzes": recent_sit_list
                 },
                 "activity": {
                     "total_sessions": len(set([a.get("session_id") for a in pronunciation_attempts if a.get("session_id")])),
-                    "total_study_time_minutes": total_study_minutes,
                     "last_active": max(
-                        [a["created_at"] for a in pronunciation_attempts] +
-                        [a.get("submitted_at", datetime.min) for a in situation_attempts]
+                        [a.get("created_at", datetime.min) if isinstance(a.get("created_at"), datetime) else datetime.min for a in pronunciation_attempts] +
+                        [a.get("submitted_at", datetime.min) if isinstance(a.get("submitted_at"), datetime) else datetime.min for a in situation_attempts] +
+                        [datetime.min]
                     ).isoformat() if (pronunciation_attempts or situation_attempts) else None,
-                    "days_active": len(set([a["created_at"].date() for a in pronunciation_attempts])) +
-                                  len(set([a.get("submitted_at", datetime.utcnow()).date() for a in situation_attempts]))
+                    "days_active": len(set([a["created_at"].date() for a in pronunciation_attempts if isinstance(a.get("created_at"), datetime)])) +
+                                  len(set([a["submitted_at"].date() for a in situation_attempts if isinstance(a.get("submitted_at"), datetime)]))
                 }
             }
         )

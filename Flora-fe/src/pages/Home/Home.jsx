@@ -19,8 +19,8 @@ import Appbar from "~/components/AppBar/Appbar";
 import Overview from "./Overview/Overview";
 import Container from "@mui/material/Container";
 import Footer from "~/components/Footer/Footer";
-import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
-import MicIcon from '@mui/icons-material/Mic';
+import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
+import MicIcon from "@mui/icons-material/Mic";
 export default function Home() {
   const navigate = useNavigate();
   const { showNotification } = useNotification();
@@ -114,7 +114,7 @@ export default function Home() {
                       WebkitTextFillColor: "transparent",
                     }}
                   >
-                    Welcome back, {user?.fullName || user?.username}! 👋
+                    Welcome back, {user?.full_name}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
                     Track your learning progress and continue your journey
@@ -172,11 +172,14 @@ export default function Home() {
                           Custom Instructions Practice
                         </Typography>
                         <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                          Enter any instruction and get instant AI-powered feedback
+                          Enter any instruction and get instant AI-powered
+                          feedback
                         </Typography>
                       </Box>
                       <Box>
-                        <ArrowCircleRightIcon sx={{ color: "white", fontSize: "2rem" }}/>
+                        <ArrowCircleRightIcon
+                          sx={{ color: "white", fontSize: "2rem" }}
+                        />
                       </Box>
                     </Box>
                   </CardActionArea>
@@ -227,7 +230,7 @@ export default function Home() {
                                 {attempt.instruction_text}
                               </Typography>
                               <Chip
-                                label={`${attempt.score}%`}
+                                label={attempt.score}
                                 size="small"
                                 sx={{
                                   fontWeight: 700,

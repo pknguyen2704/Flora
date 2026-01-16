@@ -56,21 +56,16 @@ export default function Login() {
         navigate("/home");
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Login failed");
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Login failed";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
-
-  // Animated background particles
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 60 + 20,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    duration: Math.random() * 20 + 10,
-    delay: Math.random() * 5,
-  }));
 
   return (
     <Container
@@ -82,75 +77,46 @@ export default function Login() {
         overflow: "hidden",
       }}
     >
-      {/* Animated Background Gradient Waves */}
       <Box
-        component={motion.div}
-        animate={{
-          backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-        }}
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "linear",
-        }}
         sx={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          background:
-            "linear-gradient(-45deg, #0052D4, #4A90E2, #00BFFF, #1E90FF)",
-          backgroundSize: "400% 400%",
+          background: "#0035A0",
+          overflow: "hidden",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            width: "150%",
+            height: "150%",
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(255,255,255,0.03) 100%)",
+            borderRadius: "50%",
+          },
+          "& .ripple": {
+            position: "absolute",
+            borderRadius: "50%",
+            border: "1px solid rgba(255, 255, 255, 0.05)",
+            pointerEvents: "none",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          },
         }}
-      />
-
-      {/* Animated Overlay Shapes */}
-      <Box
-        component={motion.div}
-        animate={{
-          rotate: [0, 360],
-        }}
-        transition={{
-          duration: 30,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        sx={{
-          position: "absolute",
-          top: "-10%",
-          right: "-10%",
-          width: "40%",
-          height: "40%",
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(74, 144, 226, 0.3) 0%, transparent 70%)",
-          filter: "blur(60px)",
-        }}
-      />
-
-      <Box
-        component={motion.div}
-        animate={{
-          rotate: [360, 0],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        sx={{
-          position: "absolute",
-          bottom: "-10%",
-          left: "-10%",
-          width: "50%",
-          height: "50%",
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(0, 191, 255, 0.3) 0%, transparent 70%)",
-          filter: "blur(60px)",
-        }}
-      />
+      >
+        {[400, 600, 800, 1000, 1200].map((size, i) => (
+          <Box
+            key={i}
+            className="ripple"
+            sx={{
+              width: size,
+              height: size,
+            }}
+          />
+        ))}
+      </Box>
 
       {/* Main Content */}
       <Box
@@ -176,10 +142,11 @@ export default function Login() {
             maxWidth: 450,
             width: "100%",
             mx: 2,
-            borderRadius: 2,
+            borderRadius: "24px",
             overflow: "hidden",
             backdropFilter: "blur(10px)",
             bgcolor: "rgba(255, 255, 255, 0.95)",
+            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
           }}
         >
           <CardContent sx={{ p: 5 }}>
@@ -194,7 +161,18 @@ export default function Login() {
                 stiffness: 200,
                 damping: 15,
               }}
-              sx={{ textAlign: "center", mb: 3 }}
+              sx={{
+                textAlign: "center",
+                mb: 3,
+                cursor: "pointer",
+                display: "inline-block",
+                width: "100%",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                  transition: "transform 0.2s ease-in-out",
+                },
+              }}
+              onClick={() => navigate("/")}
             >
               <motion.img
                 src={logo}
@@ -219,13 +197,11 @@ export default function Login() {
             >
               <Typography
                 variant="h4"
-                fontWeight="700"
+                fontWeight="800"
                 gutterBottom
                 sx={{
-                  background:
-                    "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
+                  color: "#0035A0",
+                  letterSpacing: "-0.02em",
                 }}
               >
                 Welcome Back
@@ -275,7 +251,7 @@ export default function Login() {
                 sx={{
                   mb: 2,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
                   },
                 }}
               />
@@ -310,7 +286,7 @@ export default function Login() {
                 sx={{
                   mb: 3,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
                   },
                 }}
               />
@@ -325,15 +301,15 @@ export default function Login() {
                 size="large"
                 disabled={loading}
                 sx={{
-                  py: 1.5,
-                  borderRadius: 2,
+                  py: 1.8,
+                  borderRadius: "12px",
                   fontSize: "1.1rem",
-                  fontWeight: 600,
-                  background:
-                    "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
+                  fontWeight: 800,
+                  bgcolor: "primary.main",
                   "&:hover": {
-                    background:
-                      "linear-gradient(135deg, #003DA5 0%, #3A7BC8 100%)",
+                    bgcolor: "primary.dark",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 6px 20px rgba(0, 82, 212, 0.4)",
                   },
                 }}
               >
@@ -362,7 +338,7 @@ export default function Login() {
                   sx={{
                     color: "primary.main",
                     textDecoration: "none",
-                    fontWeight: 600,
+                    fontWeight: 700,
                     "&:hover": {
                       textDecoration: "underline",
                     },

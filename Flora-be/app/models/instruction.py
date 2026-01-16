@@ -6,7 +6,6 @@ from datetime import datetime
 
 class InstructionBase(BaseModel):
     text: str = Field(..., min_length=1, max_length=500)
-    difficulty_level: str = Field(..., pattern="^(easy|medium|hard)$")
     phonetic_focus: List[str] = []
 
 

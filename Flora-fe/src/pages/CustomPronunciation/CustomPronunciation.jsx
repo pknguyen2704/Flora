@@ -107,10 +107,6 @@ export default function CustomPronunciation() {
 
       if (response.success) {
         setAssessment(response.data.assessment);
-        showNotification(
-          `Score: ${response.data.assessment.total_score}/100`,
-          "success"
-        );
       }
     } catch (error) {
       console.error("Assessment error:", error);

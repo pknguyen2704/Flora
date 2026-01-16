@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
             id: decoded.sub,
             username: decoded.username,
             role: decoded.role,
+            full_name: decoded.full_name,
           });
         }
       } catch (error) {
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         id: userData.id,
         username: userData.username,
         role: userData.role,
-        fullName: userData.full_name,
+        full_name: userData.full_name,
       };
 
       setUser(userInfo);

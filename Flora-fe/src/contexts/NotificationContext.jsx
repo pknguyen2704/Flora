@@ -33,7 +33,7 @@ export const NotificationProvider = ({ children }) => {
         open={notification.open}
         autoHideDuration={6000}
         onClose={hideNotification}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
           onClose={hideNotification}
