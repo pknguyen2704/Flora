@@ -43,6 +43,7 @@ import {
 } from "@mui/icons-material";
 import userService from "~/services/userService";
 import { useNotification } from "~/contexts/NotificationContext";
+import { formatLocalDate, getRelativeTime } from "~/utils/timeUtils";
 
 const STATS_DRAWER_WIDTH = 600;
 const ROWS_PER_PAGE = 10;
@@ -71,23 +72,6 @@ const getAvatarColor = (name) => {
   return colors[index];
 };
 
-// Helper function to format relative time
-const getRelativeTime = (date) => {
-  if (!date) return "Never";
-  const now = new Date();
-  const past = new Date(date);
-  const diffMs = now - past;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-  const diffMonths = Math.floor(diffDays / 30);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-  if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-  return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
-};
 
 export default function UserManagement() {
   const { showNotification } = useNotification();
@@ -440,7 +424,7 @@ export default function UserManagement() {
             sx={{
               border: "1px solid",
               borderColor: "divider",
-              borderRadius: 3,
+              borderRadius: 2,
               mb: 3,
             }}
           >
@@ -502,16 +486,7 @@ export default function UserManagement() {
                     <TableCell>{getRoleChip(user.role)}</TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        {user.created_at
-                          ? new Date(user.created_at).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              }
-                            )
-                          : "N/A"}
+                        {formatLocalDate(user.created_at)}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -520,15 +495,6 @@ export default function UserManagement() {
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
-                      <Tooltip title="View Insights">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleViewStats(user)}
-                          sx={{ color: "text.secondary" }}
-                        >
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title="Edit User">
                         <IconButton
                           size="small"

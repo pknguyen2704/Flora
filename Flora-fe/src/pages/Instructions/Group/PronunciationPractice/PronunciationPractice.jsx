@@ -36,6 +36,7 @@ import { useNotification } from "~/contexts/NotificationContext";
 import { useSidebar } from "~/contexts/SidebarContext";
 import Appbar from "~/components/AppBar/Appbar";
 import Sidebar from "~/components/Sidebar/Sidebar";
+import Footer from "~/components/Footer/Footer";
 
 const PANEL_WIDTH_EXPANDED = 360;
 const PANEL_WIDTH_COLLAPSED = 80;
@@ -341,9 +342,8 @@ export default function PronunciationPractice() {
                       disablePadding
                       sx={{
                         mb: 1,
-                        animation: `fadeSlideIn 0.3s ease-out ${
-                          index * 0.05
-                        }s both`,
+                        animation: `fadeSlideIn 0.3s ease-out ${index * 0.05
+                          }s both`,
                         "@keyframes fadeSlideIn": {
                           from: { opacity: 0, transform: "translateX(-10px)" },
                           to: { opacity: 1, transform: "translateX(0)" },
@@ -354,7 +354,7 @@ export default function PronunciationPractice() {
                         <ListItemButton
                           onClick={() => handleSelectInstruction(inst)}
                           sx={{
-                            borderRadius: 3,
+                            borderRadius: 2,
                             background: isSelected
                               ? "linear-gradient(135deg, rgba(0,82,212,0.12) 0%, rgba(0,201,255,0.08) 100%)"
                               : "rgba(255,255,255,0.6)",
@@ -414,13 +414,12 @@ export default function PronunciationPractice() {
                                     py: 0.5,
                                     borderRadius: 2,
                                     background: getScoreGradient(score),
-                                    boxShadow: `0 2px 8px ${
-                                      score >= 90
+                                    boxShadow: `0 2px 8px ${score >= 90
                                         ? "rgba(16,185,129,0.3)"
                                         : score >= 70
-                                        ? "rgba(245,158,11,0.3)"
-                                        : "rgba(239,68,68,0.3)"
-                                    }`,
+                                          ? "rgba(245,158,11,0.3)"
+                                          : "rgba(239,68,68,0.3)"
+                                      }`,
                                   }}
                                 >
                                   <EmojiEvents
@@ -517,8 +516,8 @@ export default function PronunciationPractice() {
                                 background: hasScore
                                   ? getScoreGradient(score)
                                   : isSelected
-                                  ? "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)"
-                                  : "linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%)",
+                                    ? "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)"
+                                    : "linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%)",
                                 color:
                                   hasScore || isSelected
                                     ? "white"
@@ -596,7 +595,7 @@ export default function PronunciationPractice() {
                   textAlign: "center",
                   border: "2px dashed",
                   borderColor: "divider",
-                  borderRadius: 4,
+                  borderRadius: 2,
                   bgcolor: "background.paper",
                   maxWidth: 500,
                 }}
@@ -637,7 +636,7 @@ export default function PronunciationPractice() {
                       mb: 3,
                       background: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(10px)",
-                      borderRadius: 4,
+                      borderRadius: 2,
                       border: "1px solid",
                       borderColor: "divider",
                       boxShadow: "0 8px 32px rgba(0, 82, 212, 0.08)",
@@ -670,31 +669,31 @@ export default function PronunciationPractice() {
                             </Typography>
                             {selectedInstruction.user_stats?.best_score !=
                               null && (
-                              <Box
-                                sx={{
-                                  mt: 3,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 1,
-                                  px: 3,
-                                  py: 1.5,
-                                  borderRadius: 3,
-                                  background: getScoreGradient(
-                                    selectedInstruction.user_stats.best_score
-                                  ),
-                                }}
-                              >
-                                <EmojiEvents sx={{ color: "white" }} />
-                                <Typography
-                                  variant="body1"
-                                  sx={{ color: "white", fontWeight: 600 }}
+                                <Box
+                                  sx={{
+                                    mt: 3,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    px: 3,
+                                    py: 1.5,
+                                    borderRadius: 3,
+                                    background: getScoreGradient(
+                                      selectedInstruction.user_stats.best_score
+                                    ),
+                                  }}
                                 >
-                                  Your Best:{" "}
-                                  {selectedInstruction.user_stats.best_score}
-                                  /100
-                                </Typography>
-                              </Box>
-                            )}
+                                  <EmojiEvents sx={{ color: "white" }} />
+                                  <Typography
+                                    variant="body1"
+                                    sx={{ color: "white", fontWeight: 600 }}
+                                  >
+                                    Your Best:{" "}
+                                    {selectedInstruction.user_stats.best_score}
+                                    /100
+                                  </Typography>
+                                </Box>
+                              )}
                           </Box>
 
                           <Box
@@ -798,7 +797,7 @@ export default function PronunciationPractice() {
                             sx={{
                               p: 3,
                               mb: 3,
-                              borderRadius: 3,
+                              borderRadius: 2,
                               background: (theme) =>
                                 `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                               color: "white",
@@ -832,7 +831,7 @@ export default function PronunciationPractice() {
                           sx={{
                             mt: 3,
                             p: 3,
-                            borderRadius: 3,
+                            borderRadius: 2,
                             background:
                               "linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 100%)",
                           }}
@@ -868,7 +867,7 @@ export default function PronunciationPractice() {
                     sx={{
                       background: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(10px)",
-                      borderRadius: 4,
+                      borderRadius: 2,
                       border: "1px solid",
                       borderColor: "divider",
                     }}
@@ -902,17 +901,16 @@ export default function PronunciationPractice() {
                         sx={{
                           mb: 3,
                           p: 3,
-                          borderRadius: 3,
+                          borderRadius: 2,
                           background: getScoreGradient(assessment.total_score),
                           textAlign: "center",
                           color: "white",
-                          boxShadow: `0px 4px 16px ${
-                            assessment.total_score >= 90
+                          boxShadow: `0px 4px 16px ${assessment.total_score >= 90
                               ? "rgba(16, 185, 129, 0.3)"
                               : assessment.total_score >= 70
-                              ? "rgba(245, 158, 11, 0.3)"
-                              : "rgba(239, 68, 68, 0.3)"
-                          }`,
+                                ? "rgba(245, 158, 11, 0.3)"
+                                : "rgba(239, 68, 68, 0.3)"
+                            }`,
                           position: "relative",
                           overflow: "hidden",
                           "&::before": {
@@ -937,17 +935,7 @@ export default function PronunciationPractice() {
                             textShadow: "0px 2px 8px rgba(0,0,0,0.1)",
                           }}
                         >
-                          {assessment.total_score}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            opacity: 0.95,
-                            position: "relative",
-                            fontWeight: 500,
-                          }}
-                        >
-                          out of 100
+                          {assessment.total_score}/100
                         </Typography>
                         <Box sx={{ mt: 2, position: "relative" }}>
                           <LinearProgress
@@ -973,10 +961,10 @@ export default function PronunciationPractice() {
                           }}
                         >
                           {assessment.total_score >= 90
-                            ? "🎉 Excellent!"
+                            ? "Excellent!"
                             : assessment.total_score >= 70
-                            ? "👍 Good Job!"
-                            : "💪 Keep Practicing!"}
+                              ? "Good Job!"
+                              : "Keep Practicing!"}
                         </Typography>
                       </Box>
 
@@ -988,7 +976,7 @@ export default function PronunciationPractice() {
                             p: 3,
                             mb: 3,
                             bgcolor: "#F8FAFC",
-                            borderRadius: 3,
+                            borderRadius: 2,
                             border: "1px solid",
                             borderColor: "divider",
                           }}
@@ -1012,42 +1000,6 @@ export default function PronunciationPractice() {
                             sx={{ lineHeight: 1.6 }}
                           >
                             {assessment.overall_feedback}
-                          </Typography>
-                        </Paper>
-                      )}
-
-                      {/* Transcript */}
-                      {assessment.asr_transcript && (
-                        <Paper
-                          elevation={0}
-                          sx={{
-                            p: 3,
-                            mb: 3,
-                            bgcolor: "#F0F9FF",
-                            borderRadius: 3,
-                            border: "1px solid",
-                            borderColor: "rgba(0, 82, 212, 0.1)",
-                          }}
-                        >
-                          <Typography
-                            variant="subtitle1"
-                            sx={{
-                              fontWeight: 600,
-                              mb: 1,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <RecordVoiceOver sx={{ fontSize: 20 }} />
-                            What we heard
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            color="text.secondary"
-                            sx={{ fontStyle: "italic", fontSize: "1.1rem" }}
-                          >
-                            "{assessment.asr_transcript}"
                           </Typography>
                         </Paper>
                       )}
@@ -1139,8 +1091,10 @@ export default function PronunciationPractice() {
               </Box>
             )}
           </Container>
-        </Box>
-      </Box>
-    </Container>
+        </Box >
+      </Box >
+
+      <Footer />
+    </Container >
   );
 }

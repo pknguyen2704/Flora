@@ -88,7 +88,15 @@ export default function Appbar({
   const isHomePage = location.pathname === "/home";
 
   return (
-    <MuiAppBar position="static">
+    <MuiAppBar
+      position="static"
+      elevation={0}
+      sx={{
+        background: "linear-gradient(135deg, #0052D4 0%, #0035A0 100%)",
+        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+        boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+      }}
+    >
       <Toolbar>
         {/* Sidebar Toggle Button */}
         {onToggleSidebar && (
@@ -169,7 +177,6 @@ export default function Appbar({
           </IconButton>
         </Box>
 
-        {/* Avatar Menu */}
         <Menu
           anchorEl={anchorEl}
           id="account-menu"
@@ -183,52 +190,42 @@ export default function Appbar({
               elevation: 0,
               sx: {
                 overflow: "visible",
-                filter: "drop-shadow(0px 8px 24px rgba(0,0,0,0.15))",
-                width: 200,
-                borderRadius: 1,
-                mt: 1,
-                background:
-                  "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)",
-                backdropFilter: "blur(20px)",
+                filter: "drop-shadow(0px 8px 32px rgba(0,0,0,0.15))",
+                width: 280,
+                borderRadius: "24px", // Explicit 24px for controlled roundness
+                mt: 1.5,
+                background: "#FFFFFF",
                 border: "1px solid",
-                borderColor: "divider",
+                borderColor: "rgba(0,0,0,0.08)",
                 "&::before": {
                   content: '""',
                   display: "block",
                   position: "absolute",
                   top: 0,
-                  right: 20,
+                  right: 24, // Moved slightly left to avoid corner curve
                   width: 12,
                   height: 12,
-                  bgcolor: "background.paper",
+                  bgcolor: "#0052D4", // Match gradient start color
                   transform: "translateY(-50%) rotate(45deg)",
                   zIndex: 0,
-                  borderTop: "1px solid",
-                  borderLeft: "1px solid",
-                  borderColor: "divider",
                 },
               },
             },
+          }}
+          MenuListProps={{
+            disablePadding: true, // Fixes the white gap at the top
           }}
         >
           {/* User Info Header with Gradient */}
           <Box
             sx={{
-              p: 2,
+              p: 3,
+              pb: 3,
               mb: 1,
-              position: "relative",
-              overflow: "hidden",
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background:
-                  "radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, transparent 60%)",
-                pointerEvents: "none",
-              },
+              background: "linear-gradient(135deg, #0052D4 0%, #4364F7 100%)",
+              color: "white",
+              borderTopLeftRadius: "24px", // Match Paper borderRadius
+              borderTopRightRadius: "24px", // Match Paper borderRadius
             }}
           >
             <Box
@@ -242,63 +239,70 @@ export default function Appbar({
             >
               <Avatar
                 sx={{
-                  width: 48,
-                  height: 48,
-                  bgcolor: "white",
-                  color: "primary.main",
-                  fontWeight: "bold",
-                  fontSize: "1.3rem",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  border: "3px solid rgba(255,255,255,0.3)",
+                  width: 56,
+                  height: 56,
+                  bgcolor: "rgba(255,255,255,0.2)",
+                  color: "white",
+                  fontWeight: "700",
+                  fontSize: "1.5rem",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  border: "2px solid rgba(255,255,255,0.4)",
+                  backdropFilter: "blur(4px)",
                 }}
               >
                 {getInitials()}
               </Avatar>
-              <Box>
+              <Box sx={{ overflow: "hidden" }}>
                 <Typography
                   variant="subtitle1"
                   fontWeight="700"
                   sx={{
-                    color: "primary.main",
+                    color: "white",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
-                    textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    fontSize: "1rem",
+                    lineHeight: 1.2,
                   }}
                 >
                   {user?.full_name || user?.username}
                 </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "rgba(255,255,255,0.8)",
+                    display: "block",
+                    mt: 0.5,
+                  }}
+                >
+                  Student
+                </Typography>
               </Box>
             </Box>
           </Box>
-          <Divider sx={{ my: 1 }} />
 
           {/* Menu Items */}
-          <Box sx={{ px: 1, pb: 1 }}>
-            {/* Sign Out */}
+          <Box sx={{ px: 2, pb: 2 }}>
             <MenuItem
               onClick={handleLogout}
               sx={{
-                borderRadius: 2,
+                borderRadius: "16px", // Consistent rounded items
                 px: 2,
-                py: 2,
+                py: 1.5,
                 color: "error.main",
                 transition: "all 0.2s ease",
                 "&:hover": {
-                  bgcolor: "error.main",
-                  color: "white",
-                  transform: "translateX(4px)",
-                  "& .MuiListItemIcon-root": {
-                    color: "white",
-                  },
+                  bgcolor: "error.lighter",
+                  backgroundColor: "rgba(239, 68, 68, 0.08)",
+                  transform: "translateY(-2px)", // Subtle lift instead of slide
+                  boxShadow: "0 4px 12px rgba(239, 68, 68, 0.1)",
                 },
               }}
             >
               <ListItemIcon
                 sx={{
-                  minWidth: 40,
+                  minWidth: 36,
                   color: "error.main",
-                  transition: "color 0.2s ease",
                 }}
               >
                 <LogoutIcon fontSize="small" />
@@ -307,7 +311,7 @@ export default function Appbar({
                 primary="Sign Out"
                 primaryTypographyProps={{
                   fontSize: "0.95rem",
-                  fontWeight: 500,
+                  fontWeight: 600,
                 }}
               />
             </MenuItem>

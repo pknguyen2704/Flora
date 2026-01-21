@@ -89,18 +89,18 @@ const theme = createTheme({
       lineHeight: 1.5,
     },
     button: {
-      fontWeight: 500,
+      fontWeight: 600,
       textTransform: "none",
-      letterSpacing: "0.02em",
+      letterSpacing: "0.01em",
     },
   },
   shape: {
-    borderRadius: 12, // Rounded corners for modern look
+    borderRadius: 16, // Consistent modern radius
   },
   shadows: [
     "none",
     "0px 2px 4px rgba(0, 82, 212, 0.05)",
-    "0px 4px 8px rgba(0, 82, 212, 0.08)",
+    "0px 4px 12px rgba(0, 82, 212, 0.08)", // Soft elevated
     "0px 8px 16px rgba(0, 82, 212, 0.1)",
     "0px 12px 24px rgba(0, 82, 212, 0.12)",
     "0px 16px 32px rgba(0, 82, 212, 0.14)",
@@ -114,49 +114,56 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: "none",
-          fontWeight: 500,
-          borderRadius: 8,
+          fontWeight: 600,
+          borderRadius: 12, // Slightly smaller than cards
           padding: "10px 24px",
           boxShadow: "none",
+          transition: "all 0.2s ease-in-out",
           "&:hover": {
+            transform: "translateY(-1px)",
             boxShadow: "0px 4px 12px rgba(0, 82, 212, 0.15)",
           },
         },
         contained: {
           "&:hover": {
-            boxShadow: "0px 6px 16px rgba(0, 82, 212, 0.2)",
+            boxShadow: "0px 8px 20px rgba(0, 82, 212, 0.25)",
           },
         },
         sizeLarge: {
-          padding: "12px 32px",
-          fontSize: "1rem",
+          padding: "14px 32px",
+          fontSize: "1.05rem",
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: "0px 4px 12px rgba(0, 82, 212, 0.08)",
+          borderRadius: 20, // Extra soft cards
+          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
+          border: "1px solid #F1F5F9",
+          transition: "all 0.3s ease",
           "&:hover": {
-            boxShadow: "0px 8px 24px rgba(0, 82, 212, 0.12)",
+            transform: "translateY(-4px)",
+            boxShadow: "0px 12px 32px rgba(0, 82, 212, 0.12)",
+            borderColor: "rgba(0, 82, 212, 0.3)"
           },
         },
       },
     },
-    MuiAppBar: {
+    MuiPaper: {
       styleOverrides: {
-        root: {
-          backgroundColor: "#0052D4",
-          color: "#FFFFFF",
-          boxShadow: "0px 4px 12px rgba(0, 82, 212, 0.15)",
+        rounded: {
+          borderRadius: 20,
         },
-      },
+        elevation1: {
+            boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
+        }
+      }
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          fontWeight: 500,
+          fontWeight: 600,
           borderRadius: 8,
         },
       },
@@ -165,8 +172,25 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            borderRadius: 8,
+            borderRadius: 12,
+            backgroundColor: "#FFFFFF",
+            transition: "all 0.2s",
+            "&.Mui-focused": {
+                boxShadow: "0px 4px 16px rgba(0, 82, 212, 0.15)",
+                "& fieldset": {
+                    borderWidth: "2px"
+                }
+            }
           },
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          background: "linear-gradient(135deg, #0052D4 0%, #4364F7 100%)",
+          color: "#FFFFFF",
+          boxShadow: "0px 4px 20px rgba(0, 82, 212, 0.2)",
         },
       },
     },

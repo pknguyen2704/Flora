@@ -45,7 +45,7 @@ async def get_user_stats(
             recent_pron_list.append({
                 "instruction_text": text,
                 "score": attempt.get("assessment", {}).get("total_score") if attempt.get("assessment") else None,
-                "created_at": attempt.get("created_at", datetime.utcnow()).isoformat()
+                "created_at": attempt.get("created_at", datetime.utcnow()).isoformat() + "Z"
             })
         
         # Get situation stats
@@ -79,12 +79,136 @@ async def get_user_stats(
                 "group_name": group_name,
                 "score": attempt.get("total_score", 0),
                 "percentage": round(percentage),
-                "submitted_at": submitted_at.isoformat()
+                "submitted_at": submitted_at.isoformat() + "Z"
             })
         
+        
+        # Get per-group high-level stats
+        groups = await db.groups.find().sort("group_number", 1).to_list(length=100)
+        groups_progress = []
+        
+        for group in groups:
+            group_id = group["_id"]
+            
+            # Pronunciation stats for this group
+            inst_count = await db.instructions.count_documents({"group_id": group_id, "is_active": True})
+            
+            # Get detailed pronunciation progress (only attempted ones)
+            # Find all attempts for this user in this group
+            # We need instruction details, so let's do an aggregation
+            pipeline = [
+                {"$match": {"user_id": user_id}},
+                {"$lookup": {
+                    "from": "instructions",
+                    "localField": "instruction_id",
+                    "foreignField": "_id",
+                    "as": "instruction"
+                }},
+                {"$unwind": "$instruction"},
+                {"$match": {"instruction.group_id": group_id}},
+                {"$group": {
+                    "_id": "$instruction_id",
+                    "text": {"$first": "$instruction.text"},
+                    "instruction_number": {"$first": "$instruction.instruction_number"},
+                    "best_score": {"$max": "$assessment.total_score"}
+                }},
+                {"$sort": {"instruction_number": 1}}
+            ]
+            pron_progress_cursor = db.pronunciation_attempts.aggregate(pipeline)
+            pron_progress_list = await pron_progress_cursor.to_list(length=1000)
+            
+            detailed_pronunciation = []
+            mastered_count = 0
+            
+            for p in pron_progress_list:
+                score = p.get("best_score", 0)
+                status = "mastered" if score >= 90 else "practicing"
+                if status == "mastered":
+                    mastered_count += 1
+                
+                detailed_pronunciation.append({
+                    "instruction_number": p["instruction_number"],
+                    "text": p["text"],
+                    "best_score": score,
+                    "status": status
+                })
+
+            # Situation stats for this group
+            sit_count = await db.situations.count_documents({"group_id": group_id, "is_active": True})
+            
+            # Get detailed situation progress
+            # We can use the existing sit_attempts logic but we need situation TITLES.
+            # Efficient way: Get all situations for this group (usually small # per group) map ID -> Title
+            group_situations = await db.situations.find({"group_id": group_id}).to_list(length=100)
+            sit_map = {str(s["_id"]): s["title"] for s in group_situations}
+            sit_number_map = {str(s["_id"]): s["situation_number"] for s in group_situations}
+            
+            sit_attempts = await db.situation_attempts.find({"user_id": user_id, "group_id": group_id}).to_list(length=1000)
+            
+            sit_stats_map = {}
+            encountered_sits = set()
+            
+            for att in sit_attempts:
+                for s in att.get("situations", []):
+                    sid = str(s.get("situation_id"))
+                    encountered_sits.add(sid)
+                    
+                    if sid not in sit_stats_map:
+                         sit_stats_map[sid] = {"perfect": 0, "acceptable": 0, "poor": 0, "total": 0}
+                    
+                    sit_stats_map[sid]["total"] += 1
+                    rating = s.get("rating")
+                    if rating == "best":
+                        sit_stats_map[sid]["perfect"] += 1
+                    elif rating == "acceptable":
+                        sit_stats_map[sid]["acceptable"] += 1
+                    else:
+                        sit_stats_map[sid]["poor"] += 1
+
+            detailed_situations = []
+            for sid, stats in sit_stats_map.items():
+                if sid in sit_map:
+                    detailed_situations.append({
+                        "situation_number": sit_number_map.get(sid, 0),
+                        "title": sit_map[sid],
+                        "times_answered": stats["total"],
+                        "perfect_count": stats["perfect"],
+                        "acceptable_count": stats["acceptable"],
+                        "poor_count": stats["poor"]
+                    })
+            
+            # Sort by situation number
+            detailed_situations.sort(key=lambda x: x["situation_number"])
+
+            groups_progress.append({
+                "group_id": str(group_id),
+                "group_number": group.get("group_number"),
+                "name": group["name"],
+                "description": group.get("description", ""),
+                "color": group.get("color_hex", "#0052D4"),
+                "pronunciation": {
+                    "total": inst_count,
+                    "mastered": mastered_count,
+                    "practiced": len(pron_progress_list),
+                    "instructions": detailed_pronunciation
+                },
+                "situations": {
+                    "total": sit_count,
+                    "encountered": len(encountered_sits),
+                    "situations": detailed_situations
+                }
+            })
+
         return APIResponse(
             success=True,
             data={
+                "learning_summary": {
+                    "total_study_time_minutes": current_user.get("stats", {}).get("total_study_time_minutes", 0),
+                    "total_cups": current_user.get("stats", {}).get("total_cups", 0),
+                    "total_tests": current_user.get("stats", {}).get("total_tests_completed", 0),
+                    "total_lessons": current_user.get("stats", {}).get("total_lessons_completed", 0)
+                },
+                "groups_progress": groups_progress,
                 "pronunciation": {
                     "total_attempts": len(pronunciation_attempts),
                     "average_score": round(sum(pron_scores) / len(pron_scores), 1) if pron_scores else 0,
@@ -101,7 +225,7 @@ async def get_user_stats(
                         [a.get("created_at", datetime.min) if isinstance(a.get("created_at"), datetime) else datetime.min for a in pronunciation_attempts] +
                         [a.get("submitted_at", datetime.min) if isinstance(a.get("submitted_at"), datetime) else datetime.min for a in situation_attempts] +
                         [datetime.min]
-                    ).isoformat() if (pronunciation_attempts or situation_attempts) else None,
+                    ).isoformat() + "Z" if (pronunciation_attempts or situation_attempts) else None,
                     "days_active": len(set([a["created_at"].date() for a in pronunciation_attempts if isinstance(a.get("created_at"), datetime)])) +
                                   len(set([a["submitted_at"].date() for a in situation_attempts if isinstance(a.get("submitted_at"), datetime)]))
                 }

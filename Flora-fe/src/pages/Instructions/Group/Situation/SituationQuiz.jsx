@@ -29,13 +29,23 @@ import {
   Timer,
   Assessment,
 } from "@mui/icons-material";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { situationService } from "~/services/situationService";
 import { useNotification } from "~/contexts/NotificationContext";
 import { useSidebar } from "~/contexts/SidebarContext";
 import Appbar from "~/components/AppBar/Appbar";
 import Sidebar from "~/components/Sidebar/Sidebar";
-
+import Footer from "~/components/Footer/Footer";
+import {
+  containerVariants,
+  itemVariants,
+  scalePopVariants,
+  slideUpVariants,
+  modalVariants,
+  backdropVariants,
+  hoverScale,
+  tapScale
+} from "~/utils/animations";
 function SituationQuiz() {
   const { groupId } = useParams();
   const navigate = useNavigate();
@@ -142,111 +152,178 @@ function SituationQuiz() {
 
   if (results) {
     return (
-      <Container disableGutters maxWidth={false} sx={{ minHeight: "100vh" }}>
-        <Appbar showBack={false} />
-        <Container maxWidth="md" sx={{ py: 4 }}>
-          {/* Results Summary */}
-          <Card
-            component={motion.div}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            elevation={0}
+      <Container
+        disableGutters
+        maxWidth={false}
+        sx={{
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          bgcolor: "background.default",
+          overflow: "hidden",
+        }}
+      >
+        <Appbar
+          showBack={false}
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={toggleSidebar}
+        />
+
+        <Box
+          sx={{
+            display: "flex",
+            flex: 1,
+            height: (theme) => theme.flora.contentHeight,
+            bgcolor: "background.default",
+            overflow: "hidden",
+          }}
+        >
+          <Sidebar collapsed={sidebarCollapsed} />
+
+          <Box
             sx={{
-              mb: 4,
-              textAlign: "center",
-              py: 4,
-              border: "2px solid",
-              borderColor: "primary.main",
-              borderRadius: 4,
-              background: "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)",
-              color: "white",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              overflow: "auto",
+              py: { xs: 4, sm: 6, md: 8 },
             }}
           >
-            <Typography variant="h2" fontWeight="700" gutterBottom>
-              {results.percentage}%
-            </Typography>
-            <Typography variant="h5" gutterBottom>
-              {results.total_score}/{results.max_score} points
-            </Typography>
-            <Box
-              sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "center" }}
-            >
-              <Chip
-                label={`${results.perfect_count} Perfect`}
-                sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
-              />
-              <Chip
-                label={`${results.acceptable_count} Acceptable`}
-                sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
-              />
-              <Chip
-                label={`${results.poor_count} Poor`}
-                sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
-              />
-            </Box>
-          </Card>
-
-          {/* Detailed Results */}
-          {results.results?.map((result, idx) => (
-            <Card
-              key={idx}
-              component={motion.div}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: idx * 0.1 }}
-              sx={{ mb: 2 }}
-              elevation={0}
-            >
-              <CardContent>
+            <Container maxWidth="md">
+              {/* Results Summary */}
+              <Card
+                component={motion.div}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                elevation={0}
+                sx={{
+                  mb: 4,
+                  textAlign: "center",
+                  py: 4,
+                  border: "none",
+                  borderRadius: 2,
+                  background: "linear-gradient(135deg, #0052D4 0%, #00C9FF 100%)",
+                  color: "white",
+                  boxShadow: "0 10px 40px -10px rgba(0, 82, 212, 0.5)",
+                }}
+              >
+                <Typography variant="h2" fontWeight="700" gutterBottom>
+                  {results.percentage}%
+                </Typography>
+                <Typography variant="h5" gutterBottom>
+                  {results.total_score}/{results.max_score} points
+                </Typography>
                 <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+                  sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "center" }}
                 >
-                  <Chip label={`Q${result.question_number}`} color="primary" />
-                  <Typography variant="h6">{result.title}</Typography>
+                  <Chip
+                    label={`${results.perfect_count} Perfect`}
+                    sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
+                  />
+                  <Chip
+                    label={`${results.acceptable_count} Acceptable`}
+                    sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
+                  />
+                  <Chip
+                    label={`${results.poor_count} Poor`}
+                    sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
+                  />
                 </Box>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  {result.description}
-                </Typography>
+              </Card>
 
-                <Alert
-                  severity={result.is_best_choice ? "success" : "warning"}
-                  sx={{ mb: 2 }}
+              {/* Detailed Results */}
+              {results.results?.map((result, idx) => (
+                <Card
+                  key={idx}
+                  component={motion.div}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                  sx={{
+                    mb: 3,
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "rgba(0,0,0,0.08)",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                    overflow: "hidden"
+                  }}
+                  elevation={0}
                 >
-                  <Typography variant="subtitle2">Your answer:</Typography>
-                  <Typography variant="body2">
-                    {result.selected_choice_text}
-                  </Typography>
-                </Alert>
+                  <CardContent sx={{ p: 4 }}>
+                    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 2 }}>
+                      <Chip
+                        label={`Q${result.question_number}`}
+                        sx={{
+                          fontWeight: 700,
+                          bgcolor: result.is_best_choice ? 'success.light' : 'warning.light',
+                          color: result.is_best_choice ? 'success.dark' : 'warning.dark',
+                          borderRadius: 1,
+                          height: 24,
+                          mt: 0.5
+                        }}
+                      />
+                      <Typography variant="h6" fontWeight="600" sx={{ lineHeight: 1.4 }}>
+                        {result.question}
+                      </Typography>
+                    </Box>
 
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  {result.explanation}
-                </Typography>
+                    <Alert
+                      severity={result.is_best_choice ? "success" : "warning"}
+                      variant="outlined"
+                      sx={{ mb: 3, borderRadius: 2, border: '1px solid', borderColor: result.is_best_choice ? 'success.main' : 'warning.main' }}
+                    >
+                      <Typography variant="subtitle2" fontWeight="700" gutterBottom>Your answer:</Typography>
+                      <Typography variant="body1" fontWeight="500">
+                        {result.selected_choice_text}
+                      </Typography>
+                    </Alert>
 
-                {!result.is_best_choice && result.best_choice && (
-                  <Alert severity="info">
-                    <Typography variant="subtitle2">Better choice:</Typography>
-                    <Typography variant="body2">
-                      {result.best_choice.text}
-                    </Typography>
-                    <Typography variant="caption">
-                      {result.best_choice.explanation}
-                    </Typography>
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                    {!result.is_best_choice && result.best_choice && (
+                      <Alert severity="info" variant="filled" sx={{ mb: 3, borderRadius: 2, boxShadow: '0 4px 12px rgba(2, 136, 209, 0.2)' }}>
+                        <Typography variant="subtitle2" fontWeight="700" gutterBottom>Better choice:</Typography>
+                        <Typography variant="body1" fontWeight="500">
+                          {result.best_choice.text}
+                        </Typography>
+                      </Alert>
+                    )}
 
-          <Button
-            variant="contained"
-            fullWidth
-            size="large"
-            onClick={() => navigate(`/group/${groupId}`)}
-            sx={{ mt: 3 }}
-          >
-            Back to Group
-          </Button>
-        </Container>
+                    {/* Detailed Explanation */}
+                    {result.detailed_explanation && (
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          bgcolor: 'grey.50',
+                          borderRadius: 2,
+                          border: '1px dashed',
+                          borderColor: 'divider'
+                        }}
+                      >
+                        <Typography variant="subtitle2" color="primary.main" fontWeight="700" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                          Explanation
+                        </Typography>
+                        <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                          {result.detailed_explanation}
+                        </Typography>
+                      </Paper>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+
+              <Button
+                variant="contained"
+                fullWidth
+                size="large"
+                onClick={() => navigate(`/group/${groupId}`)}
+                sx={{ mt: 3 }}
+              >
+                Back to Group
+              </Button>
+            </Container>
+          </Box>
+        </Box>
       </Container>
     );
   }
@@ -311,7 +388,7 @@ function SituationQuiz() {
                   p: 3,
                   border: "1px solid",
                   borderColor: "divider",
-                  borderRadius: 3,
+                  borderRadius: 2,
                   height: "fit-content",
                   position: "sticky",
                   top: 20,
@@ -356,8 +433,8 @@ function SituationQuiz() {
                             bgcolor: isCurrent
                               ? "primary.main"
                               : isAnsweredQ
-                              ? "success.light"
-                              : "action.hover",
+                                ? "success.light"
+                                : "action.hover",
                             color:
                               isCurrent || isAnsweredQ
                                 ? "white"
@@ -403,8 +480,6 @@ function SituationQuiz() {
                       {Object.keys(answers).length}/{totalQuestions}
                     </Typography>
                   </Box>
-                  <Box>
-                  </Box>
                 </Box>
 
                 {/* Exit Button */}
@@ -429,25 +504,22 @@ function SituationQuiz() {
                     animate={{ x: 0, opacity: 1 }}
                     elevation={0}
                     sx={{
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 3,
+                      border: "none",
+                      boxShadow: "0 8px 32px rgba(0, 82, 212, 0.08)",
+                      background: "rgba(255, 255, 255, 0.95)",
+                      backdropFilter: "blur(10px)",
+                      borderRadius: 2,
                     }}
                   >
                     <CardContent sx={{ p: 4 }}>
                       <Box sx={{ mb: 3 }}>
                         <Chip
-                          label={`Question ${
-                            currentQuestion + 1
-                          } of ${totalQuestions}`}
+                          label={`Question ${currentQuestion + 1} of ${totalQuestions}`}
                           color="primary"
-                          sx={{ mb: 2 }}
+                          sx={{ mb: 2, fontWeight: 600 }}
                         />
-                        <Typography variant="h5" fontWeight="600" gutterBottom>
-                          {question.title}
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                          {question.description}
+                        <Typography variant="h5" fontWeight="600" color="text.primary" gutterBottom>
+                          {question.question}
                         </Typography>
                       </Box>
 
@@ -469,14 +541,23 @@ function SituationQuiz() {
                               border: "2px solid",
                               borderColor:
                                 answers[currentQuestion + 1] ===
-                                choice.choice_id
+                                  choice.choice_id
                                   ? "primary.main"
-                                  : "divider",
-                              borderRadius: 2,
-                              transition: "all 0.2s",
+                                  : "transparent",
+                              borderRadius: 3,
+                              bgcolor:
+                                answers[currentQuestion + 1] === choice.choice_id
+                                  ? "rgba(0, 82, 212, 0.04)"
+                                  : "white",
+                              boxShadow:
+                                answers[currentQuestion + 1] === choice.choice_id
+                                  ? "0 4px 12px rgba(0, 82, 212, 0.15)"
+                                  : "0 2px 8px rgba(0,0,0,0.04)",
+                              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                               "&:hover": {
-                                borderColor: "primary.light",
-                                bgcolor: "action.hover",
+                                borderColor: "primary.main",
+                                transform: "translateY(-2px)",
+                                boxShadow: "0 8px 16px rgba(0,0,0,0.08)",
                               },
                             }}
                           >
@@ -521,15 +602,14 @@ function SituationQuiz() {
                           <Button
                             variant="contained"
                             size="large"
-                            color="success"
+                            color="primary"
                             onClick={handleSubmit}
                             disabled={
                               submitting ||
                               Object.keys(answers).length < totalQuestions
                             }
-                            startIcon={<Assessment />}
                           >
-                            {submitting ? "Submitting..." : "Submit Quiz"}
+                            {submitting ? "Submitting..." : "Submit"}
                           </Button>
                         )}
                       </Box>
@@ -557,6 +637,8 @@ function SituationQuiz() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Footer />
     </Container>
   );
 }

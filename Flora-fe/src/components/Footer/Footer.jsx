@@ -1,55 +1,56 @@
 import React from "react";
-import { Box, Container, Typography, Link } from "@mui/material";
-import { Code, Favorite } from "@mui/icons-material";
+import { Box, Container, Typography, Link, Divider, Stack } from "@mui/material";
+import { GitHub } from "@mui/icons-material";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
     <Box
+      component="footer"
       sx={{
-        display: "flex",
         height: (theme) => theme.flora.footerHeight,
-        justifyContent: "center",
+        bgcolor: "background.paper",
+        borderTop: "1px solid",
+        borderColor: "divider",
+        display: "flex",
         alignItems: "center",
-        gap: 1,
       }}
     >
-      {/* Copyright */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <Typography variant="body2" color="text.secondary">
-          © {currentYear} Flora
-        </Typography>
-      </Box>
+      <Container maxWidth="lg">
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={2}
+          divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />}
+        >
+          {/* Copyright */}
+          <Typography variant="body2" color="text.secondary">
+            © {currentYear} Flora. All rights reserved.
+          </Typography>
 
-      {/* Developer Credit */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-        }}
-      >
-        <Code sx={{ fontSize: 16, color: "primary.main" }} />
-        <Typography variant="body2" color="text.secondary">
-          Developed by{" "}
-          <Link
-            href="https://github.com/pknguyen2704"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              color: "primary.main",
-              textDecoration: "none",
-              fontWeight: 600,
-              "&:hover": {
-                textDecoration: "underline",
-              },
-            }}
-          >
-            Andrew Phung
-          </Link>
-        </Typography>
-      </Box>
+          {/* Developer */}
+          <Typography variant="body2" color="text.secondary">
+            Developed by{" "}
+            <Link
+              href="https://github.com/pknguyen2704"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                color: "primary.main",
+                textDecoration: "none",
+                fontWeight: 600,
+                "&:hover": {
+                  textDecoration: "underline",
+                },
+              }}
+            >
+              Andrew Phung
+            </Link>
+          </Typography>
+        </Stack>
+      </Container>
     </Box>
   );
 }

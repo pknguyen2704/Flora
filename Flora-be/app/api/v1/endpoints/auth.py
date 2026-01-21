@@ -7,7 +7,7 @@ from app.core.security import verify_password, create_access_token, create_refre
 from app.core.config import settings
 from app.core.dependencies import get_current_user
 from app.models.user import UserResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -56,7 +56,7 @@ async def login(
     # Update last login
     await db.users.update_one(
         {"_id": user["_id"]},
-        {"$set": {"last_login": datetime.utcnow()}}
+        {"$set": {"last_login": datetime.now(timezone.utc)}}
     )
     
     # Prepare user response
@@ -68,7 +68,7 @@ async def login(
         role=user["role"],
         is_active=user["is_active"],
         created_at=user["created_at"],
-        last_login=datetime.utcnow(),
+        last_login=datetime.now(timezone.utc),
         stats=user.get("stats", {})
     )
     

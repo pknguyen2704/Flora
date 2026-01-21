@@ -1,34 +1,54 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Box, Card, CardContent, Grid, Typography } from "@mui/material";
 import {
-  Mic as MicIcon,
-  TrendingUp as TrendingUpIcon,
-  Quiz as QuizIcon,
+  Box,
+  Card,
+  CardContent,
+  CardActionArea,
+  Grid,
+  Typography,
+  LinearProgress,
+  Chip,
+  Stack,
+  Divider,
+} from "@mui/material";
+import {
+  Mic,
+  QuestionAnswer,
+  Star
 } from "@mui/icons-material";
+import {
+  containerVariants,
+  itemVariants,
+  hoverScale,
+  tapScale
+} from "~/utils/animations";
 
 function Overview({ stats }) {
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
+  const navigate = useNavigate();
+  const groupsProgress = stats?.groups_progress || [];
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    },
+  const handleGroupClick = (groupId) => {
+    // Find the group data
+    const sourceGroup = groupsProgress.find(g => (g.group_id || g._id) === groupId);
+
+    if (!sourceGroup) return;
+
+    // Map Overview data structure to Group.jsx expected structure
+    const group = {
+      id: sourceGroup.group_id || sourceGroup._id,
+      group_id: sourceGroup.group_id || sourceGroup._id,
+      name: sourceGroup.name,
+      description: sourceGroup.description || '',
+      color_hex: sourceGroup.color || '#0052D4',
+      group_number: sourceGroup.group_number || sourceGroup.group_id,
+      instruction_count: sourceGroup.pronunciation?.total || 0,
+      situation_count: sourceGroup.situations?.total || 0,
+    };
+
+    // Navigate with group data to avoid re-fetching
+    navigate(`/group/${groupId}`, { state: { group } });
   };
 
   return (
@@ -37,170 +57,95 @@ function Overview({ stats }) {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
+      sx={{ width: "100%" }}
     >
-      {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4}>
-          <Card
-            component={motion.div}
-            variants={itemVariants}
-            whileHover={{ scale: 1.03, y: -4 }}
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              height: "100%",
-              background: (theme) =>
-                `linear-gradient(135deg, ${theme.palette.primary.main}15 0%, ${theme.palette.primary.light}15 100%)`,
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              "&:hover": {
-                borderColor: "primary.main",
-                boxShadow: (theme) =>
-                  `0 12px 24px ${theme.palette.primary.main}20`,
-              },
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Box
+      <Grid container spacing={4}>
+
+        {/* GROUP PROGRESS SECTION */}
+        <Grid item xs={12}>
+          <Typography variant="h6" fontWeight="700" gutterBottom sx={{ mb: 2 }}>
+            Overview
+          </Typography>
+          <Grid container spacing={3} justifyContent="center">
+            {groupsProgress.map((group) => (
+              <Grid item xs={12} sm={6} md={4} key={group.group_id}>
+                <Card
+                  component={motion.div}
+                  variants={itemVariants}
+                  whileHover={hoverScale}
+                  whileTap={tapScale}
+                  elevation={0}
+                  onClick={() => handleGroupClick(group.group_id || group._id)}
                   sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    background: (theme) =>
-                      `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
+                    // borderRadius: 2, // Use theme default (which is now 16px/20px)
+                    border: "1px solid",
+                    borderColor: "divider",
+                    height: '100%',
+                    width: '400px',
+                    transition: "all 0.2s",
+                    cursor: 'pointer',
+                    // Hover shadow handled by theme override
                   }}
                 >
-                  <MicIcon />
-                </Box>
-              </Box>
-              <Typography
-                variant="h4"
-                fontWeight="700"
-                color="primary.main"
-                gutterBottom
-              >
-                {stats?.pronunciation?.total_attempts || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Pronunciation Attempts
-              </Typography>
-            </CardContent>
-          </Card>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: group.color || 'primary.main', mr: 1 }} />
+                      <Typography variant="subtitle1" fontWeight="700" noWrap>
+                        {group.name}
+                      </Typography>
+                    </Box>
+
+                    {/* Pronunciation Progress Bar */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Mic sx={{ fontSize: 16, color: 'text.secondary' }} />
+                          <Typography variant="caption" color="text.secondary">Pronunciation</Typography>
+                        </Box>
+                        <Typography variant="caption" fontWeight="600">
+                          {group.pronunciation.practiced || 0}/{group.pronunciation.total}
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={group.pronunciation.total > 0 ? ((group.pronunciation.practiced || 0) / group.pronunciation.total) * 100 : 0}
+                        sx={{ height: 6, borderRadius: 3, bgcolor: 'grey.100', '& .MuiLinearProgress-bar': { bgcolor: group.color } }}
+                      />
+                    </Box>
+
+                    {/* Situation Progress Bar */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <QuestionAnswer sx={{ fontSize: 16, color: 'text.secondary' }} />
+                          <Typography variant="caption" color="text.secondary">Situations</Typography>
+                        </Box>
+                        <Typography variant="caption" fontWeight="600">
+                          {group.situations.encountered}/{group.situations.total}
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={group.situations.total > 0 ? (group.situations.encountered / group.situations.total) * 100 : 0}
+                        sx={{ height: 6, borderRadius: 3, bgcolor: 'grey.100', '& .MuiLinearProgress-bar': { bgcolor: group.color } }}
+                      />
+                    </Box>
+
+                    {/* INLINE DETAILS (Only shown if items exist) */}
+
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+            {groupsProgress.length === 0 && (
+              <Grid item xs={12}>
+                <Typography variant="body2" color="text.secondary">No group data available.</Typography>
+              </Grid>
+            )}
+          </Grid>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
-          <Card
-            component={motion.div}
-            variants={itemVariants}
-            whileHover={{ scale: 1.03, y: -4 }}
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              height: "100%",
-              background: (theme) =>
-                `linear-gradient(135deg, ${theme.palette.success.main}15 0%, ${theme.palette.success.light}15 100%)`,
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              "&:hover": {
-                borderColor: "success.main",
-                boxShadow: (theme) =>
-                  `0 12px 24px ${theme.palette.success.main}20`,
-              },
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    background: (theme) =>
-                      `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.light} 100%)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                  }}
-                >
-                  <TrendingUpIcon />
-                </Box>
-              </Box>
-              <Typography
-                variant="h4"
-                fontWeight="700"
-                color="success.main"
-                gutterBottom
-              >
-                {stats?.pronunciation?.average_score || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Average Score
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
-          <Card
-            component={motion.div}
-            variants={itemVariants}
-            whileHover={{ scale: 1.03, y: -4 }}
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              height: "100%",
-              background: (theme) =>
-                `linear-gradient(135deg, ${theme.palette.secondary.main}15 0%, ${theme.palette.secondary.light}15 100%)`,
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              "&:hover": {
-                borderColor: "secondary.main",
-                boxShadow: (theme) =>
-                  `0 12px 24px ${theme.palette.secondary.main}20`,
-              },
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    background: (theme) =>
-                      `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.light} 100%)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                  }}
-                >
-                  <QuizIcon />
-                </Box>
-              </Box>
-              <Typography
-                variant="h4"
-                fontWeight="700"
-                color="secondary.main"
-                gutterBottom
-              >
-                {stats?.situations?.total_quizzes || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Quizzes Completed
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
     </Box>
   );

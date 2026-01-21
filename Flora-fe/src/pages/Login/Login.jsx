@@ -139,17 +139,17 @@ export default function Login() {
           }}
           elevation={24}
           sx={{
-            maxWidth: 450,
+            maxWidth: { xs: '100%', sm: 450 },
             width: "100%",
-            mx: 2,
-            borderRadius: "24px",
+            mx: { xs: 1, sm: 2 },
+            borderRadius: { xs: '16px', sm: '24px' },
             overflow: "hidden",
             backdropFilter: "blur(10px)",
             bgcolor: "rgba(255, 255, 255, 0.95)",
             boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
           }}
         >
-          <CardContent sx={{ p: 5 }}>
+          <CardContent sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
             {/* Logo */}
             <Box
               component={motion.div}
@@ -200,6 +200,7 @@ export default function Login() {
                 fontWeight="800"
                 gutterBottom
                 sx={{
+                  fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
                   color: "#0035A0",
                   letterSpacing: "-0.02em",
                 }}
@@ -266,6 +267,7 @@ export default function Login() {
                 margin="normal"
                 required
                 disabled={loading}
+                autoComplete="current-password"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -275,8 +277,11 @@ export default function Login() {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
+                        aria-label="toggle password visibility"
                         onClick={() => setShowPassword(!showPassword)}
+                        onMouseDown={(e) => e.preventDefault()}
                         edge="end"
+                        size="small"
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
@@ -287,6 +292,19 @@ export default function Login() {
                   mb: 3,
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "12px",
+                  },
+                  // Hide browser-injected password reveal buttons
+                  "& input::-ms-reveal": {
+                    display: "none",
+                  },
+                  "& input::-ms-clear": {
+                    display: "none",
+                  },
+                  "& input::-webkit-textfield-decoration-container": {
+                    visibility: "hidden",
+                  },
+                  "& input::-webkit-credentials-auto-fill-button": {
+                    visibility: "hidden",
                   },
                 }}
               />

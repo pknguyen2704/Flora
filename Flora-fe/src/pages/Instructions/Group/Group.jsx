@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Container,
   Box,
@@ -23,31 +23,36 @@ import Footer from "~/components/Footer/Footer";
 export default function GroupDetail() {
   const { id: groupId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showNotification } = useNotification();
 
   const { collapsed: sidebarCollapsed, toggleSidebar } = useSidebar();
 
-  const [group, setGroup] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Try to get group from navigation state first
+  const [group, setGroup] = useState(location.state?.group || null);
+  const [loading, setLoading] = useState(!location.state?.group);
 
   useEffect(() => {
-    const loadGroup = async () => {
-      try {
-        const response = await groupService.getById(groupId);
-        if (response.success) {
-          setGroup(response.data);
+    // Only fetch if we don't have group data from navigation state
+    if (!group) {
+      const loadGroup = async () => {
+        try {
+          const response = await groupService.getById(groupId);
+          if (response.success) {
+            setGroup(response.data);
+          }
+        } catch {
+          showNotification("Failed to load group", "error");
+        } finally {
+          setLoading(false);
         }
-      } catch {
-        showNotification("Failed to load group", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    if (groupId) {
-      loadGroup();
+      if (groupId) {
+        loadGroup();
+      }
     }
-  }, [groupId, showNotification]);
+  }, [groupId, showNotification, group]);
 
   if (loading) {
     return (
@@ -145,6 +150,7 @@ export default function GroupDetail() {
                 fontWeight="700"
                 gutterBottom
                 sx={{
+                  fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
                   background: `linear-gradient(135deg, ${group.color_hex} 0%, ${group.color_hex}99 100%)`,
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
@@ -155,7 +161,11 @@ export default function GroupDetail() {
               <Typography
                 variant="h6"
                 color="text.secondary"
-                sx={{ maxWidth: 700, mx: "auto", fontWeight: 400 }}
+                sx={{
+                  fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                  maxWidth: { xs: '100%', sm: 600 },
+                  textAlign: "center"
+                }}
               >
                 {group.description}
               </Typography>
@@ -179,7 +189,7 @@ export default function GroupDetail() {
                   width: "40%",
                   border: "1px solid",
                   borderColor: "divider",
-                  borderRadius: 4,
+                  borderRadius: 2,
                   overflow: "hidden",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
@@ -230,8 +240,7 @@ export default function GroupDetail() {
                       color="text.secondary"
                       sx={{ mb: 3, flex: 1 }}
                     >
-                      Practice {group.instruction_count} classroom instructions
-                      with AI-powered feedback
+                      Practice classroom instructions with AI-powered feedback
                     </Typography>
 
                     {/* Stats */}
@@ -271,7 +280,7 @@ export default function GroupDetail() {
                   width: "40%",
                   border: "1px solid",
                   borderColor: "divider",
-                  borderRadius: 4,
+                  borderRadius: 2,
                   overflow: "hidden",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
@@ -320,8 +329,7 @@ export default function GroupDetail() {
                       color="text.secondary"
                       sx={{ mb: 3, flex: 1 }}
                     >
-                      Test your knowledge with {group.situation_count} classroom
-                      scenarios
+                      Test your knowledge with classroom scenarios
                     </Typography>
 
                     {/* Stats */}
@@ -353,11 +361,11 @@ export default function GroupDetail() {
                 </CardActionArea>
               </Card>
             </Box>
-          </Container>
-        </Box>
-      </Box>
+          </Container >
+        </Box >
+      </Box >
 
-      <Footer/>
-    </Container>
+      <Footer />
+    </Container >
   );
 }

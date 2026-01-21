@@ -8,6 +8,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Divider,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useNotification } from "~/contexts/NotificationContext";
@@ -79,34 +80,47 @@ export default function Home() {
             flexDirection: "column",
             alignItems: "center",
             overflow: "auto",
-            py: { xs: 4, sm: 6, md: 8 },
+            // py: { xs: 4, sm: 6, md: 8 },
+            px: { xs: 4, sm: 8, md: 16 },
           }}
         >
-          <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 4, md: 6 } }}>
-            {loading ? (
+          {loading ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "400px",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              {/* Header Grid: Welcome + Custom Practice */}
               <Box
                 sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  minHeight: "400px",
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  py: { xs: 3, sm: 4, md: 6 },
+                  gap: { xs: 2, sm: 3, md: 4 },
+                  flexWrap: 'wrap'
                 }}
               >
-                <CircularProgress />
-              </Box>
-            ) : (
-              <>
-                {/* Welcome Header */}
+                {/* Welcome Message */}
                 <Box
                   component={motion.div}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  sx={{ mb: 4, textAlign: "center" }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  sx={{ flex: 1, minWidth: { xs: '200px', sm: '300px' } }}
                 >
                   <Typography
                     variant="h4"
                     fontWeight="700"
                     sx={{
+                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
                       mb: 1,
                       background: (theme) =>
                         `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
@@ -114,144 +128,78 @@ export default function Home() {
                       WebkitTextFillColor: "transparent",
                     }}
                   >
-                    Welcome back, {user?.full_name}
+                    Hello, {user?.full_name}
                   </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    Track your learning progress and continue your journey
+                  <Typography
+                    variant="h6"
+                    color="text.secondary"
+                    sx={{
+                      fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                      mx: "auto"
+                    }}
+                  >
+                    Track your learning progress and continue your journey!
                   </Typography>
                 </Box>
 
-                <Overview stats={stats} />
-
-                {/* Featured Card - Custom Pronunciation */}
+                {/* Custom Practice Button */}
                 <Card
                   component={motion.div}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  whileHover={{
-                    scale: 1.01,
-                    y: -4,
-                  }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   elevation={0}
                   sx={{
-                    mb: 4,
                     background: (theme) =>
-                      `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 50%, ${theme.palette.secondary.main} 100%)`,
+                      `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
                     color: "white",
-                    borderRadius: 4,
-                    position: "relative",
+                    borderRadius: 2, // 32px
                     overflow: "hidden",
-                    boxShadow: (theme) =>
-                      `0 20px 40px ${theme.palette.primary.main}30`,
+                    // boxShadow: (theme) => `0 10px 20px ${theme.palette.primary.main}30`, // Let theme handle shadow
+                    minWidth: '280px'
                   }}
                 >
                   <CardActionArea
                     onClick={() => navigate("/instruction/custom")}
-                    sx={{ p: 4 }}
+                    sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}
                   >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                      <Box
-                        sx={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: 3,
-                          background: "rgba(255,255,255,0.2)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "2rem",
-                          backdropFilter: "blur(10px)",
-                          border: "1px solid rgba(255,255,255,0.3)",
-                        }}
-                      >
-                        <MicIcon />
-                      </Box>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="h5" fontWeight="700" gutterBottom>
-                          Custom Instructions Practice
-                        </Typography>
-                        <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                          Enter any instruction and get instant AI-powered
-                          feedback
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <ArrowCircleRightIcon
-                          sx={{ color: "white", fontSize: "2rem" }}
-                        />
-                      </Box>
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%", // Circle
+                        background: "rgba(255,255,255,0.2)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backdropFilter: "blur(4px)",
+                      }}
+                    >
+                      <MicIcon fontSize="medium" />
                     </Box>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight="700" lineHeight={1.2}>
+                        Custom Instructions
+                      </Typography>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                        Practice any instruction
+                      </Typography>
+                    </Box>
+                    <ArrowCircleRightIcon sx={{ ml: 'auto', opacity: 0.8 }} />
                   </CardActionArea>
                 </Card>
+              </Box>
 
-                {/* Recent Activity */}
-                {stats?.pronunciation?.recent_attempts?.length > 0 && (
-                  <Card
-                    component={motion.div}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    elevation={0}
-                    sx={{
-                      borderRadius: 3,
-                      border: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <CardContent sx={{ p: 3 }}>
-                      <Typography variant="h6" fontWeight="700" gutterBottom>
-                        Recent Practice Sessions
-                      </Typography>
-                      <Box sx={{ mt: 2 }}>
-                        {stats.pronunciation.recent_attempts
-                          .slice(0, 5)
-                          .map((attempt, idx) => (
-                            <Box
-                              key={idx}
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                py: 2,
-                                borderBottom:
-                                  idx <
-                                  stats.pronunciation.recent_attempts.slice(
-                                    0,
-                                    5
-                                  ).length -
-                                    1
-                                    ? "1px solid"
-                                    : "none",
-                                borderColor: "divider",
-                              }}
-                            >
-                              <Typography variant="body2" sx={{ flex: 1 }}>
-                                {attempt.instruction_text}
-                              </Typography>
-                              <Chip
-                                label={attempt.score}
-                                size="small"
-                                sx={{
-                                  fontWeight: 700,
-                                  background: (theme) =>
-                                    attempt.score >= 90
-                                      ? theme.palette.success.main
-                                      : attempt.score >= 70
-                                      ? theme.palette.warning.main
-                                      : theme.palette.error.main,
-                                  color: "white",
-                                }}
-                              />
-                            </Box>
-                          ))}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            )}
-          </Container>
+              <Divider sx={{ mb: 4, width: "100%" }} />
+
+              <Overview stats={stats} />
+
+
+
+            </>
+          )}
         </Box>
       </Box>
 

@@ -6,7 +6,7 @@ from app.core.dependencies import get_current_user
 from app.schemas.auth import APIResponse
 from typing import Dict, Any, List
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 import random
 import string
 
@@ -49,7 +49,7 @@ async def start_quiz(
                 "question_number": i,
                 "situation_id": str(sit["_id"]),
                 "title": sit["title"],
-                "description": sit["description"],
+                "question": sit["question"],
                 "choices": [
                     {
                         "choice_id": choice["choice_id"],
@@ -66,7 +66,7 @@ async def start_quiz(
                 "group_id": group_id,
                 "group_name": group["name"] if group else "",
                 "questions": questions,
-                "started_at": datetime.utcnow().isoformat()
+                "started_at": datetime.utcnow().isoformat() + "Z"
             }
         )
         
@@ -149,17 +149,16 @@ async def submit_quiz(
                 "question_number": len(results) + 1,
                 "situation_id": situation_id,
                 "title": situation["title"],
-                "description": situation["description"],
+                "question": situation["question"],
                 "selected_choice_id": selected_choice_id,
                 "selected_choice_text": selected_choice["text"],
                 "is_best_choice": is_best_choice,
                 "rating": rating,
                 "score": score,
-                "explanation": selected_choice["explanation"],
+                "detailed_explanation": situation.get("detailed_explanation"),
                 "best_choice": {
                     "choice_id": best_choice["choice_id"] if best_choice else "",
-                    "text": best_choice["text"] if best_choice else "",
-                    "explanation": best_choice["explanation"] if best_choice else ""
+                    "text": best_choice["text"] if best_choice else ""
                 } if not is_best_choice and best_choice else None,
                 "time_spent_seconds": time_spent
             })
@@ -188,8 +187,8 @@ async def submit_quiz(
             "perfect_count": perfect_count,
             "acceptable_count": acceptable_count,
             "poor_count": poor_count,
-            "started_at": datetime.utcnow(),  # Should come from client
-            "submitted_at": datetime.utcnow(),
+            "started_at": datetime.now(timezone.utc),  # Should come from client
++            "submitted_at": datetime.now(timezone.utc),
             "total_time_seconds": sum(answer.get("time_spent_seconds", 0) for answer in answers)
         }
         
@@ -200,7 +199,7 @@ async def submit_quiz(
             {"_id": ObjectId(current_user["_id"])},
             {
                 "$inc": {"stats.total_situation_attempts": 1},
-                "$set": {"updated_at": datetime.utcnow()}
+                "$set": {"updated_at": datetime.now(timezone.utc)}
             }
         )
         
@@ -215,7 +214,7 @@ async def submit_quiz(
                 "acceptable_count": acceptable_count,
                 "poor_count": poor_count,
                 "results": results,
-                "submitted_at": datetime.utcnow().isoformat()
+                "submitted_at": datetime.utcnow().isoformat() + "Z"
             }
         )
         

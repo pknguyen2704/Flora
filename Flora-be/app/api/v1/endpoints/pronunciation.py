@@ -44,7 +44,7 @@ async def get_instructions(
                     "attempts_count": len(attempts),
                     "best_score": max(scores) if scores else None,
                     "worst_score": min(scores) if scores else None,
-                    "last_attempt_date": max(a["created_at"] for a in attempts).isoformat()
+                    "last_attempt_date": max(a["created_at"] for a in attempts).isoformat() + "Z"
                 }
             else:
                 inst["user_stats"] = {
@@ -169,7 +169,7 @@ async def assess_pronunciation(
             "audio_duration_seconds": 0,  # Placeholder
             "assessment": assessment_result,
             "attempt_number": attempt_count,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
             "session_id": session_id
         }
         
@@ -181,7 +181,7 @@ async def assess_pronunciation(
             {"_id": ObjectId(current_user["_id"])},
             {
                 "$inc": {"stats.total_pronunciation_attempts": 1},
-                "$set": {"updated_at": datetime.utcnow()}
+                "$set": {"updated_at": datetime.now(timezone.utc)}
             }
         )
         

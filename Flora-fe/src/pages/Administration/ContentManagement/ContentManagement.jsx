@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -7,7 +7,6 @@ import {
   Grid,
   Card,
   CardContent,
-  CardActions,
   IconButton,
   Chip,
   Dialog,
@@ -23,32 +22,70 @@ import {
   Breadcrumbs,
   Link,
   Divider,
+  Tabs,
+  Tab,
+  Tooltip,
+  useTheme,
+  alpha,
+  Avatar,
+  InputAdornment,
 } from "@mui/material";
 import {
   Add,
   Edit,
   Delete,
-  School,
   RecordVoiceOver,
   Quiz,
   ArrowBack,
   ChevronRight,
+  Search,
+  MoreVert,
+  Settings,
+  ContentCopy,
+  DragIndicator,
+  CheckCircle,
+  HelpOutline,
+  KeyboardArrowRight,
+  Class,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import userService from "~/services/userService";
 import { useNotification } from "~/contexts/NotificationContext";
 
+// Glassmorphism Component
+const GlassPaper = ({ children, sx = {}, ...props }) => {
+  const theme = useTheme();
+  return (
+    <Paper
+      {...props}
+      sx={{
+        background: alpha(theme.palette.background.paper, 0.7),
+        backdropFilter: "blur(12px)",
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        borderRadius: 2,
+        boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.05)}`,
+        ...sx,
+      }}
+    >
+      {children}
+    </Paper>
+  );
+};
+
 export default function ContentManagement() {
+  const theme = useTheme();
   const { showNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [activeTab, setActiveTab] = useState(0); // 0: Instructions, 1: Situations
 
   const [instructions, setInstructions] = useState([]);
   const [situations, setSituations] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState(""); // 'group', 'instruction', 'situation'
+  const [dialogType, setDialogType] = useState("");
   const [editItem, setEditItem] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -59,12 +96,14 @@ export default function ContentManagement() {
     text: "",
     instruction_number: "",
     group_id: "",
-    title: "",
+    question: "",
     situation_number: "",
+    best_choice_id: "A",
+    detailed_explanation: "",
     choices: [
-      { choice_id: "A", text: "", rating: "best", explanation: "" },
-      { choice_id: "B", text: "", rating: "acceptable", explanation: "" },
-      { choice_id: "C", text: "", rating: "not_recommended", explanation: "" },
+      { choice_id: "A", text: "", rating: "best" },
+      { choice_id: "B", text: "", rating: "acceptable" },
+      { choice_id: "C", text: "", rating: "acceptable" },
     ],
   });
 
@@ -72,7 +111,7 @@ export default function ContentManagement() {
     setLoading(true);
     try {
       const gRes = await userService.getGroups();
-      setGroups(gRes.data.groups);
+      setGroups(gRes.data.groups || []);
     } catch (error) {
       console.error("Fetch groups error:", error);
       showNotification("Failed to fetch groups", "error");
@@ -86,10 +125,10 @@ export default function ContentManagement() {
       setLoading(true);
       try {
         const iRes = await userService.getAdminInstructions(groupId);
-        setInstructions(iRes.data);
+        setInstructions(iRes.data || []);
 
         const sRes = await userService.getAdminSituations(groupId);
-        setSituations(sRes.data);
+        setSituations(sRes.data || []);
       } catch (error) {
         console.error("Fetch details error:", error);
         showNotification("Failed to fetch group content", "error");
@@ -113,6 +152,7 @@ export default function ContentManagement() {
     setSelectedGroup(null);
     setInstructions([]);
     setSituations([]);
+    setActiveTab(0);
     fetchGroups();
   };
 
@@ -124,6 +164,8 @@ export default function ContentManagement() {
       setFormData({
         ...formData,
         ...item,
+        best_choice_id: item.best_choice_id || "A",
+        detailed_explanation: item.detailed_explanation || "",
         choices: item.choices || formData.choices,
       });
     } else {
@@ -134,18 +176,15 @@ export default function ContentManagement() {
         color_hex: "#2196F3",
         text: "",
         instruction_number: instructions.length + 1,
-        group_id: selectedGroup?.id || groups[0]?.id || "",
-        title: "",
+        group_id: selectedGroup?.id || "",
+        question: "",
         situation_number: situations.length + 1,
+        best_choice_id: "A",
+        detailed_explanation: "",
         choices: [
-          { choice_id: "A", text: "", rating: "best", explanation: "" },
-          { choice_id: "B", text: "", rating: "acceptable", explanation: "" },
-          {
-            choice_id: "C",
-            text: "",
-            rating: "not_recommended",
-            explanation: "",
-          },
+          { choice_id: "A", text: "", rating: "best" },
+          { choice_id: "B", text: "", rating: "acceptable" },
+          { choice_id: "C", text: "", rating: "acceptable" },
         ],
       });
     }
@@ -164,23 +203,22 @@ export default function ContentManagement() {
         else await userService.createGroup(formData);
         fetchGroups();
       } else if (dialogType === "instruction") {
-        if (editItem)
-          await userService.updateInstruction(editItem.id, formData);
-        else await userService.createInstruction(formData);
+        const payload = { ...formData, group_id: selectedGroup.id };
+        if (editItem) await userService.updateInstruction(editItem.id, payload);
+        else await userService.createInstruction(payload);
         fetchGroupDetails(selectedGroup.id);
       } else if (dialogType === "situation") {
-        const payload = { ...formData, description: formData.title };
+        const payload = {
+          ...formData,
+          group_id: selectedGroup.id,
+          title: formData.question // Backward compatibility if needed
+        };
         if (editItem) await userService.updateSituation(editItem.id, payload);
         else await userService.createSituation(payload);
         fetchGroupDetails(selectedGroup.id);
       }
 
-      showNotification(
-        `${
-          dialogType.charAt(0).toUpperCase() + dialogType.slice(1)
-        } saved successfully`,
-        "success"
-      );
+      showNotification("Saved successfully", "success");
       handleCloseDialog();
     } catch (error) {
       console.error("Save error:", error);
@@ -189,635 +227,463 @@ export default function ContentManagement() {
   };
 
   const handleDelete = async (type, id) => {
-    if (!window.confirm(`Are you sure you want to delete this ${type}?`))
-      return;
+    if (!window.confirm(`Delete this ${type}? This action cannot be undone.`)) return;
     try {
-      if (type === "group") {
-        await userService.deleteGroup(id);
-        fetchGroups();
-      } else if (type === "instruction") {
-        await userService.deleteInstruction(id);
-        fetchGroupDetails(selectedGroup.id);
-      } else if (type === "situation") {
-        await userService.deleteSituation(id);
-        fetchGroupDetails(selectedGroup.id);
-      }
-      showNotification(
-        `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`,
-        "success"
-      );
+      if (type === "group") await userService.deleteGroup(id);
+      else if (type === "instruction") await userService.deleteInstruction(id);
+      else if (type === "situation") await userService.deleteSituation(id);
+
+      showNotification("Deleted successfully", "success");
+      if (type === "group") fetchGroups();
+      else fetchGroupDetails(selectedGroup.id);
     } catch (error) {
       showNotification(`Failed to delete ${type}`, "error");
     }
   };
 
+  const filteredInstructions = useMemo(() => {
+    return instructions.filter(i =>
+      i.text.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [instructions, searchTerm]);
+
+  const filteredSituations = useMemo(() => {
+    return situations.filter(s =>
+      s.question.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [situations, searchTerm]);
+
   return (
-    <Box sx={{ p: 4 }}>
-      {/* Breadcrumbs / Header */}
-      <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
-        {selectedGroup && (
-          <IconButton onClick={handleBackToGroups} sx={{ mr: 1 }}>
-            <ArrowBack />
-          </IconButton>
-        )}
+    <Box sx={{ p: { xs: 2, md: 4 }, minHeight: "100vh", bgcolor: alpha(theme.palette.background.default, 0.4) }}>
+      {/* Header Section */}
+      <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <Box>
-          <Breadcrumbs separator={<ChevronRight fontSize="small" />}>
+          <Breadcrumbs separator={<ChevronRight sx={{ opacity: 0.5 }} fontSize="small" />}>
             <Link
               component="button"
               underline="hover"
-              color={selectedGroup ? "text.secondary" : "text.primary"}
+              color={selectedGroup ? "text.secondary" : "primary"}
               onClick={handleBackToGroups}
-              sx={{
-                fontWeight: selectedGroup ? 500 : 700,
-                fontSize: "1.5rem",
-                border: "none",
-                background: "none",
-                p: 0,
-                cursor: "pointer",
-              }}
+              sx={{ fontWeight: selectedGroup ? 500 : 800, fontSize: "1rem", border: "none", background: "none", p: 0, cursor: "pointer" }}
             >
-              Groups
+              Content CMS
             </Link>
             {selectedGroup && (
-              <Typography
-                color="text.primary"
-                sx={{ fontWeight: 700, fontSize: "1.5rem" }}
-              >
+              <Typography color="text.primary" sx={{ fontWeight: 800, fontSize: "1rem" }}>
                 {selectedGroup.name}
               </Typography>
             )}
           </Breadcrumbs>
-          <Typography variant="body2" color="text.secondary">
-            {selectedGroup
-              ? `Manage instructions and situations for ${selectedGroup.name}`
-              : "Manage training groups and their contents"}
+          <Typography variant="h4" fontWeight="900" sx={{ mt: 1, background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            {selectedGroup ? selectedGroup.name : "Platform Curriculum"}
           </Typography>
         </Box>
+
+        {!selectedGroup && (
+          <Button
+            variant="contained"
+            disableElevation
+            startIcon={<Add />}
+            onClick={() => handleOpenDialog("group")}
+            sx={{ borderRadius: 2, px: 3, py: 1.2, fontWeight: 700, textTransform: "none" }}
+          >
+            Create New Group
+          </Button>
+        )}
       </Box>
 
-      {loading && !selectedGroup ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <AnimatePresence mode="wait">
-          {!selectedGroup ? (
-            <motion.div
-              key="groups-list"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-            >
-              <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => handleOpenDialog("group")}
-                >
-                  Add Group
-                </Button>
-              </Box>
-              <Grid container spacing={3}>
-                {groups.map((group) => (
-                  <Grid item xs={12} sm={6} md={4} key={group.id}>
-                    <Card
-                      elevation={0}
-                      sx={{
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: 3,
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                        "&:hover": {
-                          borderColor: group.color_hex,
-                          boxShadow: `0 8px 24px ${group.color_hex}25`,
-                          transform: "translateY(-4px)",
-                        },
-                      }}
-                      onClick={() => handleGroupClick(group)}
-                    >
-                      <CardContent>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            mb: 2,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: 2,
-                              bgcolor: group.color_hex,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "white",
-                              fontWeight: "bold",
-                              fontSize: "1.2rem",
-                            }}
-                          >
-                            {group.group_number}
-                          </Box>
-                          <Box>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenDialog("group", group);
-                              }}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete("group", group.id);
-                              }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                        <Typography variant="h6" fontWeight="700" gutterBottom>
-                          {group.name}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            mb: 2,
-                            minHeight: "3em",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {group.description || "No description provided."}
-                        </Typography>
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                          <Chip
-                            label={`${group.instruction_count || 0} Inst.`}
-                            size="small"
-                            variant="outlined"
-                            icon={<RecordVoiceOver fontSize="small" />}
-                          />
-                          <Chip
-                            label={`${group.situation_count || 0} Situ.`}
-                            size="small"
-                            variant="outlined"
-                            icon={<Quiz fontSize="small" />}
-                          />
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="group-detail"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <Grid container spacing={4}>
-                {/* Instructions Section */}
-                <Grid item xs={12} md={6}>
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 3, borderRadius: 3, bgcolor: "background.paper" }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mb: 3,
-                      }}
-                    >
-                      <Typography variant="h6" fontWeight="700">
-                        Instructions
-                      </Typography>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        startIcon={<Add />}
-                        onClick={() => handleOpenDialog("instruction")}
-                      >
-                        Add
-                      </Button>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-                    >
-                      {loading ? (
-                        <CircularProgress size={24} sx={{ m: "auto", py: 4 }} />
-                      ) : (
-                        instructions.map((inst) => (
-                          <Card
-                            key={inst.id}
-                            variant="outlined"
-                            sx={{ borderRadius: 2 }}
-                          >
-                            <CardContent sx={{ py: "12px !important" }}>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 2,
-                                }}
-                              >
-                                <Typography
-                                  variant="subtitle2"
-                                  color="primary"
-                                  fontWeight="700"
-                                >
-                                  #{inst.instruction_number}
-                                </Typography>
-                                <Typography variant="body2" sx={{ flex: 1 }}>
-                                  {inst.text}
-                                </Typography>
-                                <Box sx={{ display: "flex" }}>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                      handleOpenDialog("instruction", inst)
-                                    }
-                                  >
-                                    <Edit fontSize="small" />
-                                  </IconButton>
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() =>
-                                      handleDelete("instruction", inst.id)
-                                    }
-                                  >
-                                    <Delete fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              </Box>
-                            </CardContent>
-                          </Card>
-                        ))
-                      )}
-                      {!loading && instructions.length === 0 && (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          align="center"
-                          sx={{ py: 4 }}
-                        >
-                          No instructions in this group.
-                        </Typography>
-                      )}
-                    </Box>
-                  </Paper>
-                </Grid>
-
-                {/* Situations Section */}
-                <Grid item xs={12} md={6}>
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 3, borderRadius: 3, bgcolor: "background.paper" }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mb: 3,
-                      }}
-                    >
-                      <Typography variant="h6" fontWeight="700">
-                        Situations
-                      </Typography>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        startIcon={<Add />}
-                        onClick={() => handleOpenDialog("situation")}
-                      >
-                        Add
-                      </Button>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-                    >
-                      {loading ? (
-                        <CircularProgress size={24} sx={{ m: "auto", py: 4 }} />
-                      ) : (
-                        situations.map((sit) => (
-                          <Card
-                            key={sit.id}
-                            variant="outlined"
-                            sx={{ borderRadius: 2 }}
-                          >
-                            <CardContent sx={{ py: "12px !important" }}>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 2,
-                                }}
-                              >
-                                <Typography
-                                  variant="subtitle2"
-                                  color="secondary"
-                                  fontWeight="700"
-                                >
-                                  #{sit.situation_number}
-                                </Typography>
-                                <Box sx={{ flex: 1 }}>
-                                  <Typography variant="body2" fontWeight="600">
-                                    {sit.title}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    display="block"
-                                    noWrap
-                                    sx={{ maxWidth: 200 }}
-                                  >
-                                    {sit.description}
-                                  </Typography>
-                                </Box>
-                                <Box sx={{ display: "flex" }}>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                      handleOpenDialog("situation", sit)
-                                    }
-                                  >
-                                    <Edit fontSize="small" />
-                                  </IconButton>
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() =>
-                                      handleDelete("situation", sit.id)
-                                    }
-                                  >
-                                    <Delete fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              </Box>
-                            </CardContent>
-                          </Card>
-                        ))
-                      )}
-                      {!loading && situations.length === 0 && (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          align="center"
-                          sx={{ py: 4 }}
-                        >
-                          No situations in this group.
-                        </Typography>
-                      )}
-                    </Box>
-                  </Paper>
-                </Grid>
-              </Grid>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
-
-      {/* Add/Edit Dialog */}
-      <AnimatePresence>
-        {dialogOpen && (
-          <Dialog
-            open={dialogOpen}
-            onClose={handleCloseDialog}
-            maxWidth="md"
-            fullWidth
+      <AnimatePresence mode="wait">
+        {!selectedGroup ? (
+          <motion.div
+            key="groups-list"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
           >
-            <DialogTitle sx={{ fontWeight: 800 }}>
-              {editItem ? "Edit" : "Add"}{" "}
-              {dialogType.charAt(0).toUpperCase() + dialogType.slice(1)}
-            </DialogTitle>
-            <DialogContent dividers>
-              <Box
-                sx={{ pt: 1, display: "flex", flexDirection: "column", gap: 3 }}
-              >
-                {dialogType === "group" && (
-                  <>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={8}>
-                        <TextField
-                          label="Group Name"
-                          fullWidth
-                          value={formData.name || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, name: e.target.value })
-                          }
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <TextField
-                          label="Group Number"
-                          type="number"
-                          fullWidth
-                          value={formData.group_number || ""}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              group_number: parseInt(e.target.value) || "",
-                            })
-                          }
-                        />
-                      </Grid>
-                    </Grid>
-                    <TextField
-                      label="Description"
-                      fullWidth
-                      multiline
-                      rows={2}
-                      value={formData.description || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                    <TextField
-                      label="Color (Hex)"
-                      placeholder="#FF6B6B"
-                      fullWidth
-                      value={formData.color_hex || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, color_hex: e.target.value })
-                      }
-                    />
-                  </>
-                )}
-                {dialogType === "instruction" && (
-                  <>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={4}>
-                        <TextField
-                          label="Instruction Number"
-                          type="number"
-                          fullWidth
-                          value={formData.instruction_number || ""}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              instruction_number:
-                                parseInt(e.target.value) || "",
-                            })
-                          }
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={8}>
-                        <TextField
-                          label="Group"
-                          fullWidth
-                          disabled
-                          value={selectedGroup?.name || "No group selected"}
-                        />
-                      </Grid>
-                    </Grid>
-                    <TextField
-                      label="Instruction Text"
-                      fullWidth
-                      multiline
-                      rows={3}
-                      value={formData.text || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, text: e.target.value })
-                      }
-                    />
-                  </>
-                )}
-                {dialogType === "situation" && (
-                  <>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={4}>
-                        <TextField
-                          label="Situation Number"
-                          type="number"
-                          fullWidth
-                          value={formData.situation_number || ""}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              situation_number: parseInt(e.target.value) || "",
-                            })
-                          }
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={8}>
-                        <TextField
-                          label="Group"
-                          fullWidth
-                          disabled
-                          value={selectedGroup?.name || "No group selected"}
-                        />
-                      </Grid>
-                    </Grid>
-                    <TextField
-                      label="Title / Description"
-                      fullWidth
-                      value={formData.title || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, title: e.target.value })
-                      }
-                    />
-                    <Typography variant="subtitle2" fontWeight="700">
-                      Quiz Choices
-                    </Typography>
-                    {formData.choices?.map((choice, index) => (
-                      <Paper
-                        key={choice.choice_id}
-                        variant="outlined"
+            <Grid container spacing={3}>
+              {groups.map((group, index) => (
+                <Grid item xs={12} sm={6} lg={4} key={group.id}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <GlassPaper
+                      sx={{
+                        p: 0,
+                        overflow: "hidden",
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        "&:hover": {
+                          transform: "translateY(-8px)",
+                          boxShadow: `0 20px 40px ${alpha(group.color_hex || "#000", 0.15)}`,
+                          borderColor: group.color_hex,
+                        }
+                      }}
+                    >
+                      <Box
                         sx={{
-                          p: 2,
+                          height: 80,
+                          bgcolor: alpha(group.color_hex || "#000", 0.1),
                           display: "flex",
-                          flexDirection: "column",
-                          gap: 2,
-                          bgcolor: "action.hover",
+                          alignItems: "center",
+                          px: 3,
+                          position: "relative",
+                          overflow: "hidden"
                         }}
                       >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Typography variant="body2" fontWeight="800">
-                            Choice {choice.choice_id}
-                          </Typography>
-                          <FormControl size="small" sx={{ width: 150 }}>
-                            <Select
-                              value={choice.rating || "best"}
-                              onChange={(e) => {
-                                const newChoices = [...formData.choices];
-                                newChoices[index].rating = e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  choices: newChoices,
-                                });
-                              }}
-                            >
-                              <MenuItem value="best">Best</MenuItem>
-                              <MenuItem value="acceptable">Acceptable</MenuItem>
-                              <MenuItem value="not_recommended">
-                                Not Recommended
-                              </MenuItem>
-                            </Select>
-                          </FormControl>
+                        <Box sx={{ position: "absolute", right: -20, top: -20, opacity: 0.1 }}>
+                          <Class sx={{ fontSize: 120, color: group.color_hex }} />
                         </Box>
-                        <TextField
-                          label="Text"
-                          fullWidth
-                          size="small"
-                          value={choice.text || ""}
-                          onChange={(e) => {
-                            const newChoices = [...formData.choices];
-                            newChoices[index].text = e.target.value;
-                            setFormData({ ...formData, choices: newChoices });
-                          }}
-                        />
-                        <TextField
-                          label="Feedback Explanation"
-                          fullWidth
-                          size="small"
-                          multiline
-                          rows={2}
-                          value={choice.explanation || ""}
-                          onChange={(e) => {
-                            const newChoices = [...formData.choices];
-                            newChoices[index].explanation = e.target.value;
-                            setFormData({ ...formData, choices: newChoices });
-                          }}
-                        />
-                      </Paper>
-                    ))}
-                  </>
-                )}
+                        <Avatar sx={{ bgcolor: group.color_hex, fontWeight: 900, boxShadow: 3 }}>
+                          {group.group_number}
+                        </Avatar>
+                        <Box sx={{ ml: 2, flex: 1 }}>
+                          <Typography variant="h6" fontWeight="800" noWrap>
+                            {group.name}
+                          </Typography>
+                        </Box>
+                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenDialog("group", group); }}>
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Box>
+
+                      <Box sx={{ p: 3 }} onClick={() => handleGroupClick(group)} style={{ cursor: "pointer" }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3, minHeight: 40, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                          {group.description || "No curriculum description available."}
+                        </Typography>
+
+                        <Divider sx={{ mb: 2, borderStyle: "dashed" }} />
+
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <Box sx={{ display: "flex", gap: 1 }}>
+                            <Tooltip title="Pronunciation Exercises">
+                              <Chip size="small" icon={<RecordVoiceOver fontSize="small" />} label={group.instruction_count || 0} sx={{ fontWeight: 700, bgcolor: alpha(theme.palette.primary.main, 0.05) }} />
+                            </Tooltip>
+                            <Tooltip title="Quiz Situations">
+                              <Chip size="small" icon={<Quiz fontSize="small" />} label={group.situation_count || 0} sx={{ fontWeight: 700, bgcolor: alpha(theme.palette.secondary.main, 0.05) }} />
+                            </Tooltip>
+                          </Box>
+                          <KeyboardArrowRight color="action" />
+                        </Box>
+                      </Box>
+                    </GlassPaper>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="group-detail"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+          >
+            <GlassPaper sx={{ p: 0, mb: 4 }}>
+              <Box sx={{ px: 3, pt: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Tabs
+                  value={activeTab}
+                  onChange={(_, val) => setActiveTab(val)}
+                  sx={{
+                    "& .MuiTabs-indicator": { height: 3, borderRadius: "3px 3px 0 0" }
+                  }}
+                >
+                  <Tab icon={<RecordVoiceOver />} label="Pronunciation" iconPosition="start" sx={{ fontWeight: 700, px: 3 }} />
+                  <Tab icon={<Quiz />} label="Quiz Situations" iconPosition="start" sx={{ fontWeight: 700, px: 3 }} />
+                </Tabs>
+
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                  <TextField
+                    size="small"
+                    placeholder="Quick search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    sx={{ width: 250 }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search fontSize="small" sx={{ opacity: 0.5 }} />
+                        </InputAdornment>
+                      ),
+                      sx: { borderRadius: 3, bgcolor: alpha(theme.palette.background.default, 0.5) }
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => handleOpenDialog(activeTab === 0 ? "instruction" : "situation")}
+                    sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none" }}
+                  >
+                    Add {activeTab === 0 ? "Instruction" : "Situation"}
+                  </Button>
+                </Box>
               </Box>
-            </DialogContent>
-            <DialogActions sx={{ p: 3 }}>
-              <Button onClick={handleCloseDialog}>Cancel</Button>
-              <Button variant="contained" onClick={handleSave}>
-                {editItem ? "Update" : "Save"}{" "}
-                {dialogType.charAt(0).toUpperCase() + dialogType.slice(1)}
-              </Button>
-            </DialogActions>
-          </Dialog>
+              <Divider />
+
+              <Box sx={{ p: 4, minHeight: 400 }}>
+                <AnimatePresence mode="wait">
+                  {activeTab === 0 ? (
+                    <motion.div key="inst-list" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+                      <Grid container spacing={2}>
+                        {filteredInstructions.map((inst, idx) => (
+                          <Grid item xs={12} sm={6} lg={4} key={inst.id}>
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }}>
+                              <Paper
+                                variant="outlined"
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  transition: 'background 0.2s',
+                                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.02), borderColor: theme.palette.primary.main }
+                                }}
+                              >
+                                <Typography variant="subtitle2" sx={{ width: 40, color: 'primary.main', fontWeight: 900 }}>
+                                  #{inst.instruction_number}
+                                </Typography>
+                                <Typography variant="body1" sx={{ flex: 1, fontWeight: 500 }}>
+                                  {inst.text}
+                                </Typography>
+                                <Box sx={{ display: "flex", gap: 1 }}>
+                                  <IconButton size="small" onClick={() => handleOpenDialog("instruction", inst)}>
+                                    <Edit fontSize="small" />
+                                  </IconButton>
+                                  <IconButton size="small" color="error" onClick={() => handleDelete("instruction", inst.id)}>
+                                    <Delete fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              </Paper>
+                            </motion.div>
+                          </Grid>
+                        ))}
+                        {filteredInstructions.length === 0 && (
+                          <Box sx={{ m: "auto", textAlign: "center", py: 8, width: "100%" }}>
+                            <RecordVoiceOver sx={{ fontSize: 60, opacity: 0.1, mb: 2 }} />
+                            <Typography color="text.secondary">No pronunciation instructions found.</Typography>
+                          </Box>
+                        )}
+                      </Grid>
+                    </motion.div>
+                  ) : (
+                    <motion.div key="sit-list" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                      <Grid container spacing={3}>
+                        {filteredSituations.map((sit, idx) => (
+                          <Grid item xs={12} sm={6} lg={4} key={sit.id}>
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+                              <Paper
+                                variant="outlined"
+                                sx={{
+                                  p: 3,
+                                  borderRadius: 2,
+                                  height: "100%",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  transition: 'all 0.2s',
+                                  '&:hover': { borderColor: theme.palette.secondary.main, boxShadow: theme.shadows[2] }
+                                }}
+                              >
+                                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                                  <Chip label={`#${sit.situation_number}`} size="small" color="secondary" sx={{ fontWeight: 900 }} />
+                                  <Box>
+                                    <IconButton size="small" onClick={() => handleOpenDialog("situation", sit)}>
+                                      <Edit fontSize="small" />
+                                    </IconButton>
+                                    <IconButton size="small" color="error" onClick={() => handleDelete("situation", sit.id)}>
+                                      <Delete fontSize="small" />
+                                    </IconButton>
+                                  </Box>
+                                </Box>
+                                <Typography variant="h6" fontWeight="800" gutterBottom>
+                                  {sit.question}
+                                </Typography>
+                                <Box sx={{ mt: 'auto', pt: 2 }}>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                    <CheckCircle sx={{ fontSize: 14, color: "success.main" }} />
+                                    Best: {sit.choices?.find(c => c.choice_id === sit.best_choice_id)?.text || "Not set"}
+                                  </Typography>
+                                </Box>
+                              </Paper>
+                            </motion.div>
+                          </Grid>
+                        ))}
+                        {filteredSituations.length === 0 && (
+                          <Box sx={{ m: "auto", textAlign: "center", py: 8, width: "100%" }}>
+                            <Quiz sx={{ fontSize: 60, opacity: 0.1, mb: 2 }} />
+                            <Typography color="text.secondary">No quiz situations found.</Typography>
+                          </Box>
+                        )}
+                      </Grid>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Box>
+            </GlassPaper>
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modern Dialog Structure */}
+      <Dialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 2, p: 1 }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 900, px: 3, pt: 3 }}>
+          {editItem ? "Refine" : "Create"}{" "}
+          {dialogType.charAt(0).toUpperCase() + dialogType.slice(1)}
+        </DialogTitle>
+        <DialogContent sx={{ px: 3 }}>
+          <Box sx={{ pt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
+            {dialogType === "group" && (
+              <>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={8}>
+                    <TextField
+                      label="Curriculum Name"
+                      fullWidth
+                      variant="filled"
+                      value={formData.name || ""}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      label="Sequence #"
+                      type="number"
+                      fullWidth
+                      variant="filled"
+                      value={formData.group_number || ""}
+                      onChange={(e) => setFormData({ ...formData, group_number: parseInt(e.target.value) || "" })}
+                    />
+                  </Grid>
+                </Grid>
+                <TextField
+                  label="Description"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="filled"
+                  value={formData.description || ""}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <TextField
+                    label="Accent Color (Hex)"
+                    placeholder="#2196F3"
+                    fullWidth
+                    variant="filled"
+                    value={formData.color_hex || ""}
+                    onChange={(e) => setFormData({ ...formData, color_hex: e.target.value })}
+                  />
+                </Box>
+              </>
+            )}
+
+            {dialogType === "instruction" && (
+              <>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={4}>
+                    <TextField label="Exercise #" type="number" fullWidth variant="filled" value={formData.instruction_number || ""} onChange={(e) => setFormData({ ...formData, instruction_number: parseInt(e.target.value) || "" })} />
+                  </Grid>
+                  <Grid item xs={12} sm={8}>
+                    <TextField label="Parent Group" fullWidth disabled value={selectedGroup?.name || ""} variant="filled"/>
+                  </Grid>
+                </Grid>
+                <TextField
+                  label="Phrasal Instruction Content"
+                  fullWidth
+                  multiline
+                  rows={4}
+                  variant="filled"
+                  placeholder="e.g., Please open your book to page..."
+                  value={formData.text || ""}
+                  onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                  InputProps={{ sx: { fontSize: '1.2rem', fontWeight: 500 } }}
+                />
+              </>
+            )}
+
+            {dialogType === "situation" && (
+              <>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={4}>
+                    <TextField label="Scene #" type="number" fullWidth variant="filled" value={formData.situation_number || ""} onChange={(e) => setFormData({ ...formData, situation_number: parseInt(e.target.value) || "" })} />
+                  </Grid>
+                  <Grid item xs={12} sm={8}>
+                    <TextField
+                      label="Best Response Strategy"
+                      select
+                      fullWidth
+                      variant="filled"
+                      value={formData.best_choice_id || "A"}
+                      onChange={(e) => setFormData({ ...formData, best_choice_id: e.target.value })}
+                    >
+                      <MenuItem value="A">Choice A (Default)</MenuItem>
+                      <MenuItem value="B">Choice B</MenuItem>
+                      <MenuItem value="C">Choice C</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+                <TextField
+                  label="What is the classroom situation?"
+                  fullWidth
+                  variant="filled"
+                  placeholder="The class is noisy while you are explaining..."
+                  value={formData.question || ""}
+                  onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+                />
+
+                <Typography variant="overline" color="text.secondary" sx={{ mt: 1 }}>Intervention Options</Typography>
+                <Grid container spacing={2}>
+                  {formData.choices?.map((choice, index) => (
+                    <Grid item xs={12} key={choice.choice_id}>
+                      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: formData.best_choice_id === choice.choice_id ? alpha(theme.palette.success.main, 0.05) : "transparent" }}>
+                        <Box sx={{ display: "flex", gap: 2, alignItems: 'center' }}>
+                          <Avatar sx={{ width: 32, height: 32, fontSize: 14, fontWeight: 900, bgcolor: formData.best_choice_id === choice.choice_id ? "success.main" : "grey.200" }}>{choice.choice_id}</Avatar>
+                          <TextField
+                            placeholder={`Response ${choice.choice_id}...`}
+                            fullWidth
+                            size="small"
+                            value={choice.text || ""}
+                            onChange={(e) => {
+                              const newChoices = [...formData.choices];
+                              newChoices[index].text = e.target.value;
+                              setFormData({ ...formData, choices: newChoices });
+                            }}
+                          />
+                        </Box>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <TextField
+                  label="Educational Rationale (Detailed Explanation)"
+                  fullWidth
+                  multiline
+                  rows={4}
+                  variant="outlined"
+                  placeholder="Explain why the best choice is most appropriate for a teacher in this context..."
+                  value={formData.detailed_explanation || ""}
+                  onChange={(e) => setFormData({ ...formData, detailed_explanation: e.target.value })}
+                  sx={{ mt: 2 }}
+                />
+              </>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={handleCloseDialog} sx={{ fontWeight: 700, color: 'text.secondary' }}>Cancel</Button>
+          <Button variant="contained" disableElevation onClick={handleSave} sx={{ borderRadius: 2, px: 4, fontWeight: 900 }}>
+            Commit Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

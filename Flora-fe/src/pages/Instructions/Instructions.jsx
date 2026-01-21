@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Container,
   Box,
@@ -18,6 +18,14 @@ import { groupService } from "~/services/groupService";
 import Sidebar from "~/components/Sidebar/Sidebar";
 import Appbar from "~/components/AppBar/Appbar";
 import Footer from "~/components/Footer/Footer";
+import {
+  containerVariants,
+  itemVariants,
+  pageVariants,
+  pageTransition,
+  hoverScale,
+  tapScale
+} from "~/utils/animations";
 
 export default function Groups() {
   const navigate = useNavigate();
@@ -56,30 +64,10 @@ export default function Groups() {
   };
 
   const handleGroupClick = (groupId) => {
-    navigate(`/group/${groupId}`);
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    },
+    // Find the group data
+    const group = groups.find(g => (g.id || g._id) === groupId);
+    // Navigate with group data to avoid re-fetching
+    navigate(`/group/${groupId}`, { state: { group } });
   };
 
   return (
@@ -153,7 +141,7 @@ export default function Groups() {
                   <CircularProgress size={48} />
                 </Box>
               ) : error ? (
-                <Alert severity="error" sx={{ borderRadius: 3 }}>
+                <Alert severity="error" sx={{ borderRadius: 2 }}>
                   {error}
                 </Alert>
               ) : (
@@ -184,21 +172,19 @@ export default function Groups() {
                     >
                       <Card
                         component={motion.div}
-                        whileHover={{
-                          y: -8,
-                          transition: { duration: 0.3 },
-                        }}
+                        whileHover={hoverScale}
+                        whileTap={tapScale}
                         elevation={0}
                         sx={{
                           height: "100%",
-                          borderRadius: 4,
+                          borderRadius: 2, // Use theme default
                           border: "1px solid",
                           borderColor: "divider",
                           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                           overflow: "hidden",
                           "&:hover": {
                             borderColor: group.color_hex,
-                            boxShadow: (theme) => theme.shadows[8],
+                            // boxShadow: (theme) => theme.shadows[8],
                           },
                         }}
                       >

@@ -85,27 +85,27 @@ function Introduction() {
 
   const team = [
     {
-      name: "Phuc Nguyen",
+      name: "Khuất Thị Thủy Chi",
       role: "Leader",
-      faculty: "TESOL & Applied Linguistics",
-      university: "University Example",
-      email: "phucnguyen@example.com",
+      faculty: "Faculty of English",
+      university: "Hanoi National University of Education",
+      email: "khuatchi04@gmail.com",
       avatar: null,
     },
     {
-      name: "Andrew Le",
+      name: "Tô Linh Hương",
       role: "Member",
-      faculty: "Computer Science",
-      university: "Tech University",
-      email: "andrewle@example.com",
+      faculty: "Faculty of English",
+      university: "Hanoi National University of Education",
+      email: "tolinhhuong25082004@gmail.com",
       avatar: null,
     },
     {
-      name: "Member Name",
+      name: "Nguyễn Thị Mỹ Tâm",
       role: "Member",
-      faculty: "Faculty Name",
-      university: "University Name",
-      email: "member@example.com",
+      faculty: "Faculty of English",
+      university: "Hanoi National University of Education",
+      email: "mytam@gmail.com",
       avatar: null,
     },
   ];
@@ -145,6 +145,12 @@ function Introduction() {
       maxWidth={false}
       sx={{
         minHeight: "100vh",
+        width: "100%",
+        maxWidth: "100vw",
+        overflow: "hidden",
+        overflowX: "hidden",
+        m: 0,
+        p: 0,
       }}
     >
       {/* Navigation Header */}
@@ -165,13 +171,15 @@ function Introduction() {
           <Toolbar
             sx={{
               justifyContent: "space-between",
-              bgcolor: "rgba(2, 21, 58, 0.9)", // Deep navy blue instead of charcoal
-              backdropFilter: "blur(25px)",
+              background: "linear-gradient(135deg, rgba(0, 82, 212, 0.85) 0%, rgba(0, 53, 160, 0.85) 100%)",
+              backdropFilter: "blur(20px)",
               borderRadius: "50px",
               px: { xs: 2, md: 4 },
-              border: "1px solid rgba(255, 255, 255, 0.15)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
               transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: scrolled ? "0 12px 40px rgba(0, 0, 0, 0.3)" : "none",
+              boxShadow: scrolled
+                ? "0 10px 40px rgba(0, 53, 160, 0.25)"
+                : "0 8px 32px rgba(0, 0, 0, 0.1)",
               mt: 2, // Fixed margin to prevent jumping
             }}
           >
@@ -201,96 +209,93 @@ function Introduction() {
               </Box>
             </Box>
 
-            <Stack direction="row" spacing={0.5}>
-              <Button
-                color="inherit"
-                onClick={() => scrollToSection("hero")}
+            {/* Right Side: Navigation Links + Get Started Button */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, justifyContent: 'flex-end' }}>
+              {/* Navigation Links */}
+              <Stack
+                direction="row"
+                spacing={4}
                 sx={{
-                  fontWeight: 600,
-                  px: 2,
-                  borderRadius: "20px",
-                  bgcolor:
-                    activeSection === "hero" ? "primary.main" : "transparent",
-                  color: "white",
-                  "&:hover": {
-                    bgcolor:
-                      activeSection === "hero"
-                        ? "primary.dark"
-                        : "rgba(255,255,255,0.1)",
-                  },
-                  boxShadow:
-                    activeSection === "hero"
-                      ? "0 4px 12px rgba(0, 123, 255, 0.4)"
-                      : "none",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  justifyContent: "center",
+                  display: { xs: 'none', md: 'flex' },
                 }}
               >
-                Home
-              </Button>
-              <Button
-                color="inherit"
-                onClick={() => scrollToSection("features")}
-                sx={{
-                  fontWeight: 600,
-                  px: 2,
-                  borderRadius: "20px",
-                  bgcolor:
-                    activeSection === "features"
-                      ? "primary.main"
-                      : "transparent",
-                  color: "white",
-                  "&:hover": {
-                    bgcolor:
-                      activeSection === "features"
-                        ? "primary.dark"
-                        : "rgba(255,255,255,0.1)",
-                  },
-                  boxShadow:
-                    activeSection === "features"
-                      ? "0 4px 12px rgba(0, 123, 255, 0.4)"
-                      : "none",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-              >
-                Features
-              </Button>
-              <Button
-                color="inherit"
-                onClick={() => scrollToSection("team")}
-                sx={{
-                  fontWeight: 600,
-                  px: 2,
-                  borderRadius: "20px",
-                  bgcolor:
-                    activeSection === "team" ? "primary.main" : "transparent",
-                  color: "white",
-                  "&:hover": {
-                    bgcolor:
-                      activeSection === "team"
-                        ? "primary.dark"
-                        : "rgba(255,255,255,0.1)",
-                  },
-                  boxShadow:
-                    activeSection === "team"
-                      ? "0 4px 12px rgba(0, 123, 255, 0.4)"
-                      : "none",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-              >
-                Our team
-              </Button>
+                <Button
+                  color="inherit"
+                  onClick={() =>
+                    document
+                      .getElementById("hero")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    textTransform: "none",
+                    px: 2,
+                    borderRadius: "20px",
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.15)",
+                    },
+                  }}
+                >
+                  Home
+                </Button>
+                <Button
+                  color="inherit"
+                  onClick={() =>
+                    document
+                      .getElementById("features")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    textTransform: "none",
+                    px: 2,
+                    borderRadius: "20px",
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.15)",
+                    },
+                  }}
+                >
+                  Features
+                </Button>
+                <Button
+                  color="inherit"
+                  onClick={() =>
+                    document
+                      .getElementById("team")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    textTransform: "none",
+                    px: 2,
+                    borderRadius: "20px",
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.15)",
+                    },
+                  }}
+                >
+                  Our team
+                </Button>
+              </Stack>
+
+              {/* Get Started Button */}
               <Button
                 variant="contained"
                 onClick={() => navigate("/login")}
                 sx={{
-                  ml: 2,
-                  borderRadius: "50px",
                   bgcolor: "white",
-                  color: "primary.main",
-                  px: 3,
-                  fontWeight: 800,
+                  color: "#0035A0",
+                  px: { xs: 2, md: 4 },
+                  py: 1,
+                  borderRadius: "25px",
+                  fontWeight: 700,
+                  fontSize: { xs: "0.875rem", md: "1rem" },
                   textTransform: "none",
-                  boxShadow: "0 4px 14px rgba(255, 255, 255, 0.2)",
+                  boxShadow: "0 4px 14px rgba(255, 255, 255, 0.4)",
                   "&:hover": {
                     bgcolor: "grey.100",
                     transform: "translateY(-1px)",
@@ -302,23 +307,29 @@ function Introduction() {
               >
                 Get Started
               </Button>
-            </Stack>
+            </Box>
           </Toolbar>
         </Container>
       </AppBar>
+
       {/* Hero Section */}
       <Box
         id="hero"
         sx={{
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
           justifyContent: "center",
-          color: "white",
+          alignItems: "center",
           position: "relative",
+          minHeight: "90vh",
+          width: "100%",
+          maxWidth: "100vw",
           overflow: "hidden",
-          background: "#0035A0", // Deep blue from image
-          height: "90vh",
+          overflowX: "hidden",
+          bgcolor: "primary.main",
+          color: "white",
+          textAlign: "center",
+          px: { xs: 2, sm: 3, md: 4 },
           "&::before": {
             content: '""',
             position: "absolute",
@@ -358,7 +369,7 @@ function Introduction() {
           <img
             src={logo_white}
             alt="Flora Logo"
-            style={{ height: "100px", marginBottom: "2rem" }}
+            style={{ height: "200px", marginBottom: "2rem" }}
           />
           <Typography
             variant="h2"
@@ -409,10 +420,16 @@ function Introduction() {
         sx={{
           display: "flex",
           flexDirection: "column",
-          bgcolor: "background.paper", // White
-          height: "80vh",
+          bgcolor: "background.paper",
+          minHeight: { xs: "auto", md: "80vh" },
+          width: "100%",
+          maxWidth: "100vw",
           justifyContent: "center",
           alignItems: "center",
+          overflow: "hidden",
+          overflowX: "hidden",
+          px: { xs: 2, sm: 3, md: 4 },
+          py: { xs: 8, md: 12 },
         }}
       >
         <Box
@@ -458,17 +475,21 @@ function Introduction() {
             whileInView="visible"
             viewport={{ once: true }}
             justifyContent="center"
-            wrap="nowrap"
-            sx={{ maxWidth: "1400px" }}
+            sx={{
+              maxWidth: "1400px",
+              flexWrap: { xs: "wrap", md: "nowrap" }
+            }}
           >
             {features.map((feature, index) => (
               <Grid
                 item
-                xs="auto"
+                xs={12}
+                sm={6}
+                md={3}
                 key={index}
                 component={motion.div}
                 variants={itemVariants}
-                sx={{ minWidth: 280, maxWidth: 320 }}
+                sx={{ display: "flex", width: "100%" }}
               >
                 <Card
                   component={motion.div}
@@ -479,11 +500,11 @@ function Introduction() {
                   elevation={0}
                   sx={{
                     height: "100%",
+                    width: "100%",
                     display: "flex",
                     flexDirection: "column",
                     bgcolor: feature.colorKey,
                     color: "white",
-                    borderRadius: 4,
                     transition: "all 0.3s",
                     border: "none",
                     position: "relative",
@@ -598,15 +619,21 @@ function Introduction() {
                 opacity: 0.9,
               }}
             >
-              Flora is built by a dedicated team of educators and engineers
-              passionate about transforming language learning through
-              technology.
+              Flora is built by a dedicated team of educators about transforming language learning through technology.
             </Typography>
           </Box>
 
-          <Grid container spacing={4} justifyContent="center" sx={{ mb: 12 }}>
+          <Grid
+            container
+            spacing={4}
+            justifyContent="center"
+            sx={{
+              mb: 12,
+              flexWrap: { xs: "wrap", md: "nowrap" }
+            }}
+          >
             {team.map((member, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid item xs={12} sm={6} md={4} key={index} sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
                 <Box
                   component={motion.div}
                   initial={{ opacity: 0, y: 30 }}
@@ -618,12 +645,13 @@ function Introduction() {
                     textAlign: "center",
                     p: 4,
                     height: "100%",
+                    width: "100%",
+                    borderRadius: 2,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     bgcolor: "rgba(255, 255, 255, 0.03)",
                     backdropFilter: "blur(20px)",
-                    borderRadius: "24px",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
                     transition: "all 0.3s ease",
                     "&:hover": {

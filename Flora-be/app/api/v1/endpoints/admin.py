@@ -7,7 +7,8 @@ from app.db.mongodb import get_database
 from app.models.user import UserResponse
 from pydantic import BaseModel, EmailStr, Field
 from app.core.security import hash_password
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from collections import defaultdict
 import random
 import string
 
@@ -326,7 +327,7 @@ async def get_specific_user_stats(
             recent_pron_list.append({
                 "instruction_text": text,
                 "score": attempt.get("assessment", {}).get("total_score") if attempt.get("assessment") else None,
-                "created_at": attempt.get("created_at", datetime.utcnow()).isoformat()
+                "created_at": attempt.get("created_at", datetime.utcnow()).isoformat() + "Z"
             })
         
         # Get situation stats
@@ -341,6 +342,12 @@ async def get_specific_user_stats(
         # Recent quizzes
         recent_situations = sorted(situation_attempts, key=lambda x: x.get("submitted_at", datetime.min) if isinstance(x.get("submitted_at"), datetime) else datetime.min, reverse=True)[:10]
         recent_sit_list = []
+        
+        # Distribution counts for radial charts
+        perfect_count = sum(a.get("perfect_count", 0) for a in situation_attempts)
+        acceptable_count = sum(a.get("acceptable_count", 0) for a in situation_attempts)
+        poor_count = sum(a.get("poor_count", 0) for a in situation_attempts)
+
         for attempt in recent_situations:
             group_id = attempt.get("group_id")
             if group_id:
@@ -360,9 +367,47 @@ async def get_specific_user_stats(
                 "group_name": group_name,
                 "score": attempt.get("total_score", 0),
                 "percentage": round(percentage),
-                "submitted_at": submitted_at.isoformat()
+                "submitted_at": submitted_at.isoformat() + "Z"
             })
         
+        # Performance Timeline (Last 30 days)
+        now_naive = datetime.utcnow()
+        user_timeline_map = {} # date -> {accuracy_sum, count}
+        for i in range(30):
+            d = (now_naive - timedelta(days=i)).date()
+            user_timeline_map[d] = {"accuracy_sum": 0, "count": 0}
+        
+        for a in pronunciation_attempts:
+            dt = a.get("created_at")
+            if isinstance(dt, str):
+                try: dt = datetime.fromisoformat(dt.replace('Z', ''))
+                except: dt = None
+            if isinstance(dt, datetime) and dt.date() in user_timeline_map:
+                score = a.get("assessment", {}).get("total_score") if a.get("assessment") else None
+                if score is not None:
+                    user_timeline_map[dt.date()]["accuracy_sum"] += score
+                    user_timeline_map[dt.date()]["count"] += 1
+
+        for a in situation_attempts:
+            dt = a.get("submitted_at")
+            if isinstance(dt, str):
+                try: dt = datetime.fromisoformat(dt.replace('Z', ''))
+                except: dt = None
+            if isinstance(dt, datetime) and dt.date() in user_timeline_map:
+                score = a.get("total_score")
+                max_score = len(a.get("situations", [])) * 100
+                if score is not None and max_score > 0:
+                    user_timeline_map[dt.date()]["accuracy_sum"] += (score / max_score) * 100
+                    user_timeline_map[dt.date()]["count"] += 1
+        
+        performance_timeline = []
+        for d in sorted(user_timeline_map.keys()):
+            stats = user_timeline_map[d]
+            performance_timeline.append({
+                "date": d.isoformat(),
+                "accuracy": round(stats["accuracy_sum"] / stats["count"], 1) if stats["count"] > 0 else 0
+            })
+
         return {
             "success": True,
             "data": {
@@ -379,15 +424,21 @@ async def get_specific_user_stats(
                 "situations": {
                     "total_quizzes": len(situation_attempts),
                     "average_score_percentage": round(avg_percentage, 1),
-                    "recent_quizzes": recent_sit_list
+                    "recent_quizzes": recent_sit_list,
+                    "score_distribution": {
+                        "perfect": perfect_count,
+                        "acceptable": acceptable_count,
+                        "poor": poor_count
+                    }
                 },
+                "performance_timeline": performance_timeline,
                 "activity": {
                     "total_sessions": len(set([a.get("session_id") for a in pronunciation_attempts if a.get("session_id")])),
                     "last_active": max(
                         [a.get("created_at", datetime.min) if isinstance(a.get("created_at"), datetime) else datetime.min for a in pronunciation_attempts] +
                         [a.get("submitted_at", datetime.min) if isinstance(a.get("submitted_at"), datetime) else datetime.min for a in situation_attempts] +
                         [datetime.min]
-                    ).isoformat() if (pronunciation_attempts or situation_attempts) else None,
+                    ).isoformat() + "Z" if (pronunciation_attempts or situation_attempts) else None,
                     "days_active": len(set([a["created_at"].date() for a in pronunciation_attempts if isinstance(a.get("created_at"), datetime)])) +
                                   len(set([a["submitted_at"].date() for a in situation_attempts if isinstance(a.get("submitted_at"), datetime)]))
                 }
@@ -413,6 +464,146 @@ async def get_global_dashboard_stats(
         situation_attempts = await db.situation_attempts.find().to_list(length=100000)
         users_count = await db.users.count_documents({})
         
+        # 1. Activity Timeline (Last 14 days)
+        now_naive = datetime.utcnow()
+        start_date = (now_naive - timedelta(days=13)).replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        timeline = { (start_date + timedelta(days=i)).date(): {
+            "date": (start_date + timedelta(days=i)).date().isoformat(), 
+            "pronunciation": 0, 
+            "quizzes": 0,
+            "accuracy_sum": 0,
+            "accuracy_count": 0
+        } for i in range(14) }
+        
+        for a in pronunciation_attempts:
+            dt = a.get("created_at")
+            if isinstance(dt, str):
+                try: dt = datetime.fromisoformat(dt.replace('Z', ''))
+                except: dt = None
+            
+            if isinstance(dt, datetime) and dt.date() in timeline:
+                timeline[dt.date()]["pronunciation"] += 1
+                score = a.get("assessment", {}).get("total_score") if a.get("assessment") else None
+                if score is not None:
+                    timeline[dt.date()]["accuracy_sum"] += score
+                    timeline[dt.date()]["accuracy_count"] += 1
+
+        for a in situation_attempts:
+            dt = a.get("submitted_at")
+            if isinstance(dt, str):
+                try: dt = datetime.fromisoformat(dt.replace('Z', ''))
+                except: dt = None
+
+            if isinstance(dt, datetime) and dt.date() in timeline:
+                timeline[dt.date()]["quizzes"] += 1
+                score = a.get("total_score")
+                max_score = len(a.get("situations", [])) * 100
+                if score is not None and max_score > 0:
+                    timeline[dt.date()]["accuracy_sum"] += (score / max_score) * 100
+                    timeline[dt.date()]["accuracy_count"] += 1
+
+        # Calculate average accuracy per day
+        for d in timeline.values():
+            d["avg_accuracy"] = round(d["accuracy_sum"] / d["accuracy_count"], 1) if d["accuracy_count"] > 0 else 0
+            del d["accuracy_sum"]
+            del d["accuracy_count"]
+
+        activity_timeline = sorted(timeline.values(), key=lambda x: x["date"])
+
+        # 1.1 User Growth (Last 14 days)
+        all_users = await db.users.find().to_list(length=users_count)
+        growth_timeline = []
+        for i in range(14):
+            check_date = (start_date + timedelta(days=i)).replace(hour=23, minute=59, second=59)
+            # Count users created on or before this date
+            count = 0
+            for u in all_users:
+                created_at = u.get("created_at")
+                if isinstance(created_at, str):
+                    try: created_at = datetime.fromisoformat(created_at.replace('Z', ''))
+                    except: created_at = None
+                
+                if isinstance(created_at, datetime):
+                    # Ensure created_at is naive for comparison
+                    if created_at.tzinfo is not None:
+                        created_at = created_at.replace(tzinfo=None)
+                    
+                    if created_at <= check_date:
+                        count += 1
+                elif not created_at: # Fallback for old users
+                    count += 1
+            
+            growth_timeline.append({
+                "date": check_date.date().isoformat(),
+                "cumulative_users": count
+            })
+
+        # 2. Group Performance
+        group_stats = defaultdict(lambda: {"total_score": 0, "attempts": 0, "name": "Unknown"})
+        groups = await db.groups.find({"is_active": True}).to_list(length=100)
+        group_names = {str(g["_id"]): g["name"] for g in groups}
+
+        # Calculate pronunciation scores by group (via instruction_id)
+        # First, map instructions to groups
+        instructions = await db.instructions.find({"is_active": True}).to_list(length=2000)
+        inst_to_group = {str(i["_id"]): str(i.get("group_id", "")) for i in instructions}
+
+        for a in pronunciation_attempts:
+            inst_id = str(a.get("instruction_id")) if a.get("instruction_id") else None
+            score = a.get("assessment", {}).get("total_score") if a.get("assessment") else None
+            if inst_id and inst_id in inst_to_group and score is not None:
+                gid = inst_to_group[inst_id]
+                group_stats[gid]["total_score"] += score
+                group_stats[gid]["attempts"] += 1
+                group_stats[gid]["name"] = group_names.get(gid, "Unknown")
+
+        # Add situation scores by group
+        for a in situation_attempts:
+            gid = str(a.get("group_id")) if a.get("group_id") else None
+            score = a.get("total_score")
+            max_score = len(a.get("situations", [])) * 100
+            if gid and score is not None and max_score > 0:
+                percentage = (score / max_score) * 100
+                group_stats[gid]["total_score"] += percentage
+                group_stats[gid]["attempts"] += 1
+                group_stats[gid]["name"] = group_names.get(gid, "Unknown")
+
+        group_performance = []
+        for gid, gs in group_stats.items():
+            if gs["attempts"] > 0:
+                group_performance.append({
+                    "id": gid,
+                    "name": gs["name"],
+                    "average_score": round(gs["total_score"] / gs["attempts"], 1),
+                    "total_attempts": gs["attempts"]
+                })
+        group_performance = sorted(group_performance, key=lambda x: x["total_attempts"], reverse=True)[:8]
+
+        # 3. User Engagement (Top Users)
+        user_engagement = defaultdict(int)
+        for a in pronunciation_attempts:
+            user_engagement[str(a.get("user_id"))] += 1
+        for a in situation_attempts:
+            user_engagement[str(a.get("user_id"))] += 1
+        
+        top_users_data = []
+        sorted_users = sorted(user_engagement.items(), key=lambda x: x[1], reverse=True)[:10]
+        for uid, count in sorted_users:
+            if uid and uid != "None" and len(uid) == 24:
+                u = await db.users.find_one({"_id": ObjectId(uid)})
+            else:
+                u = None
+            if u:
+                top_users_data.append({
+                    "id": uid,
+                    "name": u.get("full_name", "Unknown"),
+                    "username": u.get("username"),
+                    "activity_count": count,
+                    "avatar_color": u.get("avatar_color", "#757575")
+                })
+
+        # --- RESTORED STATS ---
         # Calculate Pronunciation Stats
         pron_scores = []
         mastery_map = {} # user_id -> instruction_id -> best_score
@@ -456,9 +647,10 @@ async def get_global_dashboard_stats(
         
         situation_scores_sums = [] # normalized percentages
         for a in situation_attempts:
-            max_p = len(a.get("situations", [])) * 100
-            if max_p > 0:
-                situation_scores_sums.append((a.get("total_score", 0) / max_p) * 100)
+            max_s = len(a.get("situations", [])) * 100
+            if max_s > 0:
+                situation_scores_sums.append((a.get("total_score", 0) / max_s) * 100)
+        # --- END RESTORED STATS ---
 
         return {
             "success": True,
@@ -466,8 +658,13 @@ async def get_global_dashboard_stats(
                 "overview": {
                     "total_users": users_count,
                     "total_pronunciation_attempts": len(pronunciation_attempts),
-                    "total_quizzes_completed": len(situation_attempts)
+                    "total_quizzes_completed": len(situation_attempts),
+                    "active_users_today": len(set([str(a["user_id"]) for a in pronunciation_attempts if (a.get("created_at") if isinstance(a.get("created_at"), datetime) else datetime.min).replace(tzinfo=None).date() == now_naive.date()]))
                 },
+                "activity_timeline": activity_timeline,
+                "user_growth_timeline": growth_timeline,
+                "group_performance": group_performance,
+                "top_users": top_users_data,
                 "pronunciation": {
                     "average_score": round(sum(pron_scores) / len(pron_scores), 1) if pron_scores else 0,
                     "average_mastery": round(avg_mastery, 1),

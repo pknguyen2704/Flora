@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   Box,
   List,
@@ -6,16 +6,14 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Typography,
   Tooltip,
 } from "@mui/material";
-import { motion } from "framer-motion";
 import HomeIcon from "@mui/icons-material/Home";
 import SchoolIcon from "@mui/icons-material/School";
 import MicIcon from "@mui/icons-material/Mic";
 import { useNavigate, useLocation } from "react-router-dom";
 
-export default function Sidebar({
+const Sidebar = React.memo(function Sidebar({
   activeSection,
   onSectionChange,
   collapsed = false,
@@ -23,31 +21,8 @@ export default function Sidebar({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Automatically determine active section from current path if not provided
-  const determineActiveSection = () => {
-    if (activeSection) return activeSection;
-
-    const path = location.pathname;
-    const searchParams = new URLSearchParams(location.search);
-    const section = searchParams.get("section");
-
-    if (path === "/home") {
-      return section || "overview";
-    }
-    if (path === "/instruction/custom") return "custom-instruction";
-    if (
-      path === "/instruction-practice" ||
-      path.startsWith("/group/") ||
-      path.startsWith("/pronunciation/") ||
-      path.startsWith("/situations/")
-    )
-      return "groups";
-    return "overview";
-  };
-
-  const currentActiveSection = determineActiveSection();
-
-  const menuItems = [
+  // Memoize menu items - only recreate if icons change (never)
+  const menuItems = useMemo(() => [
     {
       id: "overview",
       label: "Overview",
@@ -69,17 +44,49 @@ export default function Sidebar({
       type: "section",
       path: "/instruction-practice",
     },
-  ];
+  ], []);
+
+  // Memoize active section determination
+  const currentActiveSection = useMemo(() => {
+    if (activeSection) return activeSection;
+
+    const path = location.pathname;
+    const searchParams = new URLSearchParams(location.search);
+    const section = searchParams.get("section");
+
+    if (path === "/home") {
+      return section || "overview";
+    }
+    if (path === "/instruction/custom") return "custom-instruction";
+    if (
+      path === "/instruction-practice" ||
+      path.startsWith("/group/") ||
+      path.startsWith("/pronunciation/") ||
+      path.startsWith("/situations/")
+    )
+      return "groups";
+    return "overview";
+  }, [activeSection, location.pathname, location.search]);
+
+  // Memoize click handler
+  const handleItemClick = useCallback((item) => {
+    if (item.type === "link") {
+      navigate(item.path);
+    } else if (onSectionChange) {
+      onSectionChange(item.id);
+      navigate(item.path);
+    } else {
+      navigate(item.path);
+    }
+  }, [navigate, onSectionChange]);
 
   return (
     <Box
       sx={{
         width: collapsed ? 80 : 280,
         height: (theme) => theme.flora.contentHeight,
-        // position: "fixed",
         left: 0,
-        top: 64, // Position below AppBar
-        // backdropFilter: "blur(10px)",
+        top: 64,
         borderRight: "1px solid",
         borderColor: "divider",
         display: "flex",
@@ -87,33 +94,19 @@ export default function Sidebar({
         px: collapsed ? 1 : 2,
         py: 3,
         zIndex: 1000,
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "width 0.25s ease-out, padding 0.25s ease-out",
         overflow: "hidden",
+        willChange: "width, padding",
+        contain: "layout",
       }}
     >
-      {/* Navigation Menu */}
       <List sx={{ flex: 1 }}>
         {menuItems.map((item) => {
           const isActive = currentActiveSection === item.id;
           const menuButton = (
             <ListItemButton
-              component={motion.div}
               disableGutters
-              disableRipple
-              whileHover={{ scale: 1.02, x: collapsed ? 0 : 4 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                if (item.type === "link") {
-                  navigate(item.path);
-                } else if (onSectionChange) {
-                  // For sections, update state and navigate with query param
-                  onSectionChange(item.id);
-                  navigate(item.path);
-                } else {
-                  // Fallback to just navigation
-                  navigate(item.path);
-                }
-              }}
+              onClick={() => handleItemClick(item)}
               sx={{
                 borderRadius: 1,
                 py: 1.5,
@@ -123,7 +116,7 @@ export default function Sidebar({
                   ? "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)"
                   : "transparent",
                 color: isActive ? "white" : "text.primary",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "all 0.2s ease",
                 position: "relative",
                 overflow: "hidden",
                 justifyContent: collapsed ? "center" : "flex-start",
@@ -131,6 +124,7 @@ export default function Sidebar({
                   background: isActive
                     ? "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)"
                     : "rgba(0, 82, 212, 0.08)",
+                  transform: collapsed ? "none" : "translateX(4px)",
                 },
               }}
             >
@@ -139,12 +133,6 @@ export default function Sidebar({
                   color: isActive ? "white" : "primary.main",
                   minWidth: collapsed ? "auto" : 40,
                   justifyContent: "center",
-                  border: "none",
-                  outline: "none",
-                  "& .MuiSvgIcon-root": {
-                    border: "none",
-                    outline: "none",
-                  },
                 }}
               >
                 {item.icon}
@@ -176,4 +164,6 @@ export default function Sidebar({
       </List>
     </Box>
   );
-}
+});
+
+export default Sidebar;

@@ -47,7 +47,7 @@ export default function Administration() {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
       <Appbar />
 
       <Box sx={{ display: "flex", flex: 1 }}>
@@ -108,13 +108,23 @@ export default function Administration() {
           </List>
         </Drawer>
 
-        {/* Main Content */}
-        <Box sx={{ flex: 1, p: 4, bgcolor: "background.default" }}>
-          <Container maxWidth="xl">{renderContent()}</Container>
+        {/* Main Content - The Only Scrollable Part */}
+        <Box
+          sx={{
+            flex: 1,
+            bgcolor: "background.default",
+            overflowY: "auto",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column"
+          }}
+        >
+          <Box sx={{ flex: 1, p: 4 }}>
+            <Container maxWidth="xl">{renderContent()}</Container>
+          </Box>
+          <Footer />
         </Box>
       </Box>
-
-      <Footer />
     </Box>
   );
 }
