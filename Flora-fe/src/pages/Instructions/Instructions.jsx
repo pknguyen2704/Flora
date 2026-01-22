@@ -64,10 +64,8 @@ export default function Groups() {
   };
 
   const handleGroupClick = (groupId) => {
-    // Find the group data
-    const group = groups.find(g => (g.id || g._id) === groupId);
-    // Navigate with group data to avoid re-fetching
-    navigate(`/group/${groupId}`, { state: { group } });
+    // Navigate directly to pronunciation practice
+    navigate(`/pronunciation/${groupId}`);
   };
 
   return (
@@ -273,23 +271,6 @@ export default function Groups() {
                                 sx={{ fontSize: "0.875rem" }}
                               >
                                 Instructions
-                              </Typography>
-                            </Box>
-                            <Box>
-                              <Typography
-                                variant="h5"
-                                fontWeight="700"
-                                color={group.color_hex}
-                                sx={{ mb: 0.5 }}
-                              >
-                                {group.situation_count}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{ fontSize: "0.875rem" }}
-                              >
-                                Situations
                               </Typography>
                             </Box>
                           </Box>

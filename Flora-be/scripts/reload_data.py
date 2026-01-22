@@ -140,91 +140,27 @@ async def reload_database():
                 {"$set": {"instruction_count": len(group_instructions)}}
             )
     
-    # 4. Create Situations
-    print("\n🎭 Creating situations...")
+    # 4. Create Quizzes
+    print("\n🎭 Creating global quizzes...")
     
-    # Support both old and new structure (fallback if needed, but we expect new)
-    situations_by_group = data.get('situationsByGroup')
-    situations = []
+    quizzes_data = data.get('quizzes', [])
+    quizzes = []
     
-    if situations_by_group:
-        print("   Found grouped situations structure.")
-        for group_num_str, templates in situations_by_group.items():
-            try:
-                group_num = int(group_num_str)
-                # group_ids is 0-indexed, group_number is 1-indexed
-                if group_num < 1 or group_num > len(group_ids):
-                    print(f"   ⚠️  Skipping group {group_num}: No matching group created.")
-                    continue
-                
-                group_id = group_ids[group_num - 1]
-                
-                for i, template in enumerate(templates):
-                    situation_number = i + 1
-                    situations.append({
-                        "group_id": group_id,
-                        "situation_number": situation_number,
-                        "title": f"Scenario {situation_number}",
-                        "question": template.get("question") or template.get("description"), # Map to question
-                        "choices": template["choices"],
-                        "best_choice_id": template["best_choice_id"],
-                        "detailed_explanation": template.get("detailed_explanation"),
-                        "created_at": datetime.utcnow(),
-                        "is_active": True
-                    })
-            except ValueError:
-                print(f"   ⚠️  Skipping invalid group key: {group_num_str}")
-    else:
-        # Fallback for old structure (or if parse failed)
-        print("   ⚠️  Using legacy flat situations structure.")
-        situation_templates = data.get('situations', [])
-        situations_per_group = 10
-        target_groups = 5
-        
-        for i, template in enumerate(situation_templates):
-            if i >= situations_per_group * target_groups:
-                break
-                
-            group_index = i // situations_per_group
-            if group_index >= len(group_ids):
-                break
-                
-            group_id = group_ids[group_index]
-            situation_number = (i % situations_per_group) + 1
+    for i, q in enumerate(quizzes_data, 1):
+        quizzes.append({
+            "quiz_number": i,
+            "question": q["question"],
+            "choices": q["choices"],
+            "best_choice_id": q["best_choice_id"],
+            "explanation": q.get("explanation"),
+            "principle": q.get("principle"),
+            "created_at": datetime.utcnow(),
+            "is_active": True
+        })
             
-            situations.append({
-                "group_id": group_id,
-                "situation_number": situation_number,
-                "title": f"Scenario {situation_number}",
-                "question": template.get("question") or template.get("description"), # Map to question
-                "choices": template["choices"],
-                "best_choice_id": template["best_choice_id"],
-                "detailed_explanation": template.get("detailed_explanation"),
-                "created_at": datetime.utcnow(),
-                "is_active": True
-            })
-            
-    if situations:
-        await db.situations.insert_many(situations)
-        print(f"   ✓ Created {len(situations)} situations")
-        
-        # Update group situation counts
-        # We need to count per group now properly
-        for idx, group_id in enumerate(group_ids):
-            # idx is 0-based, group_num is idx+1
-            group_num = idx + 1
-            count = 0
-            
-            # Count from our new list? Or just check if key exists
-            if situations_by_group and str(group_num) in situations_by_group:
-                 count = len(situations_by_group[str(group_num)])
-            elif not situations_by_group and idx < 5:
-                 count = 10 # Legacy fallback
-            
-            await db.groups.update_one(
-                {"_id": group_id},
-                {"$set": {"situation_count": count}}
-            )
+    if quizzes:
+        await db.quizzes.insert_many(quizzes)
+        print(f"   ✓ Created {len(quizzes)} global quizzes")
     
     print("\n" + "=" * 50)
     print("✅ Database reloaded successfully!")
@@ -232,7 +168,7 @@ async def reload_database():
     print(f"   Users: {len(users)}")
     print(f"   Groups: {len(groups_data)}")
     print(f"   Instructions: {len(instructions)}")
-    print(f"   Situations: {len(situations)}")
+    print(f"   Quizzes: {len(quizzes)}")
     print("\n")
     
     client.close()

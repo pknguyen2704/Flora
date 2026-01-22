@@ -40,9 +40,10 @@ export const pronunciationService = {
   /**
    * Get pronunciation recommendations
    */
-  getRecommendations: async (groupId = null, limit = 5) => {
+  getRecommendations: async (groupId = null, excludeInstructionId = null, limit = 5) => {
     const params = { limit };
     if (groupId) params.group_id = groupId;
+    if (excludeInstructionId) params.exclude_instruction_id = excludeInstructionId;
 
     const response = await api.get("/pronunciation/recommendations", {
       params,

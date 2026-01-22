@@ -349,7 +349,7 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 10 }}>
         <CircularProgress thickness={5} size={60} />
       </Box>
     );
@@ -363,7 +363,7 @@ const AdminDashboard = () => {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          minHeight: "80vh",
+          py: 8,
           p: 3,
           textAlign: "center"
         }}
@@ -392,7 +392,7 @@ const AdminDashboard = () => {
   const { overview, activity_timeline, user_growth_timeline, group_performance, top_users, pronunciation, situations } = dashboardData || {};
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1600, mx: "auto" }}>
+    <Box sx={{ maxWidth: 1600, mx: "auto" }}>
       {/* Header Section */}
       <Box sx={{ mb: 6, display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 2 }}>
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>

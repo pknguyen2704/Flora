@@ -254,7 +254,7 @@ export default function ContentManagement() {
   }, [situations, searchTerm]);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, minHeight: "100vh", bgcolor: alpha(theme.palette.background.default, 0.4) }}>
+    <Box>
       {/* Header Section */}
       <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <Box>
@@ -591,7 +591,7 @@ export default function ContentManagement() {
                     <TextField label="Exercise #" type="number" fullWidth variant="filled" value={formData.instruction_number || ""} onChange={(e) => setFormData({ ...formData, instruction_number: parseInt(e.target.value) || "" })} />
                   </Grid>
                   <Grid item xs={12} sm={8}>
-                    <TextField label="Parent Group" fullWidth disabled value={selectedGroup?.name || ""} variant="filled"/>
+                    <TextField label="Parent Group" fullWidth disabled value={selectedGroup?.name || ""} variant="filled" />
                   </Grid>
                 </Grid>
                 <TextField

@@ -48,38 +48,66 @@ async def get_user_stats(
                 "created_at": attempt.get("created_at", datetime.utcnow()).isoformat() + "Z"
             })
         
-        # Get situation stats
-        situation_attempts = await db.situation_attempts.find({
-            "user_id": user_id
-        }).to_list(length=10000)
+        # Get quiz stats (both group-based situations and global quizzes)
+        situation_attempts = await db.situation_attempts.find({"user_id": user_id}).to_list(length=10000)
+        global_quiz_attempts = await db.quiz_attempts.find({"user_id": user_id}).to_list(length=10000)
         
-        situation_scores = [a.get("total_score", 0) for a in situation_attempts]
-        max_scores = [len(a.get("situations", [])) * 100 for a in situation_attempts]
-        avg_percentage = sum(s/m*100 for s,m in zip(situation_scores, max_scores) if m > 0) / len(situation_scores) if situation_scores else 0
+        # Process all quiz-like attempts
+        quiz_data_points = []
+        for a in situation_attempts:
+            max_score = len(a.get("situations", [])) * 100
+            if max_score > 0:
+                quiz_data_points.append({
+                    "score": a.get("total_score", 0),
+                    "max_score": max_score,
+                    "submitted_at": a.get("submitted_at") if isinstance(a.get("submitted_at"), datetime) else datetime.utcnow(),
+                    "type": "Group Quiz",
+                    "group_id": a.get("group_id")
+                })
         
-        # Recent quizzes
-        recent_situations = sorted(situation_attempts, key=lambda x: x.get("submitted_at", datetime.min) if isinstance(x.get("submitted_at"), datetime) else datetime.min, reverse=True)[:5]
-        recent_sit_list = []
-        for attempt in recent_situations:
-            group_id = attempt.get("group_id")
-            if group_id:
-                group = await db.groups.find_one({"_id": group_id})
-                group_name = group["name"] if group else "Unknown"
+        for a in global_quiz_attempts:
+            max_score = len(a.get("results", [])) * 100
+            if max_score > 0:
+                quiz_data_points.append({
+                    "score": a.get("total_score", 0),
+                    "max_score": max_score,
+                    "submitted_at": a.get("submitted_at") if isinstance(a.get("submitted_at"), datetime) else datetime.utcnow(),
+                    "type": "Global Quiz",
+                    "group_id": None
+                })
+        
+        # Calculate summary stats
+        avg_percentage = sum(p["score"] / p["max_score"] * 100 for p in quiz_data_points) / len(quiz_data_points) if quiz_data_points else 0
+        
+        # Count unique scenarios encountered
+        encountered_ids = set()
+        for a in situation_attempts:
+            for s in a.get("situations", []):
+                encountered_ids.add(str(s.get("situation_id")))
+        for a in global_quiz_attempts:
+            for r in a.get("results", []):
+                encountered_ids.add(str(r.get("quiz_id")))
+        
+        total_quizzes = len(quiz_data_points) # Total attempts
+        total_encountered = len(encountered_ids) # Unique questions
+        
+        # Recent quizzes combined
+        recent_attempts = sorted(quiz_data_points, key=lambda x: x["submitted_at"], reverse=True)[:5]
+        recent_quiz_list = []
+        for attempt in recent_attempts:
+            if attempt["type"] == "Group Quiz" and attempt["group_id"]:
+                group = await db.groups.find_one({"_id": attempt["group_id"]})
+                display_name = group["name"] if group else "Group Quiz"
             else:
-                group_name = "Unknown"
+                display_name = "Global Quiz Challenge"
             
-            max_score = len(attempt.get("situations", [])) * 100
-            percentage = (attempt.get("total_score", 0) / max_score * 100) if max_score > 0 else 0
+            percentage = (attempt["score"] / attempt["max_score"] * 100) if attempt["max_score"] > 0 else 0
             
-            submitted_at = attempt.get("submitted_at")
-            if not isinstance(submitted_at, datetime):
-                submitted_at = datetime.utcnow()
-            
-            recent_sit_list.append({
-                "group_name": group_name,
-                "score": attempt.get("total_score", 0),
+            recent_quiz_list.append({
+                "group_name": display_name,
+                "score": attempt["score"],
                 "percentage": round(percentage),
-                "submitted_at": submitted_at.isoformat() + "Z"
+                "submitted_at": attempt["submitted_at"].isoformat() + "Z"
             })
         
         
@@ -215,19 +243,20 @@ async def get_user_stats(
                     "recent_attempts": recent_pron_list
                 },
                 "situations": {
-                    "total_quizzes": len(situation_attempts),
+                    "total_quizzes": total_quizzes,
+                    "total_encountered": total_encountered,
                     "average_score_percentage": round(avg_percentage, 1),
-                    "recent_quizzes": recent_sit_list
+                    "recent_quizzes": recent_quiz_list
                 },
                 "activity": {
                     "total_sessions": len(set([a.get("session_id") for a in pronunciation_attempts if a.get("session_id")])),
                     "last_active": max(
                         [a.get("created_at", datetime.min) if isinstance(a.get("created_at"), datetime) else datetime.min for a in pronunciation_attempts] +
-                        [a.get("submitted_at", datetime.min) if isinstance(a.get("submitted_at"), datetime) else datetime.min for a in situation_attempts] +
+                        [p["submitted_at"] for p in quiz_data_points] +
                         [datetime.min]
-                    ).isoformat() + "Z" if (pronunciation_attempts or situation_attempts) else None,
-                    "days_active": len(set([a["created_at"].date() for a in pronunciation_attempts if isinstance(a.get("created_at"), datetime)])) +
-                                  len(set([a["submitted_at"].date() for a in situation_attempts if isinstance(a.get("submitted_at"), datetime)]))
+                    ).isoformat() + "Z" if (pronunciation_attempts or quiz_data_points) else None,
+                    "days_active": len(set([a["created_at"].date() for a in pronunciation_attempts if isinstance(a.get("created_at"), datetime)]).union(
+                                  set([p["submitted_at"].date() for p in quiz_data_points])))
                 }
             }
         )

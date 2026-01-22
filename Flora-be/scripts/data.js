@@ -215,1242 +215,559 @@ module.exports = {
     ],
   },
 
-  // Situation templates (will be created for each group)
-  situationsByGroup: {
-    1: [
-      {
-        question: "The class is very noisy when the teacher enters.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Who would like to share?",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "B",
-            text: "Everyone, please quiet down.",
-            rating: "best",
-          },
-          {
-            choice_id: "C",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "B",
-        detailed_explanation: `At this moment, the teacher’s main goal is classroom control, not interaction.
-“Everyone, please quiet down” is a whole-class instruction, clear and immediate, suitable when noise comes from many students at the same time.
-Option A is used after a question to invite ideas, not to manage noise.
-Option C encourages guessing and participation, which would make the class even noisier.`,
-      },
-      {
-        question: "Students keep talking after being reminded once.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "I’m waiting for silence.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s hear from someone else.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher has already warned the class, so a stronger but calm signal is needed.
-“I’m waiting for silence” shows that the lesson will not continue until students stop talking. It uses teacher authority without shouting.
-Option B shifts focus to discussion, which is inappropriate when students are noisy.
-Option C is praise and would send the wrong message.`,
-      },
-      {
-        question: "Students are too loud during individual work.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Please work quietly.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Work in pairs, please.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Any ideas?",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `During individual work, students are expected to focus independently.
-“Please work quietly” clearly reminds them of both the task type (individual) and the expected noise level.
-Option B changes the activity structure and may increase noise.
-Option C invites speaking, which goes against the goal of quiet work.`,
-      },
-      {
-        question: "The classroom becomes noisy after group work.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "This is getting too noisy.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Don’t be shy. Give it a try.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Let’s check the answers.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `After group work, noise often increases naturally.
-“This is getting too noisy” is a neutral, non-threatening reminder that helps students self-correct their behavior.
-Option B is used to encourage speaking, not reduce noise.
-Option C moves to feedback before the class is ready and attentive.`,
-      },
-      {
-        question: "Some students are chatting while the teacher is explaining.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Please stop chatting.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Change roles, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The problem behavior here is side conversations during instruction.
-“Please stop chatting” directly names the behavior and clearly tells students what to stop.
-Option B invites speaking and is inappropriate.
-Option C is only used in pair/group activities.`,
-      },
-      {
-        question: "The teacher wants everyone to look at her.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Eyes on me, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Back to your seats.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Let’s move on.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `When giving instructions or explanations, teachers need visual attention.
-“Eyes on me, please” is short, clear, and commonly used to regain focus quickly.
-Option B is about movement, not attention.
-Option C assumes the class is already focused.`,
-      },
-      {
-        question: "Students are talking while instructions are being given.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Stop talking and listen.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Work in pairs, please.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Good job staying focused.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This sentence clearly tells students what to stop and what to do next, which is essential when giving instructions.
-Option B introduces an activity instead of fixing the problem.
-Option C is praise and does not match the situation.`,
-      },
-      {
-        question: "The teacher pauses and waits for silence.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "I can still hear your voice.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Are you ready?",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This sentence communicates the teacher’s expectation without raising their voice.
-It creates positive pressure for students to self-regulate.
-Option B assumes readiness, which is not true yet.
-Option C praises behavior that has not happened`,
-      },
-      {
-        question: "The teacher cannot continue because of noise.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "We can continue when it’s quiet.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s help each other learn.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Who would like to share?",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher sets a clear condition for continuing the lesson.
-This helps students understand the consequences of noise.
-Option B is positive but too general for immediate control.
-Option C increases talking.`,
-      },
-      {
-        question: "Students are discussing too loudly.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Lower your voice, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Stop here, please.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Put your pens down.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `Students are allowed to talk, but the volume is the problem.
-“Lower your voice, please” corrects behavior without stopping interaction.
-Option B ends the activity unnecessarily.
-Option C is unrelated to speaking volume.`,
-      },
-    ],
-    2: [
-      {
-        question: "Students are shy about answering.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Don’t be shy. Give it a try.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "This is not the time to talk.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Please work quietly.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This sentence provides emotional support, helping students overcome fear of speaking.
-Option B discourages speaking.
-Option C is for silent work.`,
-      },
-      {
-        question: "Students are afraid of giving wrong answers.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "There’s no right or wrong answer.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Time’s up.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Eyes on your book, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This reduces anxiety and promotes a safe learning environment where ideas matter more than accuracy.
-Option B ends an activity.
-Option C shifts focus away from speaking.`,
-      },
-      {
-        question: "No one answers the teacher’s question.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Take a guess.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s move on.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Put your pens down.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `“Take a guess” lowers the pressure of being correct and encourages risk-taking.
-Option B stops interaction too early.
-Option C is unrelated.`,
-      },
-      {
-        question: "The teacher wants another student to respond.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Let’s hear from someone else.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Are you ready?",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Please stop chatting.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This promotes equal participation and prevents the same students from dominating.
-Option B checks readiness, not participation.
-Option C addresses noise, not turn-taking.`,
-      },
-      {
-        question: "Students are passive during discussion.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Be more active, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Please work quietly.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Stop here, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher directly encourages engagement and participation.
-Option B discourages speaking.
-Option C ends the activity`,
-      },
-      {
-        question: "Students are talking while others are presenting.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "One voice at a time, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Be more active, please.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher’s primary goal here is to protect the speaking space of the presenter and ensure listening discipline.
-“One voice at a time, please” clearly sets a turn-taking rule, reminding students that only one person should speak.
-Option B encourages more participation, which would worsen the problem.
-Option C invites guessing and speaking, which is inappropriate when someone else is presenting.`,
-      },
-      {
-        question: "The class becomes excited and unfocused after a game.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Let’s calm down and focus.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Who would like to share?",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `After a game, students often experience high emotional energy.
-The teacher’s goal is emotional regulation + cognitive refocusing.
-This sentence explicitly addresses both: calming emotions and returning attention to learning.
-Option B reinforces excitement instead of reducing it.
-Option C encourages more speaking and interaction, delaying refocus.`,
-      },
-      {
-        question: "The noise level is high and starts to disturb learning.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Too much noise. Let’s be quiet.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s help each other learn.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Are you ready?",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This is a situation requiring immediate noise control.
-The sentence directly identifies the problem (noise) and gives a clear behavioral expectation (be quiet).
-Option B promotes values but does not solve the immediate problem.
-Option C checks readiness, which is irrelevant while noise persists.`,
-      },
-      {
-        question: "The teacher wants to pause the lesson until students stop talking.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "I’m waiting for silence.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s move on.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Change roles, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `Here, the teacher uses strategic pausing as a classroom management technique.
-“I’m waiting for silence” signals that progress is conditional on student behavior, encouraging self-control.
-Option B ignores the problem and lowers teacher authority.
-Option C changes the activity instead of correcting behavior.`,
-      },
-      {
-        question: "Students interrupt others who are listening.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Please respect others who are listening.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Don’t be shy. Give it a try.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Time’s up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The issue is not just noise, but lack of respect and listening skills.
-This sentence addresses classroom values and social behavior, not just volume.
-Option B encourages speaking, which is inappropriate.
-Option C ends the activity without addressing the behavior.`,
-      },
-    ],
-    3: [
-      {
-        question: "The classroom gradually becomes louder again.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "This is getting too noisy.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Good job staying focused.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Let’s hear from someone else.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This is an early intervention statement.
-The teacher notices rising noise and addresses it before it becomes disruptive.
-Option B praises behavior that is not happening.
-Option C increases speaking and noise.`,
-      },
-      {
-        question: "Students do not respond because they feel shy.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Don’t be shy. Give it a try.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Please work quietly.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Stop here, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher recognizes the barrier as emotional, not cognitive.
-This sentence lowers affective filters and encourages risk-taking.
-Option B suppresses speaking.
-Option C ends the interaction prematurely.`,
-      },
-      {
-        question: "Students hesitate because they are afraid of making mistakes.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "It’s okay to make mistakes.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Time’s up.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Focus on your work, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `Language learning requires experimentation.
-This sentence builds a growth mindset and normalizes error as part of learning.
-Option B avoids the learning opportunity.
-Option C shifts to individual focus, not speaking.`,
-      },
-      {
-        question: "No student volunteers to answer a question.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "If no one raises your hand, I’ll randomly call someone.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s move on.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This creates accountability and gentle pressure while still giving students a chance to volunteer.
-Option B reduces participation expectations.
-Option C praises behavior that does not exist.`,
-      },
-      {
-        question: "Students appear passive and disengaged.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Be more active, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Please work quietly.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Put your pens down.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher’s goal is to increase participation and energy, not reduce noise.
-Option B discourages interaction.
-Option C ends writing, not engagement.`,
-      },
-      {
-        question: "Students are chatting during task time.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Please stop chatting.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Who would like to share?",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher needs immediate correction of off-task behavior.
-Option B and C invite speaking and worsen the issue.`,
-      },
-      {
-        question: "Students talk about topics unrelated to the lesson.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Are you talking about the lesson?",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s help each other learn.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Change roles, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This question subtly redirects students without accusing or embarrassing them.
-Option B is too abstract.
-Option C is irrelevant to the issue.`,
-      },
-      {
-        question: "Students lose focus during work time.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Focus on your work, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Who would like to share?",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Let’s move on.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher wants students to return attention to the task, not change activity.
-Option B distracts from work.
-Option C skips unfinished learning.`,
-      },
-      {
-        question: "Students talk while the teacher is explaining.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "This is not the time to talk.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Don’t be shy.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Work in pairs, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher establishes clear behavioral boundaries for instruction time.
-Option B encourages talking.
-Option C changes lesson structure.`,
-      },
-      {
-        question: "Students are not looking at learning materials.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Eyes on your book, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Time’s up.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Are you ready?",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher directs visual attention to support comprehension.
-Option B ends the task.
-Option C checks readiness, not attention.`,
-      },
-    ],
-    4: [
-      {
-        question: "Students talk while instructions are given.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "You can talk later.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This politely postpones talking and keeps the lesson moving.
-Option B invites immediate speaking.
-Option C reinforces inappropriate behavior.`,
-      },
-      {
-        question: "Students appear distracted.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Pay attention, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s check the answers.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Who would like to share?",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `A direct reminder is most effective before changing activity.
-Option B assumes readiness.
-Option C increases talking.`,
-      },
-      {
-        question: "Students are slow to return to work after an activity.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Let’s get back to the task.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This helps students transition smoothly from one activity to another.
-Option B distracts.
-Option C maintains off-task behavior.`,
-      },
-      {
-        question: "Students struggle to concentrate during quiet work.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "I need you to concentrate.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Time’s up.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Back to your seats.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher clearly communicates expectations for mental focus, not physical movement.
-Option B ends work too early.
-Option C addresses seating, not attention.`,
-      },
-      {
-        question: "The activity time ends.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Time’s up.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Please stop chatting.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This is a clear time-management signal recognized by students.`,
-      },
-      {
-        question: "The teacher wants to move to the next activity or section.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Let’s move on.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Any ideas?",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Put your pens down.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `At this point, the teacher’s goal is lesson progression and time management.
-“Let’s move on” clearly signals a transition without reopening discussion or giving physical instructions.
-Option B invites ideas and extends the current activity.
-Option C focuses on stopping writing, which may not be necessary in all transitions.`,
-      },
-      {
-        question: "The teacher wants students to stop writing and listen.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Put your pens down.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Focus on your work.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Change roles, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher needs students to physically stop writing so they can listen.
-“Put your pens down” is a clear, observable action that immediately changes student behavior.
-Option B encourages continued work, not listening.
-Option C is only relevant in pair or group activities.`,
-      },
-      {
-        question: "The teacher is about to give important instructions.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Now, listen carefully.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Work in pairs, please.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `Before giving key information, the teacher must secure full attention.
-This sentence prepares students mentally to listen and process instructions.
-Option B introduces an activity too early.
-Option C is praise and does not signal importance.`,
-      },
-      {
-        question: "The teacher checks whether students are ready to continue.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Are you ready?",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Please stop chatting.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Time’s up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher wants to confirm readiness before moving forward.
-This question invites a response and allows the teacher to adjust pacing if needed.
-Option B addresses behavior, not readiness.
-Option C signals the end of time, not preparation.`,
-      },
-      {
-        question: "The teacher wants to review students’ work together.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Let’s check the answers.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Let’s calm down.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This sentence signals a shift from doing the task to reviewing and evaluating it.
-Option B encourages guessing rather than checking.
-Option C focuses on behavior, not content.`,
-      },
-    ],
-    5: [
-      {
-        question: "The teacher wants students to work with a partner.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Work in pairs, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Please work quietly.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Stop here, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher is organizing the interaction structure.
-This sentence gives a clear instruction about grouping.
-Option B focuses on noise level, not grouping.
-Option C ends the activity instead of starting one.`,
-      },
-      {
-        question: "Students need to swap responsibilities in a pair or group.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Change roles, please.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Back to your seats.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `Changing roles ensures equal participation and balanced practice.
-This instruction is specific to collaborative activities.
-Option B concerns physical movement.
-Option C is praise, not instruction.`,
-      },
-      {
-        question: "Students are moving around and need to return to their places.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Back to your seats.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Who would like to share?",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `After movement activities, the teacher needs to restore order and structure.
-This instruction is clear and immediately actionable.
-Option B invites speaking.
-Option C encourages guessing, not seating.`,
-      },
-      {
-        question: "Students are working quietly and attentively.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Good job staying focused.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Time’s up.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Stop talking and listen.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `The teacher reinforces positive behavior through specific praise, which increases the chance students will repeat it.
-Option B ends the activity unnecessarily.
-Option C corrects behavior that is not problematic.`,
-      },
-      {
-        question: "Students stop talking after the teacher’s request.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Thank you for being quiet.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Let’s move on.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Are you ready?",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This acknowledges compliance and builds a positive teacher–student relationship.
-Option B skips reinforcement.
-Option C checks readiness instead of giving feedback.`,
-      },
-      {
-        question: "Students are listening attentively to instructions.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "I like the way you’re listening.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Please stop chatting.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Work in pairs, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `Specific praise strengthens listening behavior and encourages others to follow.
-Option B addresses a problem that does not exist.
-Option C changes the activity unnecessarily.`,
-      },
-      {
-        question: "The teacher wants to promote cooperation and support.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Let’s help each other learn.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Put your pens down.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Time’s up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This sentence reinforces collaborative values and a supportive learning environment.
-Option B addresses writing, not cooperation.
-Option C ends the activity.`,
-      },
-      {
-        question: "Students are doing well and the teacher wants to motivate them.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Keep it up.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Stop here, please.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Be more active, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `“Keep it up” is short encouragement that maintains momentum and motivation.
-Option B stops progress.
-Option C suggests students are not active enough.`,
-      },
-      {
-        question: "The teacher needs immediate silence from the whole class.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "If you can hear me, stop talking.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Take a guess.",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Change roles, please.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This is an attention-getting strategy that works without shouting and quickly reduces noise.
-Option B increases talking.
-Option C is unrelated to attention control.`,
-      },
-      {
-        question: "Students need to refocus on the lesson after being distracted.",
-        choices: [
-          {
-            choice_id: "A",
-            text: "Let’s get back to the task.",
-            rating: "best",
-          },
-          {
-            choice_id: "B",
-            text: "Who would like to share?",
-            rating: "acceptable",
-          },
-          {
-            choice_id: "C",
-            text: "Keep it up.",
-            rating: "acceptable",
-          },
-        ],
-        best_choice_id: "A",
-        detailed_explanation: `This sentence smoothly redirects students back to learning without scolding.
-Option B encourages speaking before focus is restored.
-Option C reinforces off-task behavior.`,
-      },
-    ],
- 
-  },
+  // Global Quizzes
+  quizzes: [
+    {
+      question: "Late Arrival: It’s 10 minutes past the bell. A student, Tom, opens the door and walks in.",
+      choices: [
+        { choice_id: "A", text: "You’re late.", rating: "not recommended" },
+        { choice_id: "B", text: "That’s all right. Sit down and we can start.", rating: "best" },
+        { choice_id: "C", text: "But try not to be late next time.", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B keeps the lesson moving and avoids embarrassing the student in front of the class. It shows tolerance while maintaining lesson flow. Answer C can be used as a follow-up reminder but should not be the first reaction. Answer A is too direct and may create tension or anxiety.",
+      principle: "In classroom routines, teachers should prioritize lesson continuity and a supportive atmosphere over public reprimands."
+    },
+    {
+      question: "Noisy Start: The lesson should have started, but students are still chatting loudly about their weekend.",
+      choices: [
+        { choice_id: "A", text: "It’s time to start.", rating: "acceptable" },
+        { choice_id: "B", text: "I’m waiting to start.", rating: "not recommended" },
+        { choice_id: "C", text: "Settle down, everybody.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "“Settle down, everybody” is a clear whole-class instruction that directly addresses noise and behavior. “It’s time to start” signals the lesson beginning but does not explicitly control noise. “I’m waiting to start” is passive and may not be effective with a noisy class.",
+      principle: "When the whole class is noisy, instructions should be direct, explicit, and addressed to everyone."
+    },
+    {
+      question: "Irrelevant Materials: A student has their Chemistry book open on their desk during the English lesson.",
+      choices: [
+        { choice_id: "A", text: "Put your things away, please.", rating: "best" },
+        { choice_id: "B", text: "Put your geography book away.", rating: "acceptable" },
+        { choice_id: "C", text: "This is an English lesson, not a biology lesson.", rating: "not recommended" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A corrects the behavior politely without embarrassing the student. Answer B works but assumes the wrong subject and may sound careless. Answer C sounds sarcastic and may damage teacher–student rapport.",
+      principle: "Corrections should be neutral and task-focused rather than personal or sarcastic."
+    },
+    {
+      question: "Forgotten Textbook: A student, Sara, realizes she forgot her textbook at home.",
+      choices: [
+        { choice_id: "A", text: "Is there anybody without a textbook?", rating: "acceptable" },
+        { choice_id: "B", text: "Share with someone else.", rating: "best" },
+        { choice_id: "C", text: "Don’t forget it next time.", rating: "not recommended" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B offers an immediate practical solution so learning can continue. Answer A is useful for identifying the situation but does not solve it yet. Answer C focuses on blame instead of supporting learning in the moment.",
+      principle: "When materials are missing, teachers should first ensure participation, then address responsibility later."
+    },
+    {
+      question: "Classroom Temperature: You walk into the room and immediately feel it is uncomfortably hot and stuffy.",
+      choices: [
+        { choice_id: "A", text: "Phew! It’s warm in here today.", rating: "not recommended" },
+        { choice_id: "B", text: "Open a window, please.", rating: "best" },
+        { choice_id: "C", text: "Let’s have/keep the door open.", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B gives a clear, actionable instruction to improve learning conditions. Answer C is also practical but may not be enough on its own. Answer A only comments on the situation without solving it.",
+      principle: "Teachers should give clear instructions rather than observations when action is needed."
+    },
+    {
+      question: "Attendance Check: You are taking the register and notice a student, Mari, is absent.",
+      choices: [
+        { choice_id: "A", text: "Let’s see if everyone’s here.", rating: "acceptable" },
+        { choice_id: "B", text: "Who’s absent?", rating: "not recommended" },
+        { choice_id: "C", text: "Where’s Mari this morning?", rating: "best" },
+        { choice_id: "D", text: "Does anybody know why?", rating: "acceptable" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C identifies the absent student clearly and naturally during the register. Answer A is general and suitable at the start of roll call. Answer D can be useful but may lead to speculation. Answer B is vague and less efficient.",
+      principle: "Attendance language should be clear, specific, and factual."
+    },
+    {
+      question: "Student’s Return: Kai returns to class after being away for two weeks due to illness.",
+      choices: [
+        { choice_id: "A", text: "Welcome back! We missed you.", rating: "best" },
+        { choice_id: "B", text: "Are you feeling better today, Kai?", rating: "acceptable" },
+        { choice_id: "C", text: "I hope you can catch up.", rating: "not recommended" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A creates a warm, supportive classroom atmosphere. Answer B shows care but focuses on health rather than reintegration. Answer C may sound pressuring instead of welcoming.",
+      principle: "Returning students should feel emotionally supported before academic expectations are emphasized."
+    },
+    {
+      question: "Checking Homework Status: You start the lesson by checking the assigned homework.",
+      choices: [
+        { choice_id: "A", text: "First of all, (this time) we’ll check your homework.", rating: "best" },
+        { choice_id: "B", text: "Did you all (manage to) do exercise 12/prepare this chapter?", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A clearly signals lesson structure and next steps. Answer B checks completion but does not organize the lesson sequence.",
+      principle: "Clear lesson staging helps students follow classroom routines more easily."
+    },
+    {
+      question: "End of Break Transition: The short break is over, and you need students to immediately return to their seats.",
+      choices: [
+        { choice_id: "A", text: "It’s time to get started again.", rating: "acceptable" },
+        { choice_id: "B", text: "On/Off we go again!", rating: "not recommended" },
+        { choice_id: "C", text: "Let’s get back to work.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C directly signals the transition back to learning. Answer A is neutral but less action-oriented. Answer B is informal and may not prompt immediate compliance.",
+      principle: "After breaks, transition language should be clear and task-focused."
+    },
+    {
+      question: "Setting Homework: You need to assign the remaining reading task as homework for the next lesson.",
+      choices: [
+        { choice_id: "A", text: "This is your homework for tonight/next time/next lesson.", rating: "best" },
+        { choice_id: "B", text: "Finish this off at home.", rating: "acceptable" },
+        { choice_id: "C", text: "Don’t forget about your homework.", rating: "not recommended" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A clearly defines the task and time frame. Answer B works but lacks specificity. Answer C is a reminder, not a clear assignment.",
+      principle: "Homework instructions should be explicit about task and deadline."
+    },
+    {
+      question: "Switching Language: Students are discussing a task using their L1, and you need to remind them to use English.",
+      choices: [
+        { choice_id: "A", text: "In English, please.", rating: "best" },
+        { choice_id: "B", text: "Try to use English.", rating: "acceptable" },
+        { choice_id: "C", text: "Use English as much as you can.", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A is short, clear, and immediately corrects the behavior. Answers B and C are softer reminders and work better when the problem is not serious.",
+      principle: "Language reminders should be brief and non-disruptive."
+    },
+    {
+      question: "Starting a New Task: You have finished checking homework and need to announce the next activity (e.g., group work).",
+      choices: [
+        { choice_id: "A", text: "Let’s move on.", rating: "best" },
+        { choice_id: "B", text: "(Now) we’ll/let’s go on.", rating: "acceptable" },
+        { choice_id: "C", text: "Now we’ll do another exercise.", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A clearly signals a transition. Answers B and C also work but are less concise.",
+      principle: "Transitions should be simple and clearly mark lesson progression."
+    },
+    {
+      question: "Setting Time Limits: You assign an individual reading task and want to give them exactly five minutes.",
+      choices: [
+        { choice_id: "A", text: "You have five minutes.", rating: "best" },
+        { choice_id: "B", text: "I’ll give you five minutes on this/to do this.", rating: "acceptable" },
+        { choice_id: "C", text: "Don’t spend more than a few minutes on/doing this exercise.", rating: "not recommended" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A is precise and unambiguous. Answer C is vague and may confuse students.",
+      principle: "Time limits should be clear and specific."
+    },
+    {
+      question: "Checking Instructions: You have just explained a complex activity and need to check if everyone understood what to do.",
+      choices: [
+        { choice_id: "A", text: "Is everything clear?", rating: "acceptable" },
+        { choice_id: "B", text: "Are there any questions (before we start)?", rating: "best" },
+        { choice_id: "C", text: "Have you all understood?", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B invites clarification more naturally than yes/no questions.",
+      principle: "Effective instruction checking encourages questions, not silence."
+    },
+    {
+      question: "Starting Work: The instructions are clear, and you need the students to immediately begin working.",
+      choices: [
+        { choice_id: "A", text: "Right. You can start.", rating: "best" },
+        { choice_id: "B", text: "Away/Off you go.", rating: "acceptable" },
+        { choice_id: "C", text: "Let’s get to work.", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A is direct and signals immediate action.",
+      principle: "Clear start signals reduce hesitation and wasted time."
+    },
+    {
+      question: "Warning Time: Students are busy working in pairs, and you need to warn them they only have two minutes left.",
+      choices: [
+        { choice_id: "A", text: "OK, everybody. Two more minutes.", rating: "best" },
+        { choice_id: "B", text: "(Just) a couple more minutes.", rating: "acceptable" },
+        { choice_id: "C", text: "One minute left/remaining/to go.", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A gives a clear and specific time warning.",
+      principle: "Time warnings help students manage pace and finish tasks."
+    },
+    {
+      question: "Stopping Work: The timer rings, and students need to stop immediately before checking the answers.",
+      choices: [
+        { choice_id: "A", text: "Right. That’s enough.", rating: "acceptable" },
+        { choice_id: "B", text: "All right. Stop now.", rating: "acceptable" },
+        { choice_id: "C", text: "Stop writing/working.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C specifies the exact action to stop.",
+      principle: "Stopping instructions should be explicit and observable."
+    },
+    {
+      question: "Forming Pairs: You need the students to move from individual work to a pair activity quickly.",
+      choices: [
+        { choice_id: "A", text: "Find yourself a partner.", rating: "best" },
+        { choice_id: "B", text: "I want you to pair off.", rating: "acceptable" },
+        { choice_id: "C", text: "Work together with a friend/your neighbour/the person next to you.", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A is natural and quick to process.",
+      principle: "Grouping instructions should minimize confusion and movement time."
+    },
+    {
+      question: "Forming Groups: You need to divide the class of 24 students into working groups of four.",
+      choices: [
+        { choice_id: "A", text: "Work in groups.", rating: "best" },
+        { choice_id: "B", text: "Get into groups. Three students in/to each group.", rating: "acceptable" },
+        { choice_id: "C", text: "I’d like you to arrange/divide yourselves into two teams/threes.", rating: "not recommended" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A fits the requirement clearly. Answer B gives incorrect numbers.",
+      principle: "Group size instructions must match the task exactly."
+    },
+    {
+      question: "Odd Number of Students: You have 15 students, and you asked them to work in pairs. Melanie is left alone.",
+      choices: [
+        { choice_id: "A", text: "Is there anybody on their own/left over/without a partner?", rating: "acceptable" },
+        { choice_id: "B", text: "Could you join this group, Melanie?", rating: "best" },
+        { choice_id: "C", text: "You’ll have to join Julia’s group.", rating: "not recommended" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B solves the problem politely and directly.",
+      principle: "Individual students should be addressed respectfully and clearly."
+    },
+    {
+      question: "Individual Work Instructions: You are giving a test and need to ensure students work independently.",
+      choices: [
+        { choice_id: "A", text: "Work on your own.", rating: "best" },
+        { choice_id: "B", text: "Work by yourself/yourselves.", rating: "acceptable" },
+        { choice_id: "C", text: "Everybody work individually.", rating: "acceptable" },
+        { choice_id: "D", text: "No cheating, please.", rating: "not recommended" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A sets expectations positively without accusing students.",
+      principle: "Instructions should focus on desired behavior, not suspicion."
+    },
+    {
+      question: "Reading Aloud – Nomination: Students are reading a dialogue in turns. It is Tim’s turn.",
+      choices: [
+        { choice_id: "A", text: "Your turn.", rating: "acceptable" },
+        { choice_id: "B", text: "It’s your turn (to read), Tim.", rating: "best" },
+        { choice_id: "C", text: "Go ahead, Ibrahim.", rating: "not recommended" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B avoids ambiguity and names the student clearly.",
+      principle: "Clear nomination prevents confusion in whole-class activities."
+    },
+    {
+      question: "Reading Aloud – Stopping: Tim has read a long paragraph, and you want the next student to continue.",
+      choices: [
+        { choice_id: "A", text: "Stop there, please.", rating: "best" },
+        { choice_id: "B", text: "That’s enough/fine, thank you.", rating: "acceptable" },
+        { choice_id: "C", text: "That will do fine/nicely, thank you.", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A gives a clear stopping point.",
+      principle: "Stopping cues should be polite but firm."
+    },
+    {
+      question: "Calling for Volunteers: You need someone to come to the board to write down the brainstormed ideas.",
+      choices: [
+        { choice_id: "A", text: "Who would like to do this?", rating: "best" },
+        { choice_id: "B", text: "Are there any volunteers?", rating: "acceptable" },
+        { choice_id: "C", text: "Anybody willing to clean the board for me?", rating: "not recommended" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A directly matches the task.",
+      principle: "Volunteer requests should match the task purpose."
+    },
+    {
+      question: "Managing Overeager Students: Piia keeps raising her hand to answer, even though she has already had two turns.",
+      choices: [
+        { choice_id: "A", text: "Not you again.", rating: "not recommended" },
+        { choice_id: "B", text: "You’ve already had a turn/go.", rating: "acceptable" },
+        { choice_id: "C", text: "Let’s give someone else a chance.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C encourages fairness without embarrassing the student.",
+      principle: "Participation management should be inclusive and respectful."
+    },
+    {
+      question: "Excessive Noise Level: The classroom noise level during group work has become too high.",
+      choices: [
+        { choice_id: "A", text: "There’s too much noise.", rating: "acceptable" },
+        { choice_id: "B", text: "Quiet, please!", rating: "not recommended" },
+        { choice_id: "C", text: "Keep your voices down.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C allows students to continue working while adjusting their volume appropriately. Answer A identifies the problem but does not clearly guide behavior. Answer B is abrupt and may sound impatient during group work.",
+      principle: "When managing noise during activities, teachers should correct behavior without stopping productive interaction."
+    },
+    {
+      question: "Inattentive Students: You are giving crucial instructions, but a group of students is looking elsewhere and talking.",
+      choices: [
+        { choice_id: "A", text: "Please listen to the instructions.", rating: "acceptable" },
+        { choice_id: "B", text: "Can I have your attention?", rating: "acceptable" },
+        { choice_id: "C", text: "It is important that I have your full attention now, please.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C clearly communicates urgency and importance. Answer B is polite and effective in most situations. Answer A is correct but less emphatic.",
+      principle: "Important instructions require explicit attention signals."
+    },
+    {
+      question: "Student Out of Seat: Simon is wandering around the back of the class during quiet work time.",
+      choices: [
+        { choice_id: "A", text: "Simon, what are you doing out of your seat?", rating: "not recommended" },
+        { choice_id: "B", text: "Sit down, please.", rating: "acceptable" },
+        { choice_id: "C", text: "Go back to your seat.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C is clear and corrective without confrontation. Answer B is polite but less specific. Answer A may embarrass the student publicly.",
+      principle: "Correct behavior directly while preserving student dignity."
+    },
+    {
+      question: "Distracting Behaviour: Joe is tapping his pen repeatedly on his desk, annoying other students.",
+      choices: [
+        { choice_id: "A", text: "Stop that.", rating: "not recommended" },
+        { choice_id: "B", text: "Don’t keep fidgeting.", rating: "acceptable" },
+        { choice_id: "C", text: "Please don’t tap your fingers.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C is polite and specific. Answer B is informal but acceptable. Answer A is too abrupt.",
+      principle: "Behavior correction should be calm and specific."
+    },
+    {
+      question: "Positive Feedback (Correct Answer): Maria answers a complex question correctly.",
+      choices: [
+        { choice_id: "A", text: "That’s right.", rating: "acceptable" },
+        { choice_id: "B", text: "Excellent.", rating: "best" },
+        { choice_id: "C", text: "Well done.", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B gives strong positive reinforcement. Answers A and C are supportive but less enthusiastic.",
+      principle: "Specific praise reinforces successful learning."
+    },
+    {
+      question: "Negative Feedback (Incorrect Answer): Tim answers a question, but his response is grammatically incorrect.",
+      choices: [
+        { choice_id: "A", text: "No, that’s wrong.", rating: "not recommended" },
+        { choice_id: "B", text: "Not quite right.", rating: "acceptable" },
+        { choice_id: "C", text: "Good try, but not quite right.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C balances correction with encouragement. Answer B is neutral but less supportive. Answer A may discourage participation.",
+      principle: "Error correction should support confidence and learning."
+    },
+    {
+      question: "Encouraging Retry: A shy student, Lena, gives a wrong answer and looks discouraged.",
+      choices: [
+        { choice_id: "A", text: "Have another try.", rating: "acceptable" },
+        { choice_id: "B", text: "Don’t give up.", rating: "acceptable" },
+        { choice_id: "C", text: "You’re on the right track.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C reassures the student and guides further effort. Answers A and B encourage persistence.",
+      principle: "Encouragement reduces anxiety and promotes risk-taking."
+    },
+    {
+      question: "Speaking Too Quietly: Minna answers your question but speaks so softly that you can barely hear her.",
+      choices: [
+        { choice_id: "A", text: "Sorry?", rating: "acceptable" },
+        { choice_id: "B", text: "Louder, please.", rating: "acceptable" },
+        { choice_id: "C", text: "Could you repeat what you said?", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C is polite and clear. Answer B is direct but acceptable. Answer A may sound unclear.",
+      principle: "Teachers should request clarification politely."
+    },
+    {
+      question: "Slow Work Pace: The deadline for a written exercise is approaching, but a few students are still moving slowly.",
+      choices: [
+        { choice_id: "A", text: "I’ll have to hurry you.", rating: "acceptable" },
+        { choice_id: "B", text: "Let’s pick up the pace.", rating: "best" },
+        { choice_id: "C", text: "Hurry up now.", rating: "not recommended" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B motivates without pressure. Answer A is neutral. Answer C may sound harsh.",
+      principle: "Motivation works better than pressure."
+    },
+    {
+      question: "Misunderstanding/Needs Repetition: A student asks you to repeat the instructions because they missed the beginning.",
+      choices: [
+        { choice_id: "A", text: "I didn’t catch what you said.", rating: "acceptable" },
+        { choice_id: "B", text: "Could you speak more slowly?", rating: "acceptable" },
+        { choice_id: "C", text: "Shall I go over the instructions again?", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C directly solves the problem. Answers A and B are clarification tools.",
+      principle: "Teachers should ensure clarity of instructions."
+    },
+    {
+      question: "Looking for Help: A student raises their hand and looks confused about the task.",
+      choices: [
+        { choice_id: "A", text: "Any problems?", rating: "acceptable" },
+        { choice_id: "B", text: "What’s the matter?", rating: "acceptable" },
+        { choice_id: "C", text: "Are you stuck?", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C clearly identifies learning difficulty.",
+      principle: "Offer help without judgment."
+    },
+    {
+      question: "Cleaning up: The class has finished an art project, and there is paper and glue all over the desks.",
+      choices: [
+        { choice_id: "A", text: "What a mess!", rating: "not recommended" },
+        { choice_id: "B", text: "Let’s tidy up before we begin.", rating: "best" },
+        { choice_id: "C", text: "Pick up the rubbish, please.", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B encourages cooperation. Answer A sounds critical.",
+      principle: "Use inclusive language for classroom management."
+    },
+    {
+      question: "Returning to Normal Seating: After a group activity where students rearranged desks, you need to set the room back to rows.",
+      choices: [
+        { choice_id: "A", text: "We have to put the furniture back.", rating: "acceptable" },
+        { choice_id: "B", text: "Put the desks in their original rows.", rating: "best" },
+        { choice_id: "C", text: "Please make sure the desks are straight.", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B gives clear instruction.",
+      principle: "Be specific with physical classroom arrangements."
+    },
+    {
+      question: "Apology for Teacher Mistake: You realize you wrote the wrong date or page number on the board.",
+      choices: [
+        { choice_id: "A", text: "I’m sorry. I’ve made a mistake.", rating: "best" },
+        { choice_id: "B", text: "I didn’t notice it.", rating: "acceptable" },
+        { choice_id: "C", text: "It should say…", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A models accountability.",
+      principle: "Teachers should model responsibility."
+    },
+    {
+      question: "General Praise (End of Lesson): The class has worked diligently on a challenging task all lesson.",
+      choices: [
+        { choice_id: "A", text: "You have worked very well today.", rating: "best" },
+        { choice_id: "B", text: "Well done everybody.", rating: "acceptable" },
+        { choice_id: "C", text: "Excellent job!", rating: "acceptable" }
+      ],
+      best_choice_id: "A",
+      explanation: "Answer A gives specific praise.",
+      principle: "Reflective praise reinforces effort."
+    },
+    {
+      question: "Giving Advice/Suggestion: You notice a student’s notes are disorganized, and you want to suggest a better approach.",
+      choices: [
+        { choice_id: "A", text: "How about using the spellchecker?", rating: "acceptable" },
+        { choice_id: "B", text: "I suggest saving your work regularly.", rating: "acceptable" },
+        { choice_id: "C", text: "I think you should copy these sentences down.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C directly addresses the issue.",
+      principle: "Advice should be practical and relevant."
+    },
+    {
+      question: "Changing Room Announcement: You need to inform students that your next lesson will be in a different room.",
+      choices: [
+        { choice_id: "A", text: "I have something to tell you.", rating: "acceptable" },
+        { choice_id: "B", text: "Next time we’ll meet in room 23.", rating: "best" },
+        { choice_id: "C", text: "There’s been a change of room.", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B gives clear information.",
+      principle: "Important information should be explicit."
+    },
+    {
+      question: "Collecting Materials: Students have finished a written test, and you need one person from each row to collect the papers.",
+      choices: [
+        { choice_id: "A", text: "Collect the books in.", rating: "acceptable" },
+        { choice_id: "B", text: "Could the first person in each row collect the books?", rating: "best" },
+        { choice_id: "C", text: "Pile the books up on my desk.", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B gives clear roles.",
+      principle: "Clear delegation saves time."
+    },
+    {
+      question: "Confirming Vocabulary: You ask the class about a new word, ‘persistent,’ and need to explain its meaning clearly.",
+      choices: [
+        { choice_id: "A", text: "Do you know the meaning of this word?", rating: "acceptable" },
+        { choice_id: "B", text: "This means the same as he left.", rating: "not recommended" },
+        { choice_id: "C", text: "If I keep trying and don’t give up, I am persistent.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C gives a clear definition. Answer A is acceptable. Answer B is not recommended.",
+      principle: "Vocabulary should be explained with meaning, not guesses."
+    },
+    {
+      question: "Dealing with Distraction (Daydreaming): Joe is staring out the window, clearly not concentrating on the task.",
+      choices: [
+        { choice_id: "A", text: "Return to your work please.", rating: "acceptable" },
+        { choice_id: "B", text: "Stop daydreaming.", rating: "not recommended" },
+        { choice_id: "C", text: "Keep your attention on your work.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C redirects without blame. Principle: Redirection is better than criticism.",
+      principle: "Redirection is better than criticism."
+    },
+    {
+      question: "Student Apology for Lateness: Maria rushes in late and says, “Sorry I’m late.”",
+      choices: [
+        { choice_id: "A", text: "That’s all right.", rating: "acceptable" },
+        { choice_id: "B", text: "Never mind. Let’s go on with the lesson.", rating: "best" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B accepts the apology and resumes learning.",
+      principle: "Handling lateness should minimize disruption."
+    },
+    {
+      question: "Asking for Group Opinions: The class has read an article about climate change, and you want to start a discussion about their views.",
+      choices: [
+        { choice_id: "A", text: "What do you think?", rating: "acceptable" },
+        { choice_id: "B", text: "Let’s talk about the problem.", rating: "acceptable" },
+        { choice_id: "C", text: "What’s your opinion on this topic?", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C invites thoughtful responses.",
+      principle: "Open questions promote discussion."
+    },
+    {
+      question: "Time Out: You need to step out of the classroom for a minute (e.g., talk to a colleague) and want the class to continue working quietly.",
+      choices: [
+        { choice_id: "A", text: "Excuse me for a moment.", rating: "acceptable" },
+        { choice_id: "B", text: "Carry on with the exercise.", rating: "best" },
+        { choice_id: "C", text: "I’ll leave you to it.", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B clearly instructs continued work.",
+      principle: "Maintain learning continuity."
+    },
+    {
+      question: "Asking for Clarification of Opinion: A student makes a vague statement about the discussion topic (e.g., \"It's too much\").",
+      choices: [
+        { choice_id: "A", text: "I’m not sure what you mean.", rating: "acceptable" },
+        { choice_id: "B", text: "Could you explain what you mean?", rating: "best" },
+        { choice_id: "C", text: "What exactly are you trying to say?", rating: "acceptable" }
+      ],
+      best_choice_id: "B",
+      explanation: "Answer B encourages elaboration politely.",
+      principle: "Clarification supports deeper thinking."
+    },
+    {
+      question: "Ending Class Greetings: The bell has rung, and students are packing up. You want to say a warm goodbye before a long holiday",
+      choices: [
+        { choice_id: "A", text: "That’s all for today.", rating: "acceptable" },
+        { choice_id: "B", text: "Goodbye, everyone.", rating: "acceptable" },
+        { choice_id: "C", text: "Have a nice weekend.", rating: "best" }
+      ],
+      best_choice_id: "C",
+      explanation: "Answer C ends the lesson warmly and positively.",
+      principle: "Positive closure strengthens teacher–student relationships."
+    }
+  ],
 
   // Test users
   users: [
@@ -1469,9 +786,9 @@ Option C reinforces off-task behavior.`,
       role: "user",
     },
     {
-      username: "huonglinhtest",
-      email: "huonglinhtest@flora.local",
-      password: "huonglinhtest",
+      username: "linhhuongtest",
+      email: "linhhuongtest@flora.local",
+      password: "linhhuongtest",
       full_name: "Tô Linh Hương",
       role: "user",
     },

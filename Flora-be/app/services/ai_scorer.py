@@ -49,21 +49,21 @@ For each error, provide:
 2. word: The specific word from the Target Text.
 3. error_type: One of the 5 categories above.
 4. severity: "mild", "moderate", or "severe".
-5. message: A specific explanation of what went wrong (e.g., "You pronounced /θ/ as /t/").
+5. explanation: A specific explanation of what went wrong (e.g., "You pronounced /θ/ as /t/").
 
 Return ONLY a valid JSON object with this structure:
 {{
-  "off_topic": false, // Set to true if the speech is completely unrelated to target
+  "off_topic": false,
   "errors": [
     {{
       "word_index": 0,
       "word": "example",
       "error_type": "phoneme_error",
       "severity": "moderate",
-      "message": "You pronounced the 'th' sound like a 'd'."
+      "explanation": "You pronounced the 'th' sound like a 'd'."
     }}
   ],
-  "overall_feedback": "A brief summary of the student's performance."
+  "overall_feedback": "A brief summary of the student's performance in English."
 }}
 """
         
@@ -123,6 +123,34 @@ Return ONLY a valid JSON object with this structure:
             
             # Calculate score based on errors and penalties
             errors = ai_result.get("errors", [])
+            
+            # Count target words by splitting on whitespace
+            target_words = target_text.strip().split()
+            total_target_words = len(target_words)
+            
+            # Check if ALL words have errors (every word is wrong)
+            wrong_word_indices = set()
+            for error in errors:
+                if error.get("error_type") == "wrong_word":
+                    wrong_word_indices.add(error.get("word_index"))
+            
+            # If all words are marked as wrong, return score of 0
+            if total_target_words > 0 and len(wrong_word_indices) >= total_target_words:
+                return {
+                    "total_score": 0,
+                    "errors": [{
+                        "word_index": 0,
+                        "word": "All",
+                        "error_type": "wrong_word",
+                        "severity": "severe",
+                        "message": "All words were pronounced incorrectly. Please try again. (Deducted 100 points)",
+                        "penalty": 100
+                    }],
+                    "asr_transcript": audio_transcript,
+                    "overall_feedback": "All words were pronounced incorrectly. Please listen carefully to the target text and try again."
+                }
+            
+            # Otherwise, calculate score based on individual error penalties
             total_penalty = 0
             
             for error in errors:
@@ -138,7 +166,7 @@ Return ONLY a valid JSON object with this structure:
                     total_penalty += 5
                 
                 # Append penalty info to the message
-                error["message"] = f"{error.get('message', '')} (Deducted {error['penalty']} points)"
+                error["message"] = f"{error.get('explanation', 'Error detected')} (Deducted {error['penalty']} points)"
             
             score = max(0, 100 - total_penalty)
             

@@ -8,8 +8,10 @@ from app.schemas.pronunciation import PronunciationAssessResponse, Assessment, P
 from app.services.ai_scorer import gemini_scorer
 from typing import Dict, Any, Optional
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import time
+import random
+from collections import Counter
 
 router = APIRouter(prefix="/pronunciation", tags=["pronunciation"])
 
@@ -219,56 +221,107 @@ async def assess_pronunciation(
 @router.get("/recommendations", response_model=APIResponse)
 async def get_recommendations(
     group_id: Optional[str] = None,
+    exclude_instruction_id: Optional[str] = None,
     limit: int = 5,
     current_user: Dict[str, Any] = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """Get recommended instructions based on error history."""
     try:
-        # Get user's recent errors
+        # 1. Get user's recent errors (last 50 attempts for better history)
         recent_attempts = await db.pronunciation_attempts.find({
             "user_id": ObjectId(current_user["_id"])
-        }).sort("created_at", -1).limit(20).to_list(length=20)
+        }).sort("created_at", -1).to_list(length=50)
         
-        # Count error types
-        error_counts = {}
+        # 2. Extract words and error types they struggle with
+        missed_words = []
+        error_types = []
         for attempt in recent_attempts:
-            for error in attempt.get("assessment", {}).get("errors", []):
-                error_type = error.get("error_type", "")
-                error_counts[error_type] = error_counts.get(error_type, 0) + 1
+            errors = attempt.get("assessment", {}).get("errors", [])
+            for error in errors:
+                word = error.get("word", "").lower().strip()
+                if word and word != "all":  # Exclude generic "all" errors
+                    missed_words.append(word)
+                error_types.append(error.get("error_type", ""))
         
-        # Get instructions matching error types (simplified recommendation)
+        word_counts = Counter(missed_words)
+        common_missed_words = [word for word, count in word_counts.most_common(10)]
+        
+        # 3. Get potential instructions
         query = {"is_active": True}
         if group_id:
             query["group_id"] = ObjectId(group_id)
         
-        all_instructions = await db.instructions.find(query).to_list(length=100)
+        # Exclude the just-practiced instruction
+        if exclude_instruction_id:
+            query["_id"] = {"$ne": ObjectId(exclude_instruction_id)}
         
-        # Simple scoring: prefer instructions user hasn't practiced much
-        recommendations = []
-        for inst in all_instructions[:limit]:
-            inst["id"] = str(inst.pop("_id"))
-            inst["group_id"] = str(inst["group_id"])
+        all_instructions = await db.instructions.find(query).to_list(length=200)
+        
+        # 4. Score each instruction based on relevance to user's history
+        scored_instructions = []
+        for inst in all_instructions:
+            inst_text = inst["text"].lower()
+            score = 0
+            matched_words = []
             
-            # Check if user has practiced this
-            attempt_count = await db.pronunciation_attempts.count_documents({
+            # Higher bonus for same group if group_id is specified
+            if group_id and str(inst["group_id"]) == group_id:
+                score += 20  # Strong preference for same group
+            
+            # Bonus for containing missed words
+            for word in common_missed_words:
+                if word in inst_text:
+                    word_score = 5 * word_counts[word]  # More missed = higher priority
+                    score += word_score
+                    matched_words.append(word)
+            
+            # Check if user has practiced this (prefer less practiced or poorly performed)
+            attempts = await db.pronunciation_attempts.find({
                 "user_id": ObjectId(current_user["_id"]),
-                "instruction_id": ObjectId(inst["id"])
+                "instruction_id": inst["_id"]
+            }).to_list(length=100)
+            
+            if not attempts:
+                score += 10  # New material is good
+            else:
+                best_score = max([a["assessment"].get("total_score", 0) for a in attempts])
+                if best_score < 70:
+                    score += 15  # Struggling with this one
+                elif best_score < 90:
+                    score += 5   # Can improve
+            
+            # Add some randomness to avoid staleness
+            score += random.uniform(0, 5)
+            
+            # Generate detailed reason
+            if matched_words:
+                words_str = ", ".join([f"'{w}'" for w in matched_words[:3]])  # Show max 3 words
+                reason = f"Contains words you often mispronounce: {words_str}"
+            elif not attempts:
+                reason = "New practice material for you"
+            elif best_score < 70:
+                reason = "You can improve on this one"
+            else:
+                reason = "Recommended to strengthen your skills"
+            
+            scored_instructions.append({
+                "instruction_id": str(inst["_id"]),
+                "text": inst["text"],
+                "instruction_number": inst.get("instruction_number"),
+                "group_id": str(inst["group_id"]),
+                "score": score,
+                "reason": reason,
+                "matched_error_words": matched_words[:3]  # For UI to highlight
             })
             
-            recommendations.append({
-                "instruction_id": inst["id"],
-                "text": inst["text"],
-                "reason": "Practice this to improve your pronunciation",
-                "priority_score": 10 - attempt_count  # Higher priority for less practiced
-            })
-        
-        # Sort by priority
-        recommendations.sort(key=lambda x: x["priority_score"], reverse=True)
+        # 5. Sort by score and take top N
+        scored_instructions.sort(key=lambda x: x["score"], reverse=True)
+        recommendations = scored_instructions[:limit]
         
         return APIResponse(
             success=True,
-            data={"recommendations": recommendations[:limit]}
+            data={"recommendations": recommendations}
         )
         
     except Exception as e:

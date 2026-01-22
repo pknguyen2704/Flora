@@ -11,8 +11,9 @@ import {
 import HomeIcon from "@mui/icons-material/Home";
 import SchoolIcon from "@mui/icons-material/School";
 import MicIcon from "@mui/icons-material/Mic";
+import QuizIcon from "@mui/icons-material/Quiz";
 import { useNavigate, useLocation } from "react-router-dom";
-
+import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
 const Sidebar = React.memo(function Sidebar({
   activeSection,
   onSectionChange,
@@ -39,11 +40,19 @@ const Sidebar = React.memo(function Sidebar({
     },
     {
       id: "groups",
-      label: "Instruction Practice",
-      icon: <SchoolIcon />,
-      type: "section",
+      label: "Instruction Pronunciation",
+      icon: <RecordVoiceOverIcon />,
+      type: "link",
       path: "/instruction-practice",
     },
+    {
+      id: "quiz",
+      label: "Instruction Quiz",
+      icon: <QuizIcon />,
+      type: "link",
+      path: "/quiz",
+    },
+
   ], []);
 
   // Memoize active section determination
@@ -57,7 +66,11 @@ const Sidebar = React.memo(function Sidebar({
     if (path === "/home") {
       return section || "overview";
     }
+    if (path === "/home") {
+      return section || "overview";
+    }
     if (path === "/instruction/custom") return "custom-instruction";
+    if (path.startsWith("/quiz") || path.startsWith("/situations/quiz")) return "quiz";
     if (
       path === "/instruction-practice" ||
       path.startsWith("/group/") ||

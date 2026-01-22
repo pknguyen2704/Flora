@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Box,
@@ -29,6 +29,11 @@ import {
   Assessment,
   EditNote,
   RecordVoiceOver,
+  Psychology,
+  ArrowForward,
+  TrendingDown,
+  TrendingUp,
+  Quiz as QuizIcon,
 } from "@mui/icons-material";
 import AudioRecorder from "~/components/shared/AudioRecorder";
 import { pronunciationService } from "~/services/pronunciationService";
@@ -43,6 +48,7 @@ const PANEL_WIDTH_COLLAPSED = 80;
 
 export default function PronunciationPractice() {
   const { groupId } = useParams();
+  const navigate = useNavigate();
   const { showNotification } = useNotification();
   const {
     collapsed: sidebarCollapsed,
@@ -63,26 +69,27 @@ export default function PronunciationPractice() {
   const [submitting, setSubmitting] = useState(false);
   const [assessment, setAssessment] = useState(null);
   const [sessionId] = useState(`session_${Date.now()}`);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [userStats, setUserStats] = useState(null);
+  const [groupName, setGroupName] = useState("");
 
-  // Auto-collapse sidebar when entering this page
-  useEffect(() => {
-    setCollapsed(true);
-  }, [setCollapsed]);
 
-  useEffect(() => {
-    const loadInstructions = async () => {
-      try {
-        const response = await pronunciationService.getInstructions(groupId);
-        if (response.success) {
-          setInstructions(response.data.instructions || []);
-        }
-      } catch {
-        showNotification("Failed to load instructions", "error");
-      } finally {
-        setLoading(false);
+  const loadInstructions = async () => {
+    try {
+      const response = await pronunciationService.getInstructions(groupId);
+      if (response.success) {
+        setInstructions(response.data.instructions || []);
+        setGroupName(response.data.group_name || "");
       }
-    };
+    } catch {
+      showNotification("Failed to load instructions", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (groupId) {
       loadInstructions();
     }
@@ -132,11 +139,51 @@ export default function PronunciationPractice() {
 
       if (response.success) {
         setAssessment(response.data.assessment);
+        setUserStats(response.data.user_stats);
+
+        // Refresh the instructions list to update stats
+        loadInstructions();
+
+        // Fetch recommendations after a successful submission
+        handleGetRecommendations();
       }
     } catch {
       showNotification("Assessment failed", "error");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleGetRecommendations = async () => {
+    console.log("🔍 Fetching recommendations for groupId:", groupId, "excluding:", selectedInstruction?.id);
+    setLoadingRecommendations(true);
+    try {
+      const response = await pronunciationService.getRecommendations(
+        groupId,
+        selectedInstruction?.id,  // Exclude current instruction
+        5
+      );
+      console.log("📊 Recommendations response:", response);
+      if (response.success) {
+        const recs = response.data.recommendations || [];
+        console.log("✅ Setting recommendations:", recs.length, "items", recs);
+        setRecommendations(recs);
+      } else {
+        console.warn("⚠️ Recommendations fetch not successful:", response);
+      }
+    } catch (error) {
+      console.error("❌ Failed to load recommendations:", error);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+
+  const handleSelectRecommendedInstruction = (instructionId) => {
+    const instruction = instructions.find(inst => inst.id === instructionId);
+    if (instruction) {
+      handleSelectInstruction(instruction);
+      // Scroll to top of practice area
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -415,10 +462,10 @@ export default function PronunciationPractice() {
                                     borderRadius: 2,
                                     background: getScoreGradient(score),
                                     boxShadow: `0 2px 8px ${score >= 90
-                                        ? "rgba(16,185,129,0.3)"
-                                        : score >= 70
-                                          ? "rgba(245,158,11,0.3)"
-                                          : "rgba(239,68,68,0.3)"
+                                      ? "rgba(16,185,129,0.3)"
+                                      : score >= 70
+                                        ? "rgba(245,158,11,0.3)"
+                                        : "rgba(239,68,68,0.3)"
                                       }`,
                                   }}
                                 >
@@ -539,6 +586,7 @@ export default function PronunciationPractice() {
               </List>
             )}
           </Box>
+
         </Box>
 
         {/* Main Content Area - Right Side */}
@@ -563,6 +611,20 @@ export default function PronunciationPractice() {
           >
             {/* Header */}
             <Box sx={{ mb: 4, textAlign: "center", maxWidth: 700 }}>
+              {groupName && (
+                <Typography
+                  variant="overline"
+                  sx={{
+                    fontWeight: 700,
+                    color: "primary.main",
+                    letterSpacing: 1.5,
+                    mb: 1,
+                    display: "block",
+                  }}
+                >
+                  {groupName}
+                </Typography>
+              )}
               <Typography
                 variant="h4"
                 sx={{
@@ -667,33 +729,62 @@ export default function PronunciationPractice() {
                             >
                               "{selectedInstruction.text}"
                             </Typography>
-                            {selectedInstruction.user_stats?.best_score !=
-                              null && (
+                            {selectedInstruction.user_stats?.attempts_count > 0 && (
+                              <Box
+                                sx={{
+                                  mt: 3,
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  gap: 2,
+                                  flexWrap: "wrap",
+                                }}
+                              >
                                 <Box
                                   sx={{
-                                    mt: 3,
                                     display: "inline-flex",
                                     alignItems: "center",
                                     gap: 1,
                                     px: 3,
-                                    py: 1.5,
+                                    py: 1,
                                     borderRadius: 3,
                                     background: getScoreGradient(
                                       selectedInstruction.user_stats.best_score
                                     ),
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                                   }}
                                 >
-                                  <EmojiEvents sx={{ color: "white" }} />
+                                  <TrendingUp sx={{ color: "white", fontSize: 18 }} />
                                   <Typography
-                                    variant="body1"
-                                    sx={{ color: "white", fontWeight: 600 }}
+                                    variant="body2"
+                                    sx={{ color: "white", fontWeight: 700 }}
                                   >
-                                    Your Best:{" "}
-                                    {selectedInstruction.user_stats.best_score}
-                                    /100
+                                    Best: {selectedInstruction.user_stats.best_score}
                                   </Typography>
                                 </Box>
-                              )}
+                                <Box
+                                  sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    px: 3,
+                                    py: 1,
+                                    borderRadius: 3,
+                                    background: getScoreGradient(
+                                      selectedInstruction.user_stats.worst_score
+                                    ),
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                  }}
+                                >
+                                  <TrendingDown sx={{ color: "white", fontSize: 18 }} />
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ color: "white", fontWeight: 700 }}
+                                  >
+                                    Worst: {selectedInstruction.user_stats.worst_score}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            )}
                           </Box>
 
                           <Box
@@ -906,10 +997,10 @@ export default function PronunciationPractice() {
                           textAlign: "center",
                           color: "white",
                           boxShadow: `0px 4px 16px ${assessment.total_score >= 90
-                              ? "rgba(16, 185, 129, 0.3)"
-                              : assessment.total_score >= 70
-                                ? "rgba(245, 158, 11, 0.3)"
-                                : "rgba(239, 68, 68, 0.3)"
+                            ? "rgba(16, 185, 129, 0.3)"
+                            : assessment.total_score >= 70
+                              ? "rgba(245, 158, 11, 0.3)"
+                              : "rgba(239, 68, 68, 0.3)"
                             }`,
                           position: "relative",
                           overflow: "hidden",
@@ -1004,6 +1095,68 @@ export default function PronunciationPractice() {
                         </Paper>
                       )}
 
+                      {/* Highlighted Sentence */}
+                      <Box sx={{ mb: 4, textAlign: "center" }}>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                          Pronunciation Analysis
+                        </Typography>
+                        <Box
+                          sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            bgcolor: "background.paper",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            justifyContent: "center",
+                            gap: 1,
+                          }}
+                        >
+                          {selectedInstruction.text.split(" ").map((word, index) => {
+                            const error = assessment.errors?.find(
+                              (e) => e.word_index === index ||
+                                e.word?.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "") ===
+                                word.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "")
+                            );
+
+                            if (error) {
+                              return (
+                                <Tooltip key={index} title={error.message} arrow>
+                                  <Box
+                                    component="span"
+                                    sx={{
+                                      px: 1,
+                                      py: 0.5,
+                                      borderRadius: 1,
+                                      bgcolor: error.severity === "severe" ? "error.light" : "warning.light",
+                                      color: error.severity === "severe" ? "error.contrastText" : "warning.contrastText",
+                                      fontWeight: 700,
+                                      cursor: "help",
+                                      borderBottom: "2px solid",
+                                      borderColor: error.severity === "severe" ? "error.main" : "warning.main",
+                                    }}
+                                  >
+                                    {word}
+                                  </Box>
+                                </Tooltip>
+                              );
+                            }
+
+                            return (
+                              <Typography
+                                key={index}
+                                variant="h5"
+                                component="span"
+                                sx={{ px: 0.5, fontWeight: 500 }}
+                              >
+                                {word}
+                              </Typography>
+                            );
+                          })}
+                        </Box>
+                      </Box>
+
                       {/* Errors */}
                       {assessment.errors && assessment.errors.length > 0 && (
                         <Box sx={{ mb: 4 }}>
@@ -1056,6 +1209,7 @@ export default function PronunciationPractice() {
                           display: "flex",
                           gap: 2,
                           justifyContent: "center",
+                          flexWrap: "wrap",
                         }}
                       >
                         <Button
@@ -1082,9 +1236,113 @@ export default function PronunciationPractice() {
                             },
                           }}
                         >
-                          Try Again
+                          Practice Again
                         </Button>
+
                       </Box>
+
+                      {/* Recommendations */}
+                      {recommendations.length > 0 && (
+                        <Box sx={{ mt: 6 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+                            <Box
+                              sx={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 2,
+                                background: "linear-gradient(135deg, #6366F1 0%, #A855F7 100%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
+                              }}
+                            >
+                              <Psychology sx={{ color: "white", fontSize: 22 }} />
+                            </Box>
+                            <Box>
+                              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                Recommended for You
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                Based on your pronunciation history
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            {recommendations.map((rec, idx) => (
+                              <Paper
+                                key={rec.instruction_id}
+                                elevation={0}
+                                sx={{
+                                  p: 2.5,
+                                  borderRadius: 2.5,
+                                  border: "1px solid",
+                                  borderColor: "divider",
+                                  bgcolor: "rgba(99, 102, 241, 0.02)",
+                                  transition: "all 0.2s ease",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 2,
+                                  "&:hover": {
+                                    bgcolor: "rgba(99, 102, 241, 0.05)",
+                                    borderColor: "primary.light",
+                                    transform: "translateX(8px)",
+                                  }
+                                }}
+                              >
+                                <Box sx={{ flex: 1 }}>
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                    <Chip
+                                      label={`#${rec.instruction_number || '?'}`}
+                                      size="small"
+                                      sx={{
+                                        bgcolor: "primary.main",
+                                        color: "white",
+                                        fontWeight: 700,
+                                        fontSize: "0.7rem",
+                                        height: 22
+                                      }}
+                                    />
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                                      {rec.reason}
+                                    </Typography>
+                                  </Box>
+                                  <Typography variant="body1" sx={{ fontWeight: 600, color: "text.primary", lineHeight: 1.4 }}>
+                                    "{rec.text}"
+                                  </Typography>
+                                </Box>
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  endIcon={<ArrowForward />}
+                                  onClick={() => {
+                                    const inst = instructions.find(i => i.id === rec.instruction_id);
+                                    if (inst) handleSelectInstruction(inst);
+                                    else {
+                                      // If instruction not in current list (already filtered), we would need a separate fetch or just use what we have
+                                      handleSelectInstruction({
+                                        id: rec.instruction_id,
+                                        text: rec.text,
+                                        group_id: rec.group_id
+                                      });
+                                    }
+                                  }}
+                                  sx={{
+                                    borderRadius: 2,
+                                    px: 3,
+                                    textTransform: "none",
+                                    fontWeight: 700,
+                                    boxShadow: "0 4px 12px rgba(0, 82, 212, 0.2)"
+                                  }}
+                                >
+                                  Practice
+                                </Button>
+                              </Paper>
+                            ))}
+                          </Box>
+                        </Box>
+                      )}
                     </CardContent>
                   </Card>
                 )}

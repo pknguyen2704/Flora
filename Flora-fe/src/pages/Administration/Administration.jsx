@@ -10,6 +10,7 @@ import {
   Divider,
   Typography,
   Container,
+  useTheme,
 } from "@mui/material";
 import {
   People,
@@ -17,7 +18,7 @@ import {
   Article,
 } from "@mui/icons-material";
 import Appbar from "~/components/AppBar/Appbar";
-import Footer from "~/components/footer/Footer";
+import Footer from "~/components/Footer/Footer";
 import AdminDashboard from "./AdminDashboard/AdminDashboard";
 import ContentManagement from "./ContentManagement/ContentManagement";
 import UserManagement from "./UserManagement/UserManagement";
@@ -25,6 +26,7 @@ import UserManagement from "./UserManagement/UserManagement";
 const DRAWER_WIDTH = 260;
 
 export default function Administration() {
+  const theme = useTheme();
   const [selectedSection, setSelectedSection] = useState("users");
 
   const menuItems = [
@@ -114,13 +116,15 @@ export default function Administration() {
             flex: 1,
             bgcolor: "background.default",
             overflowY: "auto",
-            height: "100%",
+            height: `calc(100vh - ${theme.flora.appBarHeight})`,
             display: "flex",
-            flexDirection: "column"
+            flexDirection: "column",
           }}
         >
-          <Box sx={{ flex: 1, p: 4 }}>
-            <Container maxWidth="xl">{renderContent()}</Container>
+          <Box sx={{ flex: 1, p: { xs: 2, md: 4 } }}>
+            <Container maxWidth="xl" sx={{ p: 0 }}>
+              {renderContent()}
+            </Container>
           </Box>
           <Footer />
         </Box>

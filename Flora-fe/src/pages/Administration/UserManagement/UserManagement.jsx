@@ -336,7 +336,7 @@ export default function UserManagement() {
   };
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight="700" gutterBottom>

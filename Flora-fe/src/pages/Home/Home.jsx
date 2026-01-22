@@ -117,10 +117,10 @@ export default function Home() {
                   sx={{ flex: 1, minWidth: { xs: '200px', sm: '300px' } }}
                 >
                   <Typography
-                    variant="h4"
+                    variant="h5"
                     fontWeight="700"
                     sx={{
-                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
+                      fontSize: { xs: '1.5rem', sm: '1.5rem', md: '1.75rem' },
                       mb: 1,
                       background: (theme) =>
                         `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,

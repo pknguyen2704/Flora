@@ -21,12 +21,12 @@ const Introduction = lazy(() => import("~/pages/Introduction/Introduction"));
 const Login = lazy(() => import("~/pages/Login/Login"));
 const Home = lazy(() => import("~/pages/Home/Home"));
 const Groups = lazy(() => import("~/pages/Instructions/Instructions"));
-const GroupDetail = lazy(() => import("~/pages/Instructions/Group/Group"));
-const PronunciationPractice = lazy(() => import("~/pages/Instructions/Group/PronunciationPractice/PronunciationPractice"));
+const PronunciationPractice = lazy(() => import("~/pages/Instructions/PronunciationPractice/PronunciationPractice"));
 const CustomPronunciation = lazy(() => import("~/pages/CustomPronunciation/CustomPronunciation"));
-const SituationQuiz = lazy(() => import("~/pages/Instructions/Group/Situation/SituationQuiz"));
+import SituationQuiz from "~/pages/Quiz/Situation/SituationQuiz";
 const Administration = lazy(() => import("~/pages/Administration/Administration"));
 const ContentManagement = lazy(() => import("~/pages/Administration/ContentManagement/ContentManagement"));
+import Quiz from "~/pages/Quiz/Quiz";
 
 // Shared Components (not lazy loaded as they're always needed)
 import RootRedirect from "~/components/shared/RootRedirect";
@@ -81,14 +81,6 @@ function App() {
                     }
                   />
                   <Route
-                    path="/group/:id"
-                    element={
-                      <ProtectedRoute>
-                        <GroupDetail />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
                     path="/pronunciation/:groupId"
                     element={
                       <ProtectedRoute>
@@ -134,6 +126,15 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ContentManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/quiz"
+                    element={
+                      <ProtectedRoute>
+                        <Quiz />
                       </ProtectedRoute>
                     }
                   />
