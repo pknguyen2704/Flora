@@ -22,7 +22,7 @@ import {
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useSidebar } from "~/contexts/SidebarContext";
-import Appbar from "~/components/AppBar/Appbar";
+import Appbar from "~/components/Appbar/Appbar";
 import Sidebar from "~/components/Sidebar/Sidebar";
 import Footer from "~/components/Footer/Footer";
 import {

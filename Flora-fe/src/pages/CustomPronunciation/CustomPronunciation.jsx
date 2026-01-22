@@ -29,7 +29,7 @@ import AudioRecorder from "~/components/shared/AudioRecorder";
 import { pronunciationService } from "~/services/pronunciationService";
 import { useNotification } from "~/contexts/NotificationContext";
 import { useSidebar } from "~/contexts/SidebarContext";
-import Appbar from "~/components/AppBar/Appbar";
+import Appbar from "~/components/Appbar/Appbar";
 import Sidebar from "~/components/Sidebar/Sidebar";
 import Footer from "~/components/Footer/Footer";
 import ChatIcon from "@mui/icons-material/Chat";

@@ -28,7 +28,7 @@ import { quizService } from "~/services/quizService";
 import { situationService } from "~/services/situationService";
 import { useNotification } from "~/contexts/NotificationContext";
 import { useSidebar } from "~/contexts/SidebarContext";
-import Appbar from "~/components/AppBar/Appbar";
+import Appbar from "~/components/Appbar/Appbar";
 import Sidebar from "~/components/Sidebar/Sidebar";
 import Footer from "~/components/Footer/Footer";
 

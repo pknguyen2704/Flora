@@ -17,7 +17,7 @@ import {
   Dashboard as DashboardIcon,
   Article,
 } from "@mui/icons-material";
-import Appbar from "~/components/AppBar/Appbar";
+import Appbar from "~/components/Appbar/Appbar";
 import Footer from "~/components/Footer/Footer";
 import AdminDashboard from "./AdminDashboard/AdminDashboard";
 import ContentManagement from "./ContentManagement/ContentManagement";

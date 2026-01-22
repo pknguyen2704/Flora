@@ -16,7 +16,7 @@ import { useNotification } from "~/contexts/NotificationContext";
 import { useSidebar } from "~/contexts/SidebarContext";
 import { groupService } from "~/services/groupService";
 import Sidebar from "~/components/Sidebar/Sidebar";
-import Appbar from "~/components/AppBar/Appbar";
+import Appbar from "~/components/Appbar/Appbar";
 import Footer from "~/components/Footer/Footer";
 import {
   containerVariants,
