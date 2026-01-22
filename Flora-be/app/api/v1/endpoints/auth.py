@@ -9,6 +9,11 @@ from app.core.dependencies import get_current_user
 from app.models.user import UserResponse
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
+from app.schemas.settings import (
+    UpdateProfileRequest,
+    ChangePasswordRequest,
+    UpdatePreferencesRequest,
+)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -148,13 +153,11 @@ async def logout():
 
 @router.put("/profile", response_model=APIResponse)
 async def update_profile(
-    profile_data: "UpdateProfileRequest",
+    profile_data: UpdateProfileRequest,
     db: AsyncIOMotorDatabase = Depends(get_database),
     current_user: dict = Depends(get_current_user)
 ):
     """Update user profile information."""
-    from app.schemas.settings import UpdateProfileRequest
-    
     update_data = {}
     if profile_data.full_name:
         update_data["full_name"] = profile_data.full_name
@@ -213,13 +216,11 @@ async def update_profile(
 
 @router.put("/password", response_model=APIResponse)
 async def change_password(
-    password_data: "ChangePasswordRequest",
+    password_data: ChangePasswordRequest,
     db: AsyncIOMotorDatabase = Depends(get_database),
     current_user: dict = Depends(get_current_user)
 ):
     """Change user password."""
-    from app.schemas.settings import ChangePasswordRequest
-    
     # Get user from database
     user = await db.users.find_one({"_id": ObjectId(current_user["_id"])})
     
@@ -259,13 +260,11 @@ async def change_password(
 
 @router.put("/preferences", response_model=APIResponse)
 async def update_preferences(
-    preferences_data: "UpdatePreferencesRequest",
+    preferences_data: UpdatePreferencesRequest,
     db: AsyncIOMotorDatabase = Depends(get_database),
     current_user: dict = Depends(get_current_user)
 ):
     """Update user preferences."""
-    from app.schemas.settings import UpdatePreferencesRequest
-    
     # Get current preferences
     user = await db.users.find_one({"_id": ObjectId(current_user["_id"])})
     current_preferences = user.get("preferences", {})

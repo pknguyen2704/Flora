@@ -1,6 +1,5 @@
 // Base API URL
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 // Error types
 export const ERROR_TYPES = {
@@ -24,7 +23,7 @@ export const AUDIO_CONSTRAINTS = {
 
 // Quiz settings
 export const QUIZ_SETTINGS = {
-  QUESTIONS_PER_QUIZ: 5,
+  QUESTIONS_PER_QUIZ: 10,
 };
 
 // Score thresholds

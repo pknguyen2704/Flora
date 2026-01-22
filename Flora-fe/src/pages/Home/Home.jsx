@@ -16,7 +16,7 @@ import { useAuth } from "~/contexts/AuthContext";
 import { useSidebar } from "~/contexts/SidebarContext";
 import { dashboardService } from "~/services/dashboardService";
 import Sidebar from "~/components/Sidebar/Sidebar";
-import Appbar from "~/components/AppBar/Appbar";
+import Appbar from "~/components/Appbar/Appbar";
 import Overview from "./Overview/Overview";
 import Container from "@mui/material/Container";
 import Footer from "~/components/Footer/Footer";

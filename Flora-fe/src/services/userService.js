@@ -1,12 +1,14 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { API_BASE_URL } from "../utils/constants";
+// API_BASE_URL = "/api/v1"
+
 
 const userService = {
   // Get all users (admin only)
   getAllUsers: async () => {
     const token = localStorage.getItem("access_token");
-    const response = await axios.get(`${API_URL}/api/v1/admin/users`, {
+    const response = await axios.get(`${API_BASE_URL}/admin/users`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
@@ -16,7 +18,7 @@ const userService = {
   updateUser: async (userId, userData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.patch(
-      `${API_URL}/api/v1/admin/users/${userId}`,
+      `${API_BASE_URL}/admin/users/${userId}`,
       userData,
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -29,7 +31,7 @@ const userService = {
   deleteUser: async (userId) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.delete(
-      `${API_URL}/api/v1/admin/users/${userId}`,
+      `${API_BASE_URL}/admin/users/${userId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -41,7 +43,7 @@ const userService = {
   toggleAdmin: async (userId) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.patch(
-      `${API_URL}/api/v1/admin/users/${userId}/toggle-admin`,
+      `${API_BASE_URL}/admin/users/${userId}/toggle-admin`,
       {},
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -54,7 +56,7 @@ const userService = {
   createUser: async (userData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.post(
-      `${API_URL}/api/v1/admin/users`,
+      `${API_BASE_URL}/admin/users`,
       userData,
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -67,7 +69,7 @@ const userService = {
   getUserStats: async (userId) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.get(
-      `${API_URL}/api/v1/admin/users/${userId}/stats`,
+      `${API_BASE_URL}/admin/users/${userId}/stats`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -79,7 +81,7 @@ const userService = {
   getGlobalStats: async () => {
     const token = localStorage.getItem("access_token");
     const response = await axios.get(
-      `${API_URL}/api/v1/admin/dashboard/stats`,
+      `${API_BASE_URL}/admin/dashboard/stats`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -93,7 +95,7 @@ const userService = {
   createGroup: async (groupData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.post(
-      `${API_URL}/api/v1/admin/content/groups`,
+      `${API_BASE_URL}/admin/content/groups`,
       groupData,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -102,7 +104,7 @@ const userService = {
   updateGroup: async (groupId, groupData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.patch(
-      `${API_URL}/api/v1/admin/content/groups/${groupId}`,
+      `${API_BASE_URL}/admin/content/groups/${groupId}`,
       groupData,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -111,7 +113,7 @@ const userService = {
   deleteGroup: async (groupId) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.delete(
-      `${API_URL}/api/v1/admin/content/groups/${groupId}`,
+      `${API_BASE_URL}/admin/content/groups/${groupId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
@@ -121,7 +123,7 @@ const userService = {
   getAdminInstructions: async (groupId) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.get(
-      `${API_URL}/api/v1/admin/content/instructions`,
+      `${API_BASE_URL}/admin/content/instructions`,
       {
         params: { group_id: groupId },
         headers: { Authorization: `Bearer ${token}` },
@@ -132,7 +134,7 @@ const userService = {
   createInstruction: async (instructionData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.post(
-      `${API_URL}/api/v1/admin/content/instructions`,
+      `${API_BASE_URL}/admin/content/instructions`,
       instructionData,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -141,7 +143,7 @@ const userService = {
   updateInstruction: async (id, instructionData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.patch(
-      `${API_URL}/api/v1/admin/content/instructions/${id}`,
+      `${API_BASE_URL}/admin/content/instructions/${id}`,
       instructionData,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -150,7 +152,7 @@ const userService = {
   deleteInstruction: async (id) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.delete(
-      `${API_URL}/api/v1/admin/content/instructions/${id}`,
+      `${API_BASE_URL}/admin/content/instructions/${id}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
@@ -160,7 +162,7 @@ const userService = {
   getAdminSituations: async (groupId) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.get(
-      `${API_URL}/api/v1/admin/content/situations`,
+      `${API_BASE_URL}/admin/content/situations`,
       {
         params: { group_id: groupId },
         headers: { Authorization: `Bearer ${token}` },
@@ -171,7 +173,7 @@ const userService = {
   createSituation: async (situationData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.post(
-      `${API_URL}/api/v1/admin/content/situations`,
+      `${API_BASE_URL}/admin/content/situations`,
       situationData,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -180,7 +182,7 @@ const userService = {
   updateSituation: async (id, situationData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.patch(
-      `${API_URL}/api/v1/admin/content/situations/${id}`,
+      `${API_BASE_URL}/admin/content/situations/${id}`,
       situationData,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -189,7 +191,7 @@ const userService = {
   deleteSituation: async (id) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.delete(
-      `${API_URL}/api/v1/admin/content/situations/${id}`,
+      `${API_BASE_URL}/admin/content/situations/${id}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
@@ -198,7 +200,7 @@ const userService = {
   // General Fetch (Authenticated)
   getGroups: async () => {
     const token = localStorage.getItem("access_token");
-    const response = await axios.get(`${API_URL}/api/v1/groups`, {
+    const response = await axios.get(`${API_BASE_URL}/groups`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
