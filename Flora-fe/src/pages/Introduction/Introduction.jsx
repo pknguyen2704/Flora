@@ -24,7 +24,7 @@ import {
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import logo_white from "~/assets/logo_white.svg";
-import Footer from "~/components/footer/Footer";
+import Footer from "~/components/Footer/Footer";
 import chikhuat from "~/assets/chikhuat.jpg";
 import linhhuong from "~/assets/linhhuong.jpg";
 import mytam from "~/assets/mytam.jpg";
