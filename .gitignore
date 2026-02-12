@@ -32,3 +32,4 @@ Flora-fe/*.ntvs*
 Flora-fe/*.njsproj
 Flora-fe/*.sln
 Flora-fe/*.sw?
+temp-test-vite/
