@@ -1,0 +1,35 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Backend (Flora-be)
+Flora-be/__pycache__/
+Flora-be/*.py[cod]
+Flora-be/*.so
+Flora-be/.venv/
+Flora-be/venv/
+Flora-be/env/
+Flora-be/.env
+Flora-be/.env.local
+Flora-be/app/static/audio/attempts/*
+!Flora-be/app/static/audio/attempts/.gitkeep
+
+# Frontend (Flora-fe)
+Flora-fe/node_modules/
+Flora-fe/dist/
+Flora-fe/dist-ssr/
+Flora-fe/*.local
+Flora-fe/npm-debug.log*
+Flora-fe/yarn-debug.log*
+Flora-fe/yarn-error.log*
+Flora-fe/pnpm-debug.log*
+Flora-fe/lerna-debug.log*
+Flora-fe/*.suo
+Flora-fe/*.ntvs*
+Flora-fe/*.njsproj
+Flora-fe/*.sln
+Flora-fe/*.sw?
+temp-test-vite/

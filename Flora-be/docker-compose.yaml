@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: flora-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: floraadmin
+      MONGO_INITDB_ROOT_PASSWORD: florapass123
+      MONGO_INITDB_DATABASE: flora_db
+    # ✅ production: không public ra LAN/Internet
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - flora-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/flora_db --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # ✅ optional: dev/debug thôi. production có thể bỏ hẳn.
+  mongo-express:
+    image: mongo-express:latest
+    container_name: flora-mongo-express
+    restart: unless-stopped
+    # ✅ chỉ mở local để không lộ ra Internet
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: floraadmin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: florapass123
+      ME_CONFIG_MONGODB_URL: mongodb://floraadmin:florapass123@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: florapass123
+    networks:
+      - flora-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  # flora-be:
+  #   build:
+  #     context: .
+  #   container_name: flora-be
+  #   restart: unless-stopped
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
+  #   environment:
+  #     # ✅ backend connect qua tên service "mongodb" trong docker network
+  #     MONGO_URI: mongodb://floraadmin:florapass123@mongodb:27017/flora_db?authSource=admin
+  #     # thêm các ENV khác nếu backend cần
+  #   networks:
+  #     - flora-network
+  #   # ✅ chỉ publish local để Nginx gọi, không lộ ra ngoài
+  #   ports:
+  #     - "127.0.0.1:8000:8000"
+
+  # flora-seed:
+  #   build:
+  #     context: .
+  #   container_name: flora-seed
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
+  #   environment:
+  #     MONGO_URI: mongodb://floraadmin:florapass123@mongodb:27017/flora_db?authSource=admin
+  #   networks:
+  #     - flora-network
+  #   working_dir: /app
+  #   command: ["python","scripts/reload_data.py"]
+  #   restart: "no"
+
+volumes:
+  mongodb_data:
+  mongodb_config:
+
+networks:
+  flora-network:
+    driver: bridge

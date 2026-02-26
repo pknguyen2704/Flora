@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  flora-fe:
+    image: node:25.6.0-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - yarn_cache:/usr/local/share/.cache/yarn
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: >
+      sh -c "if [ -f package.json ]; then 
+        echo 'Found package.json. Installing dependencies...';
+        yarn install; 
+        echo 'Starting dev server...';
+        yarn dev --host || yarn start --host;
+      else 
+        echo 'No package.json found. Keeping container alive for initialization...';
+        tail -f /dev/null; 
+      fi"
+
+volumes:
+  yarn_cache:
+    name: global-yarn-cache # Share cache across all projects utilizing this setup
