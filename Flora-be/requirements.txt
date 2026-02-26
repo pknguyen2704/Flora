@@ -6,20 +6,13 @@ pydantic
 pydantic-settings
 python-jose[cryptography]
 passlib[bcrypt]
-<<<<<<< HEAD
 bcrypt<4.0.0
-=======
-bcrypt < 4.0.0
->>>>>>> 6428b2c (fix: small update)
 python-multipart
 google-generativeai
 google-cloud-speech
 python-dotenv
 email-validator
-<<<<<<< HEAD
-=======
 openai-whisper
 nltk
 textgrid
 soundfile
->>>>>>> 6428b2c (fix: small update)

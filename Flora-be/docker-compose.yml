@@ -9,7 +9,6 @@ services:
       MONGO_INITDB_ROOT_USERNAME: floraadmin
       MONGO_INITDB_ROOT_PASSWORD: florapass123
       MONGO_INITDB_DATABASE: flora_db
-    # ✅ production: không public ra LAN/Internet
     ports:
       - "127.0.0.1:27017:27017"
     volumes:
@@ -24,12 +23,10 @@ services:
       retries: 5
       start_period: 40s
 
-  # ✅ optional: dev/debug thôi. production có thể bỏ hẳn.
   mongo-express:
     image: mongo-express:latest
     container_name: flora-mongo-express
     restart: unless-stopped
-    # ✅ chỉ mở local để không lộ ra Internet
     ports:
       - "127.0.0.1:8081:8081"
     environment:
@@ -44,38 +41,22 @@ services:
       mongodb:
         condition: service_healthy
 
-  # flora-be:
-  #   build:
-  #     context: .
-  #   container_name: flora-be
-  #   restart: unless-stopped
-  #   depends_on:
-  #     mongodb:
-  #       condition: service_healthy
-  #   environment:
-  #     # ✅ backend connect qua tên service "mongodb" trong docker network
-  #     MONGO_URI: mongodb://floraadmin:florapass123@mongodb:27017/flora_db?authSource=admin
-  #     # thêm các ENV khác nếu backend cần
-  #   networks:
-  #     - flora-network
-  #   # ✅ chỉ publish local để Nginx gọi, không lộ ra ngoài
-  #   ports:
-  #     - "127.0.0.1:8000:8000"
-
-  # flora-seed:
-  #   build:
-  #     context: .
-  #   container_name: flora-seed
-  #   depends_on:
-  #     mongodb:
-  #       condition: service_healthy
-  #   environment:
-  #     MONGO_URI: mongodb://floraadmin:florapass123@mongodb:27017/flora_db?authSource=admin
-  #   networks:
-  #     - flora-network
-  #   working_dir: /app
-  #   command: ["python","scripts/reload_data.py"]
-  #   restart: "no"
+  backend:
+    build: .
+    container_name: flora-be
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URI: mongodb://floraadmin:florapass123@mongodb:27017/flora_db?authSource=admin
+      MONGODB_DB_NAME: flora_db
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      SECRET_KEY: ${SECRET_KEY}
+    networks:
+      - flora-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
 
 volumes:
   mongodb_data:

@@ -14,90 +14,80 @@ class GeminiScorer:
     def __init__(self):
         self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
     
-    async def assess_pronunciation(
+    async def assess_pronunciation_audio(
         self,
-        audio_transcript: str,
+        audio_file: Any,
         target_text: str,
         penalty_config: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Assess pronunciation using Gemini AI.
-        
-        For now, this is a simplified version that compares transcription to target.
-        In production, you would:
-        1. Use speech-to-text to get the transcript
-        2. Use Gemini to analyze phonetic differences
-        3. Detect specific error types
+        Assess pronunciation by passing audio directly to Gemini 1.5 Pro.
+        This prompt implements the exact rule-based scoring formula requested by the user.
         """
         
-        prompt = f"""You are an English pronunciation expert. Compare the student's speech transcript with the target text and identify pronunciation errors.
-
+        prompt = f"""You are an advanced phonetics engine and English pronunciation expert.
+I will provide you with an audio recording of a student speaking the following target text:
 Target text: "{target_text}"
-Student's transcript: "{audio_transcript}"
 
-Strictly identify errors in these categories:
-1. wrong_word: Student said a different word or completely mispronounced it.
-2. missing_word: Student skipped a word.
-3. phoneme_error: Student pronounced a specific sound incorrectly (e.g., /θ/ as /t/, /r/ as /w/).
-4. ending_sound: Student dropped the final sound of a word (e.g., 'cat' becomes 'ca').
-5. clarity_speed: Speech was mumbled, unclear, too fast, or too slow.
+Your goal is to evaluate the student's pronunciation word-by-word, based on the following strict rule-based formula.
+First, determine the correct phonemes for each word in the target text (similar to CMU Dict representation).
+Then, analyze the phonemes actually spoken by the student in the audio.
 
-CRITICAL: If the student's speech content is COMPLETELY unrelated to the target text (e.g., Target: "Sit down", Transcript: "One two three"), set "off_topic" to true in the JSON response and ignore specific errors.
+CALCULATING WORD SCORE:
+For each word, calculate a score out of 100 based on these exact criteria:
+- 50% phoneme match: Are all the basic phonemes present? If they missed a phoneme, deduct proportionally from the 50 points.
+- 20% vowel accuracy: Did they pronounce the vowel correctly? If the vowel is wrong, deduct 20 points.
+- 15% consonant ending: Did they include the correct ending consonant? If missing or wrong, deduct 15 (or up to 30 if critical).
+- 15% duration similarity: Was the duration of the word natural? If held too long or too short, deduct 10-15 points.
 
-For each error, provide:
+CRITICAL: If the student's speech content is COMPLETELY unrelated to the target text, set "off_topic" to true.
+
+For each word in the target text, output any errors found. If a word was pronounced perfectly, you don't need to add it to the errors array.
+If an error exists, provide:
 1. word_index: The index of the word in the Target Text (0-indexed).
 2. word: The specific word from the Target Text.
-3. error_type: One of the 5 categories above.
+3. error_type: Use "phoneme_error", "missing_word", "wrong_word", "ending_sound", or "duration_error".
 4. severity: "mild", "moderate", or "severe".
-5. explanation: A specific explanation of what went wrong (e.g., "You pronounced /θ/ as /t/").
+5. penalty: The deducted points for this word based on the rules (e.g. 20 for wrong vowel).
+6. explanation: A specific explanation of what went wrong (e.g., "You pronounced the vowel 'AA' as 'AE'").
 
-Return ONLY a valid JSON object with this structure:
+Finally, provide an overall "total_score" out of 100 for the entire sentence (average of all word scores), and the "asr_transcript" (what the student actually said).
+
+Return ONLY a valid JSON object with this exact structure (no markdown tags, just raw JSON):
 {{
   "off_topic": false,
+  "total_score": 85,
+  "asr_transcript": "what the student actually said",
   "errors": [
     {{
       "word_index": 0,
       "word": "example",
       "error_type": "phoneme_error",
       "severity": "moderate",
-      "explanation": "You pronounced the 'th' sound like a 'd'."
+      "penalty": 20,
+      "explanation": "You pronounced the vowel sound incorrectly."
     }}
   ],
-  "overall_feedback": "A brief summary of the student's performance in English."
+  "overall_feedback": "A brief summary of their pronunciation."
 }}
 """
-        
         try:
-            # Configure safety settings to be permissive for educational analysis
+            # Configure safety settings
             safety_settings = [
-                {
-                    "category": "HARM_CATEGORY_HARASSMENT",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold": "BLOCK_NONE",
-                },
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
             ]
 
-            response = self.model.generate_content(prompt, safety_settings=safety_settings)
+            response = self.model.generate_content([audio_file, prompt], safety_settings=safety_settings)
             
-            # Robust response handling
             if not response.candidates or not response.candidates[0].content.parts:
-                print(f"Gemini returned an empty or blocked assessment response. Finish reason: {response.candidates[0].finish_reason if response.candidates else 'Unknown'}")
                 raise ValueError("No valid response parts returned from Gemini")
 
             result_text = response.text
             
-            # Extract JSON from response (handle markdown code blocks)
+            # Extract JSON from response
             if "```json" in result_text:
                 result_text = result_text.split("```json")[1].split("```")[0].strip()
             elif "```" in result_text:
@@ -105,87 +95,38 @@ Return ONLY a valid JSON object with this structure:
             
             ai_result = json.loads(result_text)
             
-            # Check for off-topic speech (completely unrelated)
             if ai_result.get("off_topic", False):
                 return {
                     "total_score": 0,
                     "errors": [{
-                        "word_index": 0,
-                        "word": "All",
-                        "error_type": "wrong_word",
-                        "severity": "severe",
-                        "message": "Spoken text is completely different from target. (Deducted 100 points)",
-                        "penalty": 100
+                        "word_index": 0, "word": "All", "error_type": "wrong_word",
+                        "severity": "severe", "penalty": 100,
+                        "message": "Spoken text is completely different from target. (Deducted 100 points)"
                     }],
-                    "asr_transcript": audio_transcript,
-                    "overall_feedback": ai_result.get("overall_feedback", "Your speech was completely unrelated to the target text.")
+                    "asr_transcript": ai_result.get("asr_transcript", ""),
+                    "overall_feedback": "Your speech was completely unrelated to the target text."
                 }
             
-            # Calculate score based on errors and penalties
+            # Ensure proper message formatting for errors
             errors = ai_result.get("errors", [])
-            
-            # Count target words by splitting on whitespace
-            target_words = target_text.strip().split()
-            total_target_words = len(target_words)
-            
-            # Check if ALL words have errors (every word is wrong)
-            wrong_word_indices = set()
             for error in errors:
-                if error.get("error_type") == "wrong_word":
-                    wrong_word_indices.add(error.get("word_index"))
-            
-            # If all words are marked as wrong, return score of 0
-            if total_target_words > 0 and len(wrong_word_indices) >= total_target_words:
-                return {
-                    "total_score": 0,
-                    "errors": [{
-                        "word_index": 0,
-                        "word": "All",
-                        "error_type": "wrong_word",
-                        "severity": "severe",
-                        "message": "All words were pronounced incorrectly. Please try again. (Deducted 100 points)",
-                        "penalty": 100
-                    }],
-                    "asr_transcript": audio_transcript,
-                    "overall_feedback": "All words were pronounced incorrectly. Please listen carefully to the target text and try again."
-                }
-            
-            # Otherwise, calculate score based on individual error penalties
-            total_penalty = 0
-            
-            for error in errors:
-                error_type = error.get("error_type", "")
-                severity = error.get("severity", "mild")
+                penalty = error.get("penalty", 5)
+                error["message"] = f"{error.get('explanation', 'Error')} (Deducted {penalty} points)"
                 
-                if error_type in penalty_config:
-                    penalty = penalty_config[error_type].get(severity, 5)
-                    error["penalty"] = penalty
-                    total_penalty += penalty
-                else:
-                    error["penalty"] = 5
-                    total_penalty += 5
-                
-                # Append penalty info to the message
-                error["message"] = f"{error.get('explanation', 'Error detected')} (Deducted {error['penalty']} points)"
-            
-            score = max(0, 100 - total_penalty)
-            
             return {
-                "total_score": score,
+                "total_score": ai_result.get("total_score", 0),
                 "errors": errors,
-                "asr_transcript": audio_transcript,
+                "asr_transcript": ai_result.get("asr_transcript", ""),
                 "overall_feedback": ai_result.get("overall_feedback", "")
             }
             
         except Exception as e:
-            # Fallback for errors
             return {
-                "total_score": None,
-                "errors": [],
-                "asr_transcript": audio_transcript,
-                "suggestions": ["AI service temporarily unavailable. Please try again."],
-                "error": str(e)
+                "total_score": 0,
+                "errors": [{"word": "All", "error_type": "system_error", "message": f"Assessment failed: {str(e)}", "penalty": 100}],
+                "asr_transcript": "",
+                "overall_feedback": "System error during assessment."
             }
-    
+            
 # Singleton instance
 gemini_scorer = GeminiScorer()

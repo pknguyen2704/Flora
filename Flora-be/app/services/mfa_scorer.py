@@ -139,7 +139,7 @@ class MFAPronunciationScorer:
         spoken_words = [w.strip(" ,.?!") for w in transcript.lower().split() if w.strip(" ,.?!")]
         
         errors = []
-        total_penalty = 0
+        words_result = []
         total_word_score = 0
         
         for i, target_word in enumerate(target_words):
@@ -151,9 +151,28 @@ class MFAPronunciationScorer:
                 spoken_word = spoken_words[i]
                 spoken_phones = self.get_target_phonemes(spoken_word)
                 match_score, messages = self._compute_word_score_detailed(target_phones, spoken_phones, None)
+                
+                words_result.append({
+                    "word": target_word,
+                    "spoken_word": spoken_word,
+                    "score": round(match_score),
+                    "start_time": 0, 
+                    "end_time": 0,
+                    "phones": [{"phone": p, "duration": 0} for p in spoken_phones],
+                    "messages": messages
+                })
             else:
                 match_score = 0
                 messages = ["Word missing"]
+                words_result.append({
+                    "word": target_word,
+                    "spoken_word": "",
+                    "score": 0,
+                    "start_time": 0, 
+                    "end_time": 0,
+                    "phones": [],
+                    "messages": messages
+                })
                 
             total_word_score += match_score
             
@@ -182,6 +201,7 @@ class MFAPronunciationScorer:
 
         return {
             "total_score": round(total_score),
+            "words": words_result,
             "errors": errors,
             "asr_transcript": transcript,
             "overall_feedback": f"Processed using text-matching without exact phonetic alignment. (Score: {round(total_score)}%)"
@@ -207,23 +227,37 @@ class MFAPronunciationScorer:
                         })
             spoken_mfa_words.append({
                 "word": word,
+                "start_time": interval.minTime,
+                "end_time": interval.maxTime,
                 "phones": word_phones
             })
 
         target_words = [w.strip(" ,.?!") for w in target_text.lower().split() if w.strip(" ,.?!")]
         
         errors = []
+        words_result = []
         total_word_score = 0
         
         for i, target_word in enumerate(target_words):
             target_phones = self.get_target_phonemes(target_word)
             
             if i < len(spoken_mfa_words):
-                spoken_phones_data = spoken_mfa_words[i]["phones"]
+                spoken_mfa_word = spoken_mfa_words[i]
+                spoken_phones_data = spoken_mfa_word["phones"]
                 spoken_phones = [p["phone"] for p in spoken_phones_data]
                 
                 score, penalty_messages = self._compute_word_score_detailed(target_phones, spoken_phones, spoken_phones_data)
                 total_word_score += score
+                
+                words_result.append({
+                    "word": target_word,
+                    "spoken_word": spoken_mfa_word["word"],
+                    "score": round(score),
+                    "start_time": spoken_mfa_word["start_time"],
+                    "end_time": spoken_mfa_word["end_time"],
+                    "phones": spoken_phones_data,
+                    "messages": penalty_messages
+                })
                 
                 if score < 80:
                     for msg in penalty_messages:
@@ -237,6 +271,16 @@ class MFAPronunciationScorer:
                         })
             else:
                 total_word_score += 0
+                words_result.append({
+                    "word": target_word,
+                    "spoken_word": "",
+                    "score": 0,
+                    "start_time": 0, 
+                    "end_time": 0,
+                    "phones": [],
+                    "messages": ["Word missing in spoken text"]
+                })
+                
                 errors.append({
                     "word_index": i,
                     "word": target_word,
@@ -250,6 +294,7 @@ class MFAPronunciationScorer:
         
         return {
             "total_score": round(max(0.0, min(100.0, float(avg_score)))),
+            "words": words_result,
             "errors": errors,
             "asr_transcript": transcript,
             "overall_feedback": f"MFA aligned: Word Score: {round(avg_score)}%"

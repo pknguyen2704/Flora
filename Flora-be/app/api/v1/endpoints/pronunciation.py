@@ -123,12 +123,12 @@ async def assess_pronunciation(
             tmp_audio_path = tmp_audio.name
             
         try:
-            # Use new Rule-based Engine (Whisper + MFA)
+            # Use Rule-based Engine (Whisper + MFA)
             assessment_result = await rule_engine.assess_pronunciation(
                 audio_file_path=tmp_audio_path,
                 target_text=target_text
             )
-            
+                
             if assessment_result.get("total_score") == 0 and not assessment_result.get("asr_transcript"):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

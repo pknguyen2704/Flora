@@ -34,6 +34,7 @@ def load_data_js():
             cwd=Path(__file__).parent,
             capture_output=True,
             text=True,
+            encoding='utf-8',
             check=True
         )
         return json.loads(result.stdout)
