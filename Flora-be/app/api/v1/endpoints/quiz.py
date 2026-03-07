@@ -86,9 +86,8 @@ async def submit_quiz(
         
         results = []
         total_score = 0
-        perfect_count = 0
-        acceptable_count = 0
-        poor_count = 0
+        correct_count = 0
+        incorrect_count = 0
         
         for answer in answers:
             q_id = answer.get("quiz_id")
@@ -108,17 +107,15 @@ async def submit_quiz(
             if not selected_choice:
                 continue
             
-            # Score
-            rating = selected_choice["rating"]
-            if rating == "best":
-                score = 100
-                perfect_count += 1
-            elif rating == "acceptable":
-                score = 60
-                acceptable_count += 1
+            # Binary scoring: only "best" rating counts as correct
+            is_correct = (selected_choice.get("rating") == "best")
+            rating = "correct" if is_correct else "incorrect"
+            score = 1 if is_correct else 0
+            
+            if is_correct:
+                correct_count += 1
             else:
-                score = 0
-                poor_count += 1
+                incorrect_count += 1
                 
             total_score += score
             
@@ -133,6 +130,7 @@ async def submit_quiz(
                 "question": quiz_q["question"],
                 "selected_choice_id": selected_choice_id,
                 "selected_choice_text": selected_choice["text"],
+                "is_correct": is_correct,
                 "rating": rating,
                 "score": score,
                 "explanation": quiz_q.get("explanation"),
@@ -149,9 +147,8 @@ async def submit_quiz(
             "type": "global_quiz",
             "quiz_id": quiz_id,
             "total_score": total_score,
-            "perfect_count": perfect_count,
-            "acceptable_count": acceptable_count,
-            "poor_count": poor_count,
+            "correct_count": correct_count,
+            "incorrect_count": incorrect_count,
             "submitted_at": datetime.now(timezone.utc),
             "results": results
         }
@@ -167,11 +164,10 @@ async def submit_quiz(
             success=True,
             data={
                 "total_score": total_score,
-                "max_score": len(answers) * 100,
-                "percentage": round((total_score / (len(answers) * 100)) * 100) if answers else 0,
-                "perfect_count": perfect_count,
-                "acceptable_count": acceptable_count,
-                "poor_count": poor_count,
+                "max_score": len(answers),
+                "percentage": round((total_score / len(answers)) * 100) if answers else 0,
+                "correct_count": correct_count,
+                "incorrect_count": incorrect_count,
                 "results": results
             }
         )

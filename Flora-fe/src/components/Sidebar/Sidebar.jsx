@@ -14,6 +14,8 @@ import MicIcon from "@mui/icons-material/Mic";
 import QuizIcon from "@mui/icons-material/Quiz";
 import { useNavigate, useLocation } from "react-router-dom";
 import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
+import { motion } from "framer-motion";
+
 const Sidebar = React.memo(function Sidebar({
   activeSection,
   onSectionChange,
@@ -22,7 +24,7 @@ const Sidebar = React.memo(function Sidebar({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Memoize menu items - only recreate if icons change (never)
+  // Memoize menu items
   const menuItems = useMemo(() => [
     {
       id: "overview",
@@ -59,8 +61,6 @@ const Sidebar = React.memo(function Sidebar({
       type: "link",
       path: "/quiz",
     },
-
-
   ], []);
 
   // Memoize active section determination
@@ -74,10 +74,8 @@ const Sidebar = React.memo(function Sidebar({
     if (path === "/home") {
       return section || "overview";
     }
-    if (path === "/home") {
-      return section || "overview";
-    }
     if (path === "/instruction/custom") return "custom-instruction";
+    if (path.startsWith("/learning")) return "learning";
     if (path.startsWith("/quiz") || path.startsWith("/situations/quiz")) return "quiz";
     if (
       path === "/instruction-practice" ||
@@ -103,6 +101,8 @@ const Sidebar = React.memo(function Sidebar({
 
   return (
     <Box
+      component={motion.div}
+      layout
       sx={{
         width: collapsed ? 80 : 280,
         height: (theme) => theme.flora.contentHeight,
@@ -115,10 +115,16 @@ const Sidebar = React.memo(function Sidebar({
         px: collapsed ? 1 : 2,
         py: 3,
         zIndex: 1000,
-        transition: "width 0.25s ease-out, padding 0.25s ease-out",
         overflow: "hidden",
-        willChange: "width, padding",
-        contain: "layout",
+        bgcolor: "background.paper",
+      }}
+      transition={{
+        layout: {
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+          mass: 0.8
+        }
       }}
     >
       <List sx={{ flex: 1 }}>
@@ -126,28 +132,38 @@ const Sidebar = React.memo(function Sidebar({
           const isActive = currentActiveSection === item.id;
           const menuButton = (
             <ListItemButton
+              component={motion.div}
+              layout
               disableGutters
               onClick={() => handleItemClick(item)}
+              whileHover={isActive ? undefined : {
+                x: collapsed ? 0 : 4,
+                backgroundColor: "rgba(79, 70, 229, 0.08)"
+              }}
+              whileTap={{ scale: 0.98 }}
               sx={{
-                borderRadius: 1,
+                borderRadius: 1.5,
                 py: 1.5,
                 px: collapsed ? 1.5 : 2,
                 mb: 1,
                 background: isActive
-                  ? "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)"
+                  ? "var(--mui-palette-primary-main)"
                   : "transparent",
+                bgcolor: isActive ? "primary.main" : "transparent",
                 color: isActive ? "white" : "text.primary",
-                transition: "all 0.2s ease",
+                transition: "color 0.2s ease",
                 position: "relative",
                 overflow: "hidden",
                 justifyContent: collapsed ? "center" : "flex-start",
-                "&:hover": {
-                  background: isActive
-                    ? "linear-gradient(135deg, #0052D4 0%, #4A90E2 100%)"
-                    : "rgba(0, 82, 212, 0.08)",
-                  transform: collapsed ? "none" : "translateX(4px)",
+                "&.Mui-selected": {
+                  bgcolor: "primary.main",
+                  color: "white",
+                  "&:hover": {
+                    bgcolor: "primary.main", // Keep same color on hover when selected
+                  },
                 },
               }}
+              selected={isActive}
             >
               <ListItemIcon
                 sx={{
@@ -174,7 +190,9 @@ const Sidebar = React.memo(function Sidebar({
             <ListItem key={item.id} disablePadding>
               {collapsed ? (
                 <Tooltip title={item.label} placement="right" arrow>
-                  {menuButton}
+                  <Box sx={{ width: '100%' }}>
+                    {menuButton}
+                  </Box>
                 </Tooltip>
               ) : (
                 menuButton

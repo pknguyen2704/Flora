@@ -7,7 +7,7 @@ from datetime import datetime
 class ChoiceBase(BaseModel):
     choice_id: str
     text: str = Field(..., min_length=1, max_length=500)
-    rating: str = Field(..., pattern="^(best|acceptable|not_recommended)$")
+    rating: str = Field(..., pattern="^(correct|incorrect|best|acceptable|not_recommended)$")
 
 
 class SituationBase(BaseModel):

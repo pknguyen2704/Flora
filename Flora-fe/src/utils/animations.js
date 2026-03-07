@@ -17,48 +17,61 @@ export const pageVariants = {
 };
 
 export const pageTransition = {
-  type: 'tween',
-  ease: [0.6, 0.05, 0.01, 0.9], // Custom cubic bezier for smoother feel
-  duration: 0.3, // Reduced from 0.4
+  type: 'spring',
+  stiffness: 260,
+  damping: 30,
+  mass: 0.5,
+  restDelta: 0.001,
+};
+
+// Standard high-performance spring for 120Hz displays
+export const smoothSpring = {
+  type: "spring",
+  stiffness: 260,
+  damping: 30,
+  mass: 0.5,
+  restDelta: 0.001
 };
 
 // Container with stagger children (optimized)
 export const containerVariants = {
   hidden: { 
-    opacity: 0 
+    opacity: 0,
+    y: 10,
   },
   visible: {
     opacity: 1,
+    y: 0,
     transition: {
-      staggerChildren: 0.05, // Reduced from 0.08 for faster entrance
-      delayChildren: 0.05, // Reduced from 0.1
+      staggerChildren: 0.04, // Slightly faster stagger
+      delayChildren: 0.02,
+      ...smoothSpring
     },
   },
   exit: {
     opacity: 0,
+    y: -10,
     transition: {
-      staggerChildren: 0.03,
+      staggerChildren: 0.02,
       staggerDirection: -1,
+      duration: 0.2
     },
   },
 };
 
-// Card/Item animations (optimized spring physics)
+// Card/Item animations (optimized spring physics for 120Hz)
 export const itemVariants = {
   hidden: { 
     opacity: 0, 
-    y: 15, // Reduced from 20
-    scale: 0.97, // Less dramatic scaling
+    y: 15,
+    scale: 0.98,
   },
   visible: { 
     opacity: 1, 
     y: 0,
     scale: 1,
     transition: {
-      type: 'spring',
-      stiffness: 150, // Increased from 100 for snappier feel
-      damping: 18, // Increased from 15 for less bounce
-      mass: 0.5, // Added: reduces inertia
+      ...smoothSpring
     },
   },
   exit: {

@@ -17,7 +17,7 @@ import { Person, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useAuth } from "~/contexts/AuthContext";
 import { useNotification } from "~/contexts/NotificationContext";
-import logo from "~/assets/logo_blue.svg";
+import logo from "~/assets/images/Flora.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -84,16 +84,22 @@ export default function Login() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: "#0035A0",
+          background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`, // Deep indigo to dark violet
           overflow: "hidden",
           "&::before": {
             content: '""',
             position: "absolute",
-            width: "150%",
-            height: "150%",
+            width: "200%",
+            height: "200%",
             background:
-              "radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(255,255,255,0.03) 100%)",
-            borderRadius: "50%",
+              "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, transparent 60%)",
+            top: "-50%",
+            left: "-50%",
+            animation: "pulse 15s infinite alternate",
+          },
+          "@keyframes pulse": {
+            "0%": { transform: "scale(1)" },
+            "100%": { transform: "scale(1.05)" },
           },
           "& .ripple": {
             position: "absolute",
@@ -174,16 +180,22 @@ export default function Login() {
               }}
               onClick={() => navigate("/")}
             >
-              <motion.img
-                src={logo}
-                width="100"
-                height="100"
-                alt="Flora Logo"
+              <Box
+                component={motion.div}
                 transition={{
                   duration: 3,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
+                sx={{
+                  width: 100,
+                  height: 100,
+                  display: "inline-block",
+                  mask: `url(${logo}) no-repeat center / contain`,
+                  WebkitMask: `url(${logo}) no-repeat center / contain`,
+                  background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                }}
+                title="Flora Logo"
               />
             </Box>
 
@@ -201,7 +213,7 @@ export default function Login() {
                 gutterBottom
                 sx={{
                   fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
-                  color: "#0035A0",
+                  color: "primary.dark",
                   letterSpacing: "-0.02em",
                 }}
               >
@@ -327,7 +339,7 @@ export default function Login() {
                   "&:hover": {
                     bgcolor: "primary.dark",
                     transform: "translateY(-2px)",
-                    boxShadow: "0 6px 20px rgba(0, 82, 212, 0.4)",
+                    boxShadow: "0 6px 20px rgba(79, 70, 229, 0.4)",
                   },
                 }}
               >

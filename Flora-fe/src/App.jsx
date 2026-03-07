@@ -23,6 +23,7 @@ const Home = lazy(() => import("~/pages/Home/Home"));
 const Groups = lazy(() => import("~/pages/Instructions/Instructions"));
 const PronunciationPractice = lazy(() => import("~/pages/Instructions/PronunciationPractice/PronunciationPractice"));
 const CustomPronunciation = lazy(() => import("~/pages/CustomPronunciation/CustomPronunciation"));
+const Learning = lazy(() => import("~/pages/Learning/Learning"));
 import SituationQuiz from "~/pages/Quiz/Situation/SituationQuiz";
 const Administration = lazy(() => import("~/pages/Administration/Administration"));
 const ContentManagement = lazy(() => import("~/pages/Administration/ContentManagement/ContentManagement"));
@@ -144,6 +145,15 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <QuizContent />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/learning"
+                    element={
+                      <ProtectedRoute>
+                        <Learning />
                       </ProtectedRoute>
                     }
                   />

@@ -208,7 +208,7 @@ function SituationQuiz() {
 
                             {(result.detailed_explanation || result.explanation) && (
                                 <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'divider' }}>
-                                    <Typography variant="subtitle2" color="primary.main" fontWeight="700" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Why?</Typography>
+                                    <Typography variant="subtitle2" color="primary.main" fontWeight="700" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Explanation</Typography>
                                     <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{result.detailed_explanation || result.explanation}</Typography>
                                 </Paper>
                             )}

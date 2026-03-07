@@ -26,7 +26,7 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "~/contexts/AuthContext";
 import { useNotification } from "~/contexts/NotificationContext";
-import logo_white from "~/assets/logo_white.svg";
+import logo_blue from "~/assets/images/Flora.svg";
 
 export default function Appbar({
   showBack = true,
@@ -92,9 +92,9 @@ export default function Appbar({
       position="static"
       elevation={0}
       sx={{
-        background: "linear-gradient(135deg, #0052D4 0%, #0035A0 100%)",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-        boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+        py: 0.5,
+        borderBottom: "1px solid",
+        borderColor: "divider",
       }}
     >
       <Toolbar>
@@ -127,7 +127,16 @@ export default function Appbar({
           }}
           onClick={() => navigate("/home")}
         >
-          <img src={logo_white} alt="Flora Logo" style={{ height: "56px" }} />
+          <Box
+            sx={{
+              height: "48px",
+              aspectRatio: "1",
+              mask: `url(${logo_blue}) no-repeat center / contain`,
+              WebkitMask: `url(${logo_blue}) no-repeat center / contain`,
+              background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+            }}
+            title="Flora Logo"
+          />
         </Box>
 
         {/* User Info & Avatar */}
@@ -158,17 +167,18 @@ export default function Appbar({
           >
             <Avatar
               sx={{
-                width: 40,
-                height: 40,
-                bgcolor: "white",
-                color: "primary.main",
-                fontWeight: "bold",
-                fontSize: "1rem",
+                width: 44,
+                height: 44,
+                bgcolor: "primary.light",
+                color: "primary.contrastText",
+                fontWeight: "700",
+                fontSize: "1.1rem",
                 border: "2px solid",
                 borderColor: "primary.light",
                 transition: "all 0.2s",
                 "&:hover": {
-                  borderColor: "secondary.main",
+                  borderColor: "primary.main",
+                  bgcolor: "primary.main",
                 },
               }}
             >
@@ -205,9 +215,12 @@ export default function Appbar({
                   right: 24, // Moved slightly left to avoid corner curve
                   width: 12,
                   height: 12,
-                  bgcolor: "#0052D4", // Match gradient start color
+                  bgcolor: "background.paper",
                   transform: "translateY(-50%) rotate(45deg)",
                   zIndex: 0,
+                  borderLeft: "1px solid",
+                  borderTop: "1px solid",
+                  borderColor: "divider",
                 },
               },
             },
@@ -222,10 +235,10 @@ export default function Appbar({
               p: 3,
               pb: 3,
               mb: 1,
-              background: "linear-gradient(135deg, #0052D4 0%, #4364F7 100%)",
+              background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               color: "white",
-              borderTopLeftRadius: "24px", // Match Paper borderRadius
-              borderTopRightRadius: "24px", // Match Paper borderRadius
+              borderTopLeftRadius: "24px",
+              borderTopRightRadius: "24px",
             }}
           >
             <Box

@@ -10,6 +10,13 @@ import {
   CircularProgress,
   Divider,
 } from "@mui/material";
+import {
+  containerVariants,
+  itemVariants,
+  hoverScale,
+  tapScale,
+  pageTransition
+} from "~/utils/animations";
 import { motion } from "framer-motion";
 import { useNotification } from "~/contexts/NotificationContext";
 import { useAuth } from "~/contexts/AuthContext";
@@ -80,70 +87,70 @@ export default function Home() {
             flexDirection: "column",
             alignItems: "center",
             overflow: "auto",
-            // py: { xs: 4, sm: 6, md: 8 },
-            px: { xs: 4, sm: 8, md: 16 },
+            px: { xs: 4, sm: 8, md: 12 },
           }}
         >
-          {loading ? (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                minHeight: "400px",
-              }}
-            >
-              <CircularProgress />
-            </Box>
-          ) : (
-            <>
-              {/* Header Grid: Welcome + Custom Practice */}
+          <Box sx={{ width: "100%", maxWidth: "1400px" }}>
+            {loading ? (
               <Box
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  width: '100%',
-                  py: { xs: 3, sm: 4, md: 6 },
-                  gap: { xs: 2, sm: 3, md: 4 },
-                  flexWrap: 'wrap'
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: "400px",
                 }}
               >
-                {/* Welcome Message */}
+                <CircularProgress />
+              </Box>
+            ) : (
+              <>
                 <Box
-                  component={motion.div}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  sx={{ flex: 1, minWidth: { xs: '200px', sm: '300px' } }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    py: { xs: 3, sm: 4, md: 6 },
+                    gap: { xs: 2, sm: 3, md: 4 },
+                    flexWrap: 'wrap'
+                  }}
                 >
-                  <Typography
-                    variant="h5"
-                    fontWeight="700"
-                    sx={{
-                      fontSize: { xs: '1.5rem', sm: '1.5rem', md: '1.75rem' },
-                      mb: 1,
-                      background: (theme) =>
-                        `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
+                  {/* Welcome Message */}
+                  <Box
+                    component={motion.div}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={pageTransition}
+                    sx={{ flex: 1, minWidth: { xs: '200px', sm: '300px' } }}
                   >
-                    Hello, {user?.full_name}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    color="text.secondary"
-                    sx={{
-                      fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
-                      mx: "auto"
-                    }}
-                  >
-                    Track your learning progress and continue your journey!
-                  </Typography>
-                </Box>
+                    <Typography
+                      variant="h3"
+                      fontWeight="700"
+                      sx={{
+                        mb: 1,
+                        background: (theme) =>
+                          `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+                      }}
+                    >
+                      Hello, {user?.full_name}
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      color="text.secondary"
+                      sx={{
+                        fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                      }}
+                    >
+                      Track your learning progress and continue your journey!
+                    </Typography>
+                  </Box>
 
-                {/* Custom Practice Button */}
-                <Card
+                  {/* Custom Practice Button */}
+                  {/* <Card
                   component={motion.div}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -153,11 +160,11 @@ export default function Home() {
                   elevation={0}
                   sx={{
                     background: (theme) =>
-                      `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                      `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                     color: "white",
                     borderRadius: 2, // 32px
                     overflow: "hidden",
-                    // boxShadow: (theme) => `0 10px 20px ${theme.palette.primary.main}30`, // Let theme handle shadow
+                    boxShadow: "0 10px 24px rgba(79, 70, 229, 0.2)",
                     minWidth: '280px'
                   }}
                 >
@@ -189,17 +196,15 @@ export default function Home() {
                     </Box>
                     <ArrowCircleRightIcon sx={{ ml: 'auto', opacity: 0.8 }} />
                   </CardActionArea>
-                </Card>
-              </Box>
+                </Card> */}
+                </Box>
 
-              <Divider sx={{ mb: 4, width: "100%" }} />
+                <Divider sx={{ mb: 4, width: "100%" }} />
 
-              <Overview stats={stats} />
-
-
-
-            </>
-          )}
+                <Overview stats={stats} />
+              </>
+            )}
+          </Box>
         </Box>
       </Box>
 

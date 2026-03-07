@@ -22,6 +22,7 @@ import {
 import {
     CheckCircle,
     Psychology,
+    InfoOutlined,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { quizService } from "~/services/quizService";
@@ -50,7 +51,7 @@ function Content() {
     const [questionTimes, setQuestionTimes] = useState({});
     const [error, setError] = useState(null);
     const [currentAnswerResult, setCurrentAnswerResult] = useState(null); // stores intermediate result after answering
-    const [timeLeft, setTimeLeft] = useState(5);
+    const [timeLeft, setTimeLeft] = useState(10);
     const [choicesVisible, setChoicesVisible] = useState(false);
     const [countdownActive, setCountdownActive] = useState(false);
     const [showTimeoutScreen, setShowTimeoutScreen] = useState(false);
@@ -120,7 +121,7 @@ function Content() {
         setStartTime(Date.now());
         setChoicesVisible(false);
         setCountdownActive(false);
-        setTimeLeft(5);
+        setTimeLeft(10);
 
         const timer = setTimeout(() => {
             setChoicesVisible(true);
@@ -150,7 +151,7 @@ function Content() {
 
     const handleRetryQuestion = () => {
         setShowTimeoutScreen(false);
-        setTimeLeft(5);
+        setTimeLeft(10);
         setCountdownActive(true);
     };
 
@@ -247,21 +248,20 @@ function Content() {
     const renderResults = () => (
         <Container maxWidth="md" component={motion.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
             <Card component={motion.div} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} elevation={0} sx={{
-                mb: 4, textAlign: "center", py: 4, borderRadius: 2, background: "linear-gradient(135deg, #0052D4 0%, #00C9FF 100%)", color: "white", boxShadow: "0 10px 40px -10px rgba(0, 82, 212, 0.5)",
+                mb: 4, textAlign: "center", py: 4, borderRadius: 2, background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, color: "white", boxShadow: "0 10px 40px -10px rgba(79, 70, 229, 0.5)",
             }}>
                 <Typography variant="h2" fontWeight="700" gutterBottom>{results.percentage}%</Typography>
                 <Typography variant="h5" gutterBottom>{results.total_score}/{results.max_score} points</Typography>
                 <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "center" }}>
-                    <Chip label={`${results.perfect_count} Perfect`} sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }} />
-                    <Chip label={`${results.acceptable_count} Acceptable`} sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }} />
-                    <Chip label={`${results.poor_count} Poor`} sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }} />
+                    <Chip label={`${results.correct_count} Correct`} sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }} />
+                    <Chip label={`${results.incorrect_count} Incorrect`} sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }} />
                 </Box>
             </Card>
 
             {results.results?.map((result, idx) => {
-                const rating = result.rating;
-                const severity = rating === "best" ? "success" : rating === "acceptable" ? "warning" : "error";
-                const isBest = rating === "best";
+                const isCorrect = result.is_correct || result.rating === "correct" || result.rating === "best" || result.is_best_choice;
+                const severity = isCorrect ? "success" : "error";
+                const isBest = isCorrect;
 
                 return (
                     <Card key={idx} component={motion.div} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: idx * 0.1 }} sx={{
@@ -269,28 +269,31 @@ function Content() {
                     }} elevation={0}>
                         <CardContent sx={{ p: 4 }}>
                             <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 2 }}>
-                                <Chip label={`Question ${idx + 1}`} sx={{ fontWeight: 700, bgcolor: `${severity}.light`, color: `${severity}.dark`, borderRadius: 1, height: 24, mt: 0.5 }} />
+                                <Chip label={`Question ${idx + 1}`} sx={{ fontWeight: 700, bgcolor: `${severity}.light`, color: "white", borderRadius: 1, height: 24, mt: 0.5 }} />
                                 <Box>
                                     {result.title && <Typography variant="subtitle1" fontWeight="700" color="primary.main">{result.title}</Typography>}
                                     <Typography variant="h6" fontWeight="600" sx={{ lineHeight: 1.4 }}>{result.question}</Typography>
                                 </Box>
                             </Box>
 
-                            <Alert severity={severity} variant="outlined" sx={{ mb: 2, borderRadius: 2, borderColor: `${severity}.main`, bgcolor: `${severity}.light` }}>
-                                <Typography variant="subtitle2" fontWeight="700" color={`${severity}.dark`} gutterBottom>Your answer:</Typography>
-                                <Typography variant="body1" fontWeight="600" color={`${severity}.dark`}>{result.selected_choice_text}</Typography>
+                            <Alert severity={severity} variant="outlined" sx={{ mb: 2, borderColor: `${severity}.main`, bgcolor: `${severity}.light` }}>
+                                <Typography variant="subtitle2" fontWeight="700" color="white" gutterBottom>Your answer:</Typography>
+                                <Typography variant="body1" fontWeight="600" color="white">{result.selected_choice_text}</Typography>
                             </Alert>
 
                             {!isBest && result.best_choice && (
-                                <Alert severity="success" variant="filled" sx={{ mb: 3, borderRadius: 2 }}>
-                                    <Typography variant="subtitle2" fontWeight="700" gutterBottom>Recommended best choice:</Typography>
-                                    <Typography variant="body1" fontWeight="600">{result.best_choice.text}</Typography>
+                                <Alert severity="success" variant="filled" sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle2" fontWeight="700" color ="white" gutterBottom>RIGHT ANSWER:</Typography>
+                                    <Typography variant="body1" fontWeight="600" color="white">{result.best_choice.text}</Typography>
                                 </Alert>
                             )}
 
                             {(result.detailed_explanation || result.explanation) && (
-                                <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'divider' }}>
-                                    <Typography variant="subtitle2" color="primary.main" fontWeight="700" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Why?</Typography>
+                                <Paper elevation={0} sx={{ p: 3, bgcolor: 'rgba(79, 70, 229, 0.04)', borderRadius: 2, border: '1px solid', borderColor: 'primary.light' }}>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                        <InfoOutlined sx={{ color: 'primary.main', fontSize: 20 }} />
+                                        <Typography variant="subtitle2" color="primary.main" fontWeight="700" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Explanation</Typography>
+                                    </Box>
                                     <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{result.detailed_explanation || result.explanation}</Typography>
                                 </Paper>
                             )}
@@ -331,13 +334,13 @@ function Content() {
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                     {/* Progress Panel - Top */}
                     <Box sx={{ width: '100%', mb: 2, px: 2, pt: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 4 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 6 }}>
                             <Button variant="contained" color="error" onClick={() => setExitDialogOpen(true)} sx={{ fontWeight: 'bold' }}>
                                 Exit Quiz
                             </Button>
                         </Box>
-                        <Box sx={{ position: 'relative', width: '100%', height: 12, bgcolor: '#e0e0e0', borderRadius: 6 }}>
-                            <Box sx={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${progressPercent}%`, bgcolor: '#4B0082', borderRadius: 6, transition: 'width 0.3s ease' }} />
+                        <Box sx={{ position: 'relative', width: '100%', height: 12, bgcolor: 'divider', borderRadius: 2 }}>
+                            <Box sx={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${progressPercent}%`, background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 2, transition: 'width 0.3s ease' }} />
                             <Box sx={{
                                 position: 'absolute',
                                 top: '50%',
@@ -345,9 +348,9 @@ function Content() {
                                 transform: 'translate(-50%, -50%)',
                                 width: 24,
                                 height: 24,
-                                bgcolor: '#e0e0e0',
+                                bgcolor: 'background.paper',
                                 border: '6px solid',
-                                borderColor: '#4B0082',
+                                borderColor: 'primary.main',
                                 borderRadius: '50%',
                                 zIndex: 2,
                                 transition: 'left 0.3s ease'
@@ -360,7 +363,7 @@ function Content() {
                                     mb: 1.5,
                                     px: 2,
                                     py: 0.5,
-                                    bgcolor: '#4B0082',
+                                    bgcolor: 'primary.dark',
                                     color: '#fff',
                                     borderRadius: 1,
                                     fontSize: '0.85rem',
@@ -374,7 +377,7 @@ function Content() {
                                         transform: 'translateX(-50%)',
                                         borderWidth: '6px',
                                         borderStyle: 'solid',
-                                        borderColor: '#4B0082 transparent transparent transparent',
+                                        borderColor: (theme) => `${theme.palette.primary.dark} transparent transparent transparent`,
                                     }
                                 }}>
                                     {`${currentQuestion + 1}/${totalQuestions}`}
@@ -390,13 +393,13 @@ function Content() {
                                 <CardContent sx={{ p: { xs: 3, md: 5 } }}>
                                     <Box component={motion.div} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                                            <Box sx={{ bgcolor: '#e0e0e0', color: '#1976d2', px: 1.5, py: 0.5, borderRadius: 1 }}>
+                                            <Box sx={{ bgcolor: 'rgba(79, 70, 229, 0.1)', color: 'primary.main', px: 1.5, py: 0.5, borderRadius: 1 }}>
                                                 <Typography variant="subtitle2" fontWeight="800" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
                                                     QUESTION {currentQuestion + 1}
                                                 </Typography>
                                             </Box>
                                         </Box>
-                                        <Typography variant="h6" fontWeight="600" color="text.secondary" gutterBottom sx={{ lineHeight: 1.4, mb: 4, textAlign: 'center' }}>
+                                        <Typography variant="h5" fontWeight="700" color="text.primary" gutterBottom sx={{ lineHeight: 1.5, mb: 4, textAlign: 'center', px: { xs: 1, md: 3 } }}>
                                             {question.question}
                                         </Typography>
                                     </Box>
@@ -428,18 +431,23 @@ function Content() {
                                                 let bgcolor = "transparent";
                                                 let radioColor = "primary";
 
+                                                let labelColor = "text.primary";
+
                                                 if (currentAnswerResult) {
-                                                    const isBest = choice.choice_id === currentAnswerResult.best_choice?.choice_id || (currentAnswerResult.is_best_choice && isSelected);
-                                                    if (isBest) {
+                                                    const isCorrect = choice.choice_id === currentAnswerResult.best_choice?.choice_id || (currentAnswerResult.is_correct || currentAnswerResult.is_best_choice) && isSelected;
+                                                    if (isCorrect) {
                                                         borderColor = "success.main";
                                                         bgcolor = "rgba(76, 175, 80, 0.08)";
                                                         radioColor = "success";
+                                                        labelColor = "success.dark";
                                                     } else if (isSelected) {
                                                         borderColor = "error.main";
                                                         bgcolor = "rgba(244, 67, 54, 0.08)";
                                                         radioColor = "error";
+                                                        labelColor = "error.dark";
                                                     } else {
                                                         borderColor = "divider";
+                                                        labelColor = "text.secondary";
                                                     }
                                                 }
 
@@ -456,9 +464,17 @@ function Content() {
                                                         }}>
                                                         <FormControlLabel
                                                             value={choice.choice_id}
-                                                            control={<Radio color={radioColor} />}
+                                                            control={<Radio color={radioColor} sx={{ '&.Mui-disabled': { color: currentAnswerResult && (radioColor === 'success' || radioColor === 'error') ? `${radioColor}.main` : 'action.disabled' } }} />}
                                                             label={choice.text}
-                                                            sx={{ width: "100%", m: 0, px: 2, py: 1 }}
+                                                            sx={{
+                                                                width: "100%", m: 0, px: 2, py: 1,
+                                                                "& .MuiFormControlLabel-label": {
+                                                                    fontWeight: 500,
+                                                                },
+                                                                "& .MuiFormControlLabel-label.Mui-disabled": {
+                                                                    color: labelColor,
+                                                                }
+                                                            }}
                                                             disabled={!!currentAnswerResult || !choicesVisible}
                                                         />
                                                     </Paper>
@@ -474,8 +490,11 @@ function Content() {
                                             {/* Removed Recommended best choice alert per user request */}
 
                                             {(currentAnswerResult.detailed_explanation || currentAnswerResult.explanation) && (
-                                                <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'divider' }}>
-                                                    <Typography variant="subtitle2" color="primary.main" fontWeight="700" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Why?</Typography>
+                                                <Paper elevation={0} sx={{ p: 3, bgcolor: 'rgba(79, 70, 229, 0.04)', borderRadius: 2, border: '1px solid', borderColor: 'primary.light' }}>
+                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                                        <InfoOutlined sx={{ color: 'primary.main', fontSize: 20 }} />
+                                                        <Typography variant="subtitle2" color="primary.main" fontWeight="700" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Explanation</Typography>
+                                                    </Box>
                                                     <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{currentAnswerResult.detailed_explanation || currentAnswerResult.explanation}</Typography>
                                                 </Paper>
                                             )}
@@ -505,7 +524,7 @@ function Content() {
                                                 <Button variant="contained" onClick={handleNext}>Next Question</Button>
                                             ) : (
                                                 <Button variant="contained" onClick={handleSubmit} disabled={submitting}>
-                                                    {submitting ? "Submitting..." : "Submit & See Results"}
+                                                    {submitting ? "Submitting..." : "Summarize"}
                                                 </Button>
                                             )
                                         ) : (
@@ -565,7 +584,7 @@ function Content() {
                 open={showTimeoutScreen}
                 maxWidth="sm"
                 fullWidth
-                PaperProps={{ sx: { textAlign: 'center', py: 5, borderRadius: 3, boxShadow: '0 12px 48px rgba(0,0,0,0.2)' } }}
+                PaperProps={{ sx: { textAlign: 'center', py: 5, borderRadius: 2, boxShadow: '0 12px 48px rgba(0,0,0,0.2)' } }}
             >
                 <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 15 }}>
@@ -586,7 +605,7 @@ function Content() {
                         color="primary"
                         size="large"
                         onClick={handleRetryQuestion}
-                        sx={{ px: 6, py: 1.5, borderRadius: 3, fontSize: '1.2rem', fontWeight: 'bold' }}
+                        sx={{ px: 6, py: 1.5, borderRadius: 2, fontSize: '1.2rem', fontWeight: 'bold' }}
                     >
                         Re-answer this question
                     </Button>

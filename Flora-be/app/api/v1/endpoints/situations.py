@@ -99,9 +99,8 @@ async def submit_quiz(
         # Process each answer
         results = []
         total_score = 0
-        perfect_count = 0
-        acceptable_count = 0
-        poor_count = 0
+        correct_count = 0
+        incorrect_count = 0
         
         for answer in answers:
             situation_id = answer.get("situation_id")
@@ -122,17 +121,15 @@ async def submit_quiz(
             if not selected_choice:
                 continue
             
-            # Determine score based on rating
-            if selected_choice_id == situation.get("best_choice_id"):
-                rating = "best"
-                score = 100
-                is_best_choice = True
-                perfect_count += 1
+            # Determine if correct based on best_choice_id
+            is_correct = (selected_choice_id == situation.get("best_choice_id"))
+            rating = "correct" if is_correct else "incorrect"
+            score = 1 if is_correct else 0
+            
+            if is_correct:
+                correct_count += 1
             else:
-                rating = "not_recommended"
-                score = 0
-                is_best_choice = False
-                poor_count += 1
+                incorrect_count += 1
             
             total_score += score
             
@@ -149,7 +146,7 @@ async def submit_quiz(
                 "question": situation["question"],
                 "selected_choice_id": selected_choice_id,
                 "selected_choice_text": selected_choice["text"],
-                "is_best_choice": is_best_choice,
+                "is_correct": is_correct,
                 "rating": rating,
                 "score": score,
                 "detailed_explanation": situation.get("explanation"),
@@ -174,7 +171,7 @@ async def submit_quiz(
                 {
                     "situation_id": ObjectId(answer["situation_id"]),
                     "selected_choice_id": answer["selected_choice_id"],
-                    "is_best_choice": results[i]["is_best_choice"],
+                    "is_correct": results[i]["is_correct"],
                     "rating": results[i]["rating"],
                     "score": results[i]["score"],
                     "time_spent_seconds": answer.get("time_spent_seconds", 0)
@@ -182,10 +179,9 @@ async def submit_quiz(
                 for i, answer in enumerate(answers)
             ],
             "total_score": total_score,
-            "perfect_count": perfect_count,
-            "acceptable_count": acceptable_count,
-            "poor_count": poor_count,
-            "started_at": datetime.now(timezone.utc),  # Should come from client
+            "correct_count": correct_count,
+            "incorrect_count": incorrect_count,
+            "started_at": datetime.now(timezone.utc),
             "submitted_at": datetime.now(timezone.utc),
             "total_time_seconds": sum(answer.get("time_spent_seconds", 0) for answer in answers)
         }
@@ -206,11 +202,10 @@ async def submit_quiz(
             data={
                 "quiz_id": quiz_id,
                 "total_score": total_score,
-                "max_score": len(answers) * 100,
-                "percentage": round((total_score / (len(answers) * 100)) * 100) if answers else 0,
-                "perfect_count": perfect_count,
-                "acceptable_count": acceptable_count,
-                "poor_count": poor_count,
+                "max_score": len(answers),
+                "percentage": round((total_score / len(answers)) * 100) if answers else 0,
+                "correct_count": correct_count,
+                "incorrect_count": incorrect_count,
                 "results": results,
                 "submitted_at": datetime.utcnow().isoformat() + "Z"
             }

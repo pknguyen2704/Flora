@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.api.v1.api import api_router
 import os
+from app.services.pronunciation_engine import PronunciationEngine
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -13,6 +14,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+@app.on_event("startup")
+async def load_pronunciation_engine():
+
+    print("Preloading pronunciation engine...")
+
+    app.state.pronunciation_engine = PronunciationEngine()
+
+    print("Pronunciation engine ready")
+    
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,

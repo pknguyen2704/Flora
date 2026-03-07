@@ -12,6 +12,7 @@ import {
     Alert,
     Chip,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useNotification } from "~/contexts/NotificationContext";
 import { useSidebar } from "~/contexts/SidebarContext";
 import { groupService } from "~/services/groupService";
@@ -24,7 +25,8 @@ import {
     pageVariants,
     pageTransition,
     hoverScale,
-    tapScale
+    tapScale,
+    smoothSpring
 } from "~/utils/animations";
 
 export default function Quiz() {
@@ -95,10 +97,10 @@ export default function Quiz() {
                         flexDirection: "column",
                         alignItems: "center",
                         overflow: "auto",
-                        py: { xs: 4, sm: 6, md: 8 },
+                        px: { xs: 4, sm: 8, md: 12 },
                     }}
                 >
-                    <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 4, md: 6 } }}>
+                    <Box sx={{ width: "100%", maxWidth: "1400px" }}>
                         <Box
                             component={motion.div}
                             variants={containerVariants}
@@ -108,29 +110,42 @@ export default function Quiz() {
                             {/* Section Header */}
                             <Box
                                 component={motion.div}
-                                variants={itemVariants}
-                                sx={{ mb: 6, textAlign: "center" }}
-                            >
-                                <Typography
-                                    variant="h3"
-                                    fontWeight="700"
-                                    sx={{
-                                        mb: 2,
-                                        background: (theme) =>
-                                            `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent",
-                                    }}
-                                >
-                                    Quiz Groups
-                                </Typography>
-                                <Typography
-                                    variant="h6"
-                                    color="text.secondary"
-                                    sx={{ maxWidth: 600, mx: "auto" }}
-                                >
-                                    Choose a group to start the quiz challenge
-                                </Typography>
+                                layout
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={pageTransition}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    py: { xs: 3, sm: 4, md: 6 },
+                                    gap: { xs: 2, sm: 3, md: 4 },
+                                    flexWrap: 'wrap'
+                                }}>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography
+                                        variant="h3"
+                                        fontWeight="700"
+                                        sx={{
+                                            mb: 1,
+                                            background: (theme) =>
+                                                `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                                            WebkitBackgroundClip: "text",
+                                            WebkitTextFillColor: "transparent",
+                                            fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+                                        }}
+                                    >
+                                        Quiz Groups
+                                    </Typography>
+                                    <Typography
+                                        variant="h6"
+                                        color="text.secondary"
+                                        sx={{ fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' } }}
+                                    >
+                                        Choose a group to start the quiz challenge
+                                    </Typography>
+                                </Box>
                             </Box>
 
                             {/* Groups Grid */}
@@ -170,20 +185,24 @@ export default function Quiz() {
                                         >
                                             <Card
                                                 component={motion.div}
-                                                whileHover={hoverScale}
+                                                layout
+                                                variants={itemVariants}
+                                                whileHover={{
+                                                    ...hoverScale,
+                                                    y: -5,
+                                                    boxShadow: group.color_hex
+                                                        ? `0 20px 40px ${alpha(group.color_hex, 0.15)}`
+                                                        : "0 20px 40px rgba(0,0,0,0.12)"
+                                                }}
                                                 whileTap={tapScale}
                                                 elevation={0}
                                                 sx={{
                                                     height: "100%",
-                                                    borderRadius: 2, // Use theme default
+                                                    borderRadius: 2.5,
                                                     border: "1px solid",
-                                                    borderColor: "divider",
-                                                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                                    borderColor: group.color_hex ? alpha(group.color_hex, 0.4) : "divider",
+                                                    bgcolor: group.color_hex ? alpha(group.color_hex, 0.05) : "background.paper",
                                                     overflow: "hidden",
-                                                    "&:hover": {
-                                                        borderColor: group.color_hex,
-                                                        // boxShadow: (theme) => theme.shadows[8],
-                                                    },
                                                 }}
                                             >
                                                 <CardActionArea
@@ -203,7 +222,7 @@ export default function Quiz() {
                                                         sx={{
                                                             width: 60,
                                                             height: 8,
-                                                            borderRadius: 4,
+                                                            borderRadius: 2,
                                                             bgcolor: group.color_hex,
                                                             mb: 3,
                                                         }}
@@ -281,7 +300,7 @@ export default function Quiz() {
                                 </Box>
                             )}
                         </Box>
-                    </Container>
+                    </Box>
                 </Box>
             </Box>
 

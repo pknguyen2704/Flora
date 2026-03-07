@@ -18,16 +18,13 @@ import {
   Assessment,
   School,
   ArrowForward,
-  Email,
-  LinkedIn,
-  GitHub,
+  Email
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import logo_white from "~/assets/logo_white.svg";
+import logo_white from "~/assets/images/Flora.svg";
 import Footer from "~/components/Footer/Footer";
-import chikhuat from "~/assets/chikhuat.jpg";
-import linhhuong from "~/assets/linhhuong.jpg";
-import mytam from "~/assets/mytam.jpg";
+import linhhuong from "~/assets/images/linhhuong.jpg";
+import mytam from "~/assets/images/mytam.jpg";
 function Introduction() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -87,16 +84,7 @@ function Introduction() {
 
   const team = [
     {
-      name: "Khuất Thị Thủy Chi",
-      role: "Leader",
-      faculty: "Faculty of English",
-      university: "Hanoi National University of Education",
-      email: "khuatchi04@gmail.com",
-      avatar: chikhuat,
-    },
-    {
       name: "Tô Linh Hương",
-      role: "Member",
       faculty: "Faculty of English",
       university: "Hanoi National University of Education",
       email: "tolinhhuong25082004@gmail.com",
@@ -104,7 +92,6 @@ function Introduction() {
     },
     {
       name: "Nguyễn Thị Mỹ Tâm",
-      role: "Member",
       faculty: "Faculty of English",
       university: "Hanoi National University of Education",
       email: "nmytam52@gmail.com",
@@ -173,14 +160,14 @@ function Introduction() {
           <Toolbar
             sx={{
               justifyContent: "space-between",
-              background: "linear-gradient(135deg, rgba(0, 82, 212, 0.85) 0%, rgba(0, 53, 160, 0.85) 100%)",
+              background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}E6 0%, ${theme.palette.primary.dark}E6 100%)`, // E6 is 90% opacity
               backdropFilter: "blur(20px)",
               borderRadius: "50px",
               px: { xs: 2, md: 4 },
-              border: "1px solid rgba(255, 255, 255, 0.2)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
               transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
               boxShadow: scrolled
-                ? "0 10px 40px rgba(0, 53, 160, 0.25)"
+                ? "0 10px 40px rgba(79, 70, 229, 0.35)" // Indigo shadow
                 : "0 8px 32px rgba(0, 0, 0, 0.1)",
               mt: 2, // Fixed margin to prevent jumping
             }}
@@ -201,12 +188,18 @@ function Introduction() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  gap: 1
                 }}
               >
-                <img
-                  src={logo_white}
-                  alt="Flora Logo"
-                  style={{ height: "100%", width: "auto" }}
+                <Box
+                  sx={{
+                    height: "100%",
+                    aspectRatio: "1", // Ensure it doesn't squish
+                    mask: `url(${logo_white}) no-repeat center / contain`,
+                    WebkitMask: `url(${logo_white}) no-repeat center / contain`,
+                    backgroundColor: "white", // Change to "blue" or any tone here
+                  }}
+                  title="Flora"
                 />
               </Box>
             </Box>
@@ -290,7 +283,7 @@ function Introduction() {
                 onClick={() => navigate("/login")}
                 sx={{
                   bgcolor: "white",
-                  color: "#0035A0",
+                  color: "primary.dark",
                   px: { xs: 2, md: 4 },
                   py: 1,
                   borderRadius: "25px",
@@ -299,9 +292,9 @@ function Introduction() {
                   textTransform: "none",
                   boxShadow: "0 4px 14px rgba(255, 255, 255, 0.4)",
                   "&:hover": {
-                    bgcolor: "grey.100",
-                    transform: "translateY(-1px)",
-                    boxShadow: "0 6px 20px rgba(255, 255, 255, 0.3)",
+                    bgcolor: "grey.50",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 6px 20px rgba(255, 255, 255, 0.5)",
                   },
                   transition:
                     "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
@@ -323,31 +316,36 @@ function Introduction() {
           justifyContent: "center",
           alignItems: "center",
           position: "relative",
-          minHeight: "90vh",
+          minHeight: "95vh",
           width: "100%",
           maxWidth: "100vw",
           overflow: "hidden",
           overflowX: "hidden",
-          bgcolor: "primary.main",
+          background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           color: "white",
           textAlign: "center",
           px: { xs: 2, sm: 3, md: 4 },
           "&::before": {
             content: '""',
             position: "absolute",
-            width: "150%",
-            height: "150%",
+            width: "200%",
+            height: "200%",
             background:
-              "radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(255,255,255,0.03) 100%)",
-            borderRadius: "50%",
+              "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, transparent 60%)",
+            top: "-50%",
+            left: "-50%",
+            animation: "pulse 15s infinite alternate",
           },
-          // Concentric circles logic moved into CSS
           "& .ripple": {
             position: "absolute",
             borderRadius: "50%",
-            border: "1px solid rgba(255, 255, 255, 0.05)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
             pointerEvents: "none",
           },
+          "@keyframes pulse": {
+            "0%": { transform: "scale(1)" },
+            "100%": { transform: "scale(1.05)" },
+          }
         }}
       >
         {[400, 600, 800, 1000, 1200].map((size, i) => (
@@ -386,27 +384,41 @@ function Introduction() {
               mb: 6,
             }}
           >
+            Flora
+          </Typography>
+          <Typography
+            variant="h5"
+            component="h1"
+            gutterBottom
+            fontWeight="900"
+            sx={{
+              fontSize: { xs: "1rem", md: "2rem" },
+              letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+              maxWidth: "900px",
+              mb: 6,
+            }}
+          >
             Classroom Instructions Support
           </Typography>
-
           <Button
             variant="contained"
             size="large"
             onClick={() => navigate("/login")}
             sx={{
               bgcolor: "white",
-              color: "#0035A0",
+              color: "primary.dark",
               borderRadius: "50px",
               px: { xs: 4, md: 8 },
               py: 2,
               fontSize: "1.2rem",
               fontWeight: 800,
-              boxShadow: "0 0 30px rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 0 30px rgba(255, 255, 255, 0.4)",
               textTransform: "uppercase",
               "&:hover": {
-                bgcolor: "grey.100",
+                bgcolor: "grey.50",
                 transform: "translateY(-4px)",
-                boxShadow: "0 0 50px rgba(255, 255, 255, 0.5)",
+                boxShadow: "0 0 50px rgba(255, 255, 255, 0.6)",
               },
               transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
             }}
@@ -422,7 +434,7 @@ function Introduction() {
         sx={{
           display: "flex",
           flexDirection: "column",
-          bgcolor: "background.paper",
+          bgcolor: "background.default", // Different background to stand out
           minHeight: { xs: "auto", md: "80vh" },
           width: "100%",
           maxWidth: "100vw",
@@ -448,7 +460,7 @@ function Introduction() {
             gutterBottom
             sx={{
               background: (theme) =>
-                `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
@@ -580,12 +592,12 @@ function Introduction() {
       <Box
         id="team"
         sx={{
-          pt: 20,
-          pb: 15,
+          pt: 16,
+          pb: 12,
           position: "relative",
           overflow: "hidden",
           background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 10%)`,
+            `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`, // Deep indigo to dark violet
           color: "white",
           "&::before": {
             content: '""',
@@ -595,7 +607,7 @@ function Introduction() {
             right: 0,
             bottom: 0,
             background:
-              "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 70%)",
+              "radial-gradient(circle at 100% 0%, rgba(255,255,255,0.06) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(255,255,255,0.04) 0%, transparent 40%)",
             pointerEvents: "none",
           },
         }}
@@ -708,123 +720,123 @@ function Introduction() {
                     {member.name}
                   </Typography>
                   <Typography
-                  variant="caption"
-                  sx={{
-                    mb: 3,
-                    color: "white",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                  }}
-                  >
-                  {member.role || "Team Member"}
-                </Typography>
-
-                <Box
-                  sx={{
-                    mt: "auto",
-                    width: "100%",
-                    pt: 3,
-                    borderTop: "1px solid rgba(255,255,255,0.05)",
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{ mb: 0.5, opacity: 0.7, fontWeight: 500 }}
-                  >
-                    {member.faculty}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ mb: 1, opacity: 0.5, fontSize: "0.75rem" }}
-                  >
-                    {member.university}
-                  </Typography>
-                  <Typography
-                    variant="body2"
+                    variant="caption"
                     sx={{
+                      mb: 3,
                       color: "white",
-                      fontWeight: 600,
-                      opacity: 0.9,
-                      fontSize: "0.85rem",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
                     }}
                   >
-                    <Email sx={{ fontSize: "1rem", opacity: 0.7 }} />
-                    {member.email}
+                    {member.role || "Team Member"}
                   </Typography>
+
+                  <Box
+                    sx={{
+                      mt: "auto",
+                      width: "100%",
+                      pt: 3,
+                      borderTop: "1px solid rgba(255,255,255,0.05)",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ mb: 0.5, opacity: 0.7, fontWeight: 500, color: "white" }}
+                    >
+                      {member.faculty}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ mb: 1, opacity: 0.5, fontSize: "0.75rem", color: "white" }}
+                    >
+                      {member.university}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "white",
+                        fontWeight: 600,
+                        opacity: 0.9,
+                        fontSize: "0.85rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <Email sx={{ fontSize: "1rem", opacity: 0.7 }} />
+                      {member.email}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
               </Grid>
             ))}
-        </Grid>
+          </Grid>
 
-        {/* Minimal Contact Section Integrated */}
-        <Box
-          id="contact"
-          component={motion.div}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          sx={{
-            pt: 6,
-            mt: 4,
-            position: "relative",
-            textAlign: "center",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: "20%",
-              right: "20%",
-              height: "1px",
-              background:
-                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
-            },
-          }}
-        >
-          <Typography
-            variant="h6"
-            fontWeight="800"
-            sx={{ mb: 1, color: "white" }}
-          >
-            Have Questions?
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 3, opacity: 0.6 }}>
-            Reach out to our project lead
-          </Typography>
-          <Button
-            variant="contained"
-            size="medium"
-            startIcon={<Email />}
+          {/* Minimal Contact Section Integrated */}
+          <Box
+            id="contact"
+            component={motion.div}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
             sx={{
-              bgcolor: "white",
-              color: "primary.main",
-              px: 4,
-              py: 1.2,
-              borderRadius: "50px",
-              fontWeight: 700,
-              textTransform: "none",
-              "&:hover": {
-                bgcolor: "grey.100",
-                transform: "translateY(-2px)",
+              pt: 6,
+              mt: 4,
+              position: "relative",
+              textAlign: "center",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: "20%",
+                right: "20%",
+                height: "1px",
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
               },
-              transition: "all 0.3s",
             }}
-            onClick={() =>
-              (window.location.href = "mailto:phucnguyen@example.com")
-            }
           >
-            Contact Lead
-          </Button>
-        </Box>
-    </Container>
+            <Typography
+              variant="h6"
+              fontWeight="800"
+              sx={{ mb: 1, color: "white" }}
+            >
+              Have Questions?
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 3, opacity: 0.6 }}>
+              Reach out to our project lead
+            </Typography>
+            <Button
+              variant="contained"
+              size="medium"
+              startIcon={<Email />}
+              sx={{
+                bgcolor: "white",
+                color: "primary.main",
+                px: 4,
+                py: 1.2,
+                borderRadius: "50px",
+                fontWeight: 700,
+                textTransform: "none",
+                "&:hover": {
+                  bgcolor: "grey.100",
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.3s",
+              }}
+              onClick={() =>
+                (window.location.href = "mailto:tolinhhuong25082004@example.com")
+              }
+            >
+              Contact Lead
+            </Button>
+          </Box>
+        </Container>
       </Box >
-    {/* Footer */ }
-    < Footer />
+      {/* Footer */}
+      < Footer />
     </Container >
   );
 }
