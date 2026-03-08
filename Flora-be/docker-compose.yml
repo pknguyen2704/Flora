@@ -6,12 +6,6 @@ services:
     container_name: flora-be
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "28000:8000"
     env_file:
       - .env
-    networks:
-      - flora-network
-
-networks:
-  flora-network:
-    driver: bridge
