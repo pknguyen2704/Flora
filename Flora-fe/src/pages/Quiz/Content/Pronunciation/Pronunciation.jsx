@@ -8,13 +8,14 @@ import {
   Paper,
   LinearProgress,
   Tooltip,
-  Alert
+  Alert, Chip
 } from "@mui/material";
 
 import {
   Mic,
   VolumeUp,
-  Assessment
+  Assessment,
+  CheckCircle
 } from "@mui/icons-material";
 
 import AudioRecorder from "~/components/shared/AudioRecorder";
@@ -399,12 +400,12 @@ export default function Pronunciation({ text }) {
               const color = scoreColor(w.score);
 
               return (
-                <Box key={i} sx={{ textAlign: "center", width: { xs: '100%', sm: 'calc(50% - 16px)', md: 160 } }}>
+                <Box key={i} sx={{ textAlign: "center", width: { xs: '100%', sm: 'calc(50% - 16px)', md: 200 } }}>
                   <Paper
                     elevation={0}
                     sx={{
                       p: 2.5,
-                      borderRadius: 3,
+                      borderRadius: 2,
                       border: "2px solid",
                       borderColor: isCorrect ? "success.light" : w.score >= 60 ? "warning.light" : "error.light",
                       bgcolor: isCorrect ? "rgba(16, 185, 129, 0.03)" : w.score >= 60 ? "rgba(245, 158, 11, 0.03)" : "rgba(239, 68, 68, 0.03)",

@@ -107,8 +107,8 @@ async def submit_quiz(
             if not selected_choice:
                 continue
             
-            # Binary scoring: only "best" rating counts as correct
-            is_correct = (selected_choice.get("rating") == "best")
+            # Scoring: check against best_choice_id
+            is_correct = (selected_choice_id == quiz_q.get("best_choice_id"))
             rating = "correct" if is_correct else "incorrect"
             score = 1 if is_correct else 0
             
@@ -121,7 +121,7 @@ async def submit_quiz(
             
             # Best choice for feedback
             best_choice = next(
-                (c for c in quiz_q["choices"] if c["rating"] == "best"),
+                (c for c in quiz_q["choices"] if c["choice_id"] == quiz_q.get("best_choice_id")),
                 None
             )
             

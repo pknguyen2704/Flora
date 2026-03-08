@@ -459,223 +459,205 @@ async def get_global_dashboard_stats(
 ):
     """Get global platform statistics for the admin dashboard (admin only)."""
     try:
-        # Aggregated stats for all users
-        pronunciation_attempts = await db.pronunciation_attempts.find().to_list(length=100000)
-        situation_attempts = await db.situation_attempts.find().to_list(length=100000)
+        now = datetime.now(timezone.utc)
+        yesterday = (now - timedelta(days=1)).replace(tzinfo=None)
+        two_weeks_ago = (now - timedelta(days=14)).replace(tzinfo=None)
+
+        # 1. Total Counts (Efficient)
         users_count = await db.users.count_documents({})
+        pronunciation_attempts_count = await db.pronunciation_attempts.count_documents({})
+        situation_attempts_count = await db.situation_attempts.count_documents({})
+        global_quiz_attempts_count = await db.quiz_attempts.count_documents({})
+        total_quizzes_count = situation_attempts_count + global_quiz_attempts_count
         
-        # 1. Activity Timeline (Last 14 days)
-        now_naive = datetime.utcnow()
-        start_date = (now_naive - timedelta(days=13)).replace(hour=0, minute=0, second=0, microsecond=0)
+        # 2. Activity Today (Wait, we need to compare with UTC dates)
+        active_today = await db.pronunciation_attempts.distinct("user_id", {"created_at": {"$gte": yesterday}})
+        active_today_sit = await db.situation_attempts.distinct("user_id", {"submitted_at": {"$gte": yesterday}})
+        active_today_quiz = await db.quiz_attempts.distinct("user_id", {"submitted_at": {"$gte": yesterday}})
+        active_users_today = len(set(active_today + active_today_sit + active_today_quiz))
+
+        # 3. Activity Timeline (Aggregation)
+        timeline_pipeline = [
+            {"$match": {"created_at": {"$gte": two_weeks_ago}}},
+            {"$project": {
+                "date": {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}},
+                "score": "$assessment.total_score"
+            }},
+            {"$group": {
+                "_id": "$date",
+                "count": {"$sum": 1},
+                "avg_score": {"$avg": "$score"}
+            }},
+            {"$project": {"_id": 1, "count": 1, "avg_score": 1}}
+        ]
+        pron_timeline = await db.pronunciation_attempts.aggregate(timeline_pipeline).to_list(None)
         
-        timeline = { (start_date + timedelta(days=i)).date(): {
-            "date": (start_date + timedelta(days=i)).date().isoformat(), 
-            "pronunciation": 0, 
-            "quizzes": 0,
-            "accuracy_sum": 0,
-            "accuracy_count": 0
-        } for i in range(14) }
+        sit_timeline_pipeline = [
+            {"$match": {"submitted_at": {"$gte": two_weeks_ago}}},
+            {"$project": {
+                "date": {"$dateToString": {"format": "%Y-%m-%d", "date": "$submitted_at"}},
+                "total_score": "$total_score",
+                "max_score": {"$multiply": [{"$size": {"$ifNull": ["$situations", []]}}, 100]}
+            }},
+            {"$group": {
+                "_id": "$date",
+                "count": {"$sum": 1},
+                "avg_accuracy": {"$avg": {"$cond": [{"$gt": ["$max_score", 0]}, {"$divide": ["$total_score", "$max_score"]}, 0]}}
+            }},
+            {"$project": {"_id": 1, "count": 1, "avg_accuracy": 1}}
+        ]
+        sit_timeline = await db.situation_attempts.aggregate(sit_timeline_pipeline).to_list(None)
+
+        quiz_timeline_pipeline = [
+            {"$match": {"submitted_at": {"$gte": two_weeks_ago}}},
+            {"$project": {
+                "date": {"$dateToString": {"format": "%Y-%m-%d", "date": "$submitted_at"}},
+                "total_score": "$total_score",
+                "max_score": {"$multiply": [{"$size": {"$ifNull": ["$results", []]}}, 100]}
+            }},
+            {"$group": {
+                "_id": "$date",
+                "count": {"$sum": 1},
+                "avg_accuracy": {"$avg": {"$cond": [{"$gt": ["$max_score", 0]}, {"$divide": ["$total_score", "$max_score"]}, 0]}}
+            }},
+            {"$project": {"_id": 1, "count": 1, "avg_accuracy": 1}}
+        ]
+        quiz_timeline = await db.quiz_attempts.aggregate(quiz_timeline_pipeline).to_list(None)
+
+        # 4. User Growth Timeline (Aggregation - Last 30 Days)
+        one_month_ago = (now - timedelta(days=30)).replace(tzinfo=None)
+        growth_pipeline = [
+            {"$match": {"created_at": {"$gte": one_month_ago}}},
+            {"$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}},
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"_id": 1}},
+            {"$project": {"date": "$_id", "count": 1, "_id": 0}}
+        ]
+        user_growth_timeline = await db.users.aggregate(growth_pipeline).to_list(None)
+
+        # Merge activity timelines and use standard keys
+        timeline_map = {}
+        for r in pron_timeline:
+            timeline_map[r["_id"]] = {"date": r["_id"], "pronunciation": r["count"], "quizzes": 0, "accuracy": r["avg_score"] or 0}
         
-        for a in pronunciation_attempts:
-            dt = a.get("created_at")
-            if isinstance(dt, str):
-                try: dt = datetime.fromisoformat(dt.replace('Z', ''))
-                except: dt = None
-            
-            if isinstance(dt, datetime) and dt.date() in timeline:
-                timeline[dt.date()]["pronunciation"] += 1
-                score = a.get("assessment", {}).get("total_score") if a.get("assessment") else None
-                if score is not None:
-                    timeline[dt.date()]["accuracy_sum"] += score
-                    timeline[dt.date()]["accuracy_count"] += 1
-
-        for a in situation_attempts:
-            dt = a.get("submitted_at")
-            if isinstance(dt, str):
-                try: dt = datetime.fromisoformat(dt.replace('Z', ''))
-                except: dt = None
-
-            if isinstance(dt, datetime) and dt.date() in timeline:
-                timeline[dt.date()]["quizzes"] += 1
-                score = a.get("total_score")
-                max_score = len(a.get("situations", [])) * 100
-                if score is not None and max_score > 0:
-                    timeline[dt.date()]["accuracy_sum"] += (score / max_score) * 100
-                    timeline[dt.date()]["accuracy_count"] += 1
-
-        # Calculate average accuracy per day
-        for d in timeline.values():
-            d["avg_accuracy"] = round(d["accuracy_sum"] / d["accuracy_count"], 1) if d["accuracy_count"] > 0 else 0
-            del d["accuracy_sum"]
-            del d["accuracy_count"]
-
-        activity_timeline = sorted(timeline.values(), key=lambda x: x["date"])
-
-        # 1.1 User Growth (Last 14 days)
-        all_users = await db.users.find().to_list(length=users_count)
-        growth_timeline = []
-        for i in range(14):
-            check_date = (start_date + timedelta(days=i)).replace(hour=23, minute=59, second=59)
-            # Count users created on or before this date
-            count = 0
-            for u in all_users:
-                created_at = u.get("created_at")
-                if isinstance(created_at, str):
-                    try: created_at = datetime.fromisoformat(created_at.replace('Z', ''))
-                    except: created_at = None
-                
-                if isinstance(created_at, datetime):
-                    # Ensure created_at is naive for comparison
-                    if created_at.tzinfo is not None:
-                        created_at = created_at.replace(tzinfo=None)
-                    
-                    if created_at <= check_date:
-                        count += 1
-                elif not created_at: # Fallback for old users
-                    count += 1
-            
-            growth_timeline.append({
-                "date": check_date.date().isoformat(),
-                "cumulative_users": count
-            })
-
-        # 2. Group Performance
-        group_stats = defaultdict(lambda: {"total_score": 0, "attempts": 0, "name": "Unknown"})
-        groups = await db.groups.find({"is_active": True}).to_list(length=100)
-        group_names = {str(g["_id"]): g["name"] for g in groups}
-
-        # Calculate pronunciation scores by group (via instruction_id)
-        # First, map instructions to groups
-        instructions = await db.instructions.find({"is_active": True}).to_list(length=2000)
-        inst_to_group = {str(i["_id"]): str(i.get("group_id", "")) for i in instructions}
-
-        for a in pronunciation_attempts:
-            inst_id = str(a.get("instruction_id")) if a.get("instruction_id") else None
-            score = a.get("assessment", {}).get("total_score") if a.get("assessment") else None
-            if inst_id and inst_id in inst_to_group and score is not None:
-                gid = inst_to_group[inst_id]
-                group_stats[gid]["total_score"] += score
-                group_stats[gid]["attempts"] += 1
-                group_stats[gid]["name"] = group_names.get(gid, "Unknown")
-
-        # Add situation scores by group
-        for a in situation_attempts:
-            gid = str(a.get("group_id")) if a.get("group_id") else None
-            score = a.get("total_score")
-            max_score = len(a.get("situations", [])) * 100
-            if gid and score is not None and max_score > 0:
-                percentage = (score / max_score) * 100
-                group_stats[gid]["total_score"] += percentage
-                group_stats[gid]["attempts"] += 1
-                group_stats[gid]["name"] = group_names.get(gid, "Unknown")
-
-        group_performance = []
-        for gid, gs in group_stats.items():
-            if gs["attempts"] > 0:
-                group_performance.append({
-                    "id": gid,
-                    "name": gs["name"],
-                    "average_score": round(gs["total_score"] / gs["attempts"], 1),
-                    "total_attempts": gs["attempts"]
-                })
-        group_performance = sorted(group_performance, key=lambda x: x["total_attempts"], reverse=True)[:8]
-
-        # 3. User Engagement (Top Users)
-        user_engagement = defaultdict(int)
-        for a in pronunciation_attempts:
-            user_engagement[str(a.get("user_id"))] += 1
-        for a in situation_attempts:
-            user_engagement[str(a.get("user_id"))] += 1
-        
-        top_users_data = []
-        sorted_users = sorted(user_engagement.items(), key=lambda x: x[1], reverse=True)[:10]
-        for uid, count in sorted_users:
-            if uid and uid != "None" and len(uid) == 24:
-                u = await db.users.find_one({"_id": ObjectId(uid)})
+        for r in sit_timeline:
+            if r["_id"] not in timeline_map:
+                timeline_map[r["_id"]] = {"date": r["_id"], "pronunciation": 0, "quizzes": r["count"], "accuracy": (r["avg_accuracy"] or 0) * 100}
             else:
-                u = None
-            if u:
-                top_users_data.append({
-                    "id": uid,
-                    "name": u.get("full_name", "Unknown"),
-                    "username": u.get("username"),
-                    "activity_count": count,
-                    "avatar_color": u.get("avatar_color", "#757575")
-                })
+                timeline_map[r["_id"]]["quizzes"] += r["count"]
+                # Adjusted weighted average
+                timeline_map[r["_id"]]["accuracy"] = round((timeline_map[r["_id"]]["accuracy"] + (r["avg_accuracy"] or 0) * 100) / 2, 1)
 
-        # --- RESTORED STATS ---
-        # Calculate Pronunciation Stats
-        pron_scores = []
-        mastery_map = {} # user_id -> instruction_id -> best_score
-        error_distribution = {}
-        
-        for a in pronunciation_attempts:
-            user_id = str(a.get("user_id"))
-            score = a.get("assessment", {}).get("total_score") if a.get("assessment") else None
-            if score is not None:
-                pron_scores.append(score)
-                
-                # Mastery tracking
-                inst_id = str(a.get("instruction_id")) if a.get("instruction_id") else None
-                if inst_id:
-                    if user_id not in mastery_map:
-                        mastery_map[user_id] = {}
-                    current_best = mastery_map[user_id].get(inst_id, 0)
-                    mastery_map[user_id][inst_id] = max(current_best, score)
+        for r in quiz_timeline:
+            if r["_id"] not in timeline_map:
+                timeline_map[r["_id"]] = {"date": r["_id"], "pronunciation": 0, "quizzes": r["count"], "accuracy": (r["avg_accuracy"] or 0) * 100}
+            else:
+                timeline_map[r["_id"]]["quizzes"] += r["count"]
+                timeline_map[r["_id"]]["accuracy"] = round((timeline_map[r["_id"]]["accuracy"] + (r["avg_accuracy"] or 0) * 100) / 2, 1)
 
-            # Error distribution
-            if a.get("assessment"):
-                for error in a["assessment"].get("errors", []):
-                    err_type = error.get("error_type", "unknown")
-                    error_distribution[err_type] = error_distribution.get(err_type, 0) + 1
+        activity_timeline = sorted(timeline_map.values(), key=lambda x: x["date"])
 
-        # Calculate average mastery % across all users
-        user_mastery_percentages = []
-        for user_id, inst_scores in mastery_map.items():
-            total_unique = len(inst_scores)
-            if total_unique > 0:
-                mastered = len([s for s in inst_scores.values() if s >= 90])
-                user_mastery_percentages.append((mastered / total_unique) * 100)
-        
-        avg_mastery = sum(user_mastery_percentages) / len(user_mastery_percentages) if user_mastery_percentages else 0
+        # 5. Error Distribution (Pronunciation) - Top 8
+        error_pipeline = [
+            {"$unwind": "$assessment.errors"},
+            {"$group": {"_id": "$assessment.errors.error_type", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 8},
+            {"$project": {"type": "$_id", "count": 1, "_id": 0}}
+        ]
+        error_distribution = await db.pronunciation_attempts.aggregate(error_pipeline).to_list(None)
 
-        # Calculate Situation Stats
-        total_questions = sum(len(a.get("situations", [])) for a in situation_attempts)
-        perfect_answers = sum(a.get("perfect_count", 0) for a in situation_attempts)
-        acceptable_answers = sum(a.get("acceptable_count", 0) for a in situation_attempts)
-        poor_answers = sum(a.get("poor_count", 0) for a in situation_attempts)
-        
-        situation_scores_sums = [] # normalized percentages
-        for a in situation_attempts:
-            max_s = len(a.get("situations", [])) * 100
-            if max_s > 0:
-                situation_scores_sums.append((a.get("total_score", 0) / max_s) * 100)
-        # --- END RESTORED STATS ---
+        # 6. Top Users (Engagement)
+        top_users_pipeline = [
+            {"$group": {"_id": "$user_id", "activity_count": {"$sum": 1}}},
+            {"$sort": {"activity_count": -1}},
+            {"$limit": 10},
+            {"$lookup": {"from": "users", "localField": "_id", "foreignField": "_id", "as": "user"}},
+            {"$unwind": "$user"},
+            {"$project": {
+                "id": {"$toString": "$user._id"},
+                "name": {"$ifNull": ["$user.full_name", "Unknown"]},
+                "username": "$user.username",
+                "activity_count": 1,
+                "avatar_color": {"$ifNull": ["$user.avatar_color", "#757575"]}
+            }},
+            {"$project": {"_id": 0, "id": 1, "name": 1, "username": 1, "activity_count": 1, "avatar_color": 1}}
+        ]
+        top_users = await db.pronunciation_attempts.aggregate(top_users_pipeline).to_list(None)
 
+        # 7. Group Performance (Aggregation)
+        group_perf_pipeline = [
+            {"$match": {"group_id": {"$ne": None}}},
+            {"$group": {
+                "_id": "$group_id",
+                "total_score": {"$sum": "$total_score"},
+                "max_score": {"$sum": {"$multiply": [{"$size": {"$ifNull": ["$situations", []]}}, 100]}},
+                "total_attempts": {"$sum": 1}
+            }},
+            {"$lookup": {"from": "groups", "localField": "_id", "foreignField": "_id", "as": "group"}},
+            {"$unwind": "$group"},
+            {"$project": {
+                "id": {"$toString": "$_id"},
+                "name": "$group.name",
+                "avg_score": {"$cond": [{"$gt": ["$max_score", 0]}, {"$divide": [{"$multiply": ["$total_score", 100]}, "$max_score"]}, 0]},
+                "count": "$total_attempts",
+                "_id": 0
+            }},
+            {"$sort": {"count": -1}},
+            {"$limit": 8}
+        ]
+        group_performance = await db.situation_attempts.aggregate(group_perf_pipeline).to_list(None)
+        for g in group_performance: g["avg_score"] = round(g["avg_score"], 1)
+
+        # 8. Situation Distribution (Perfect, Acceptable, Poor)
+        sit_counts_pipeline = [
+            {"$group": {
+                "_id": None,
+                "perfect": {"$sum": {"$ifNull": ["$perfect_count", 0]}},
+                "acceptable": {"$sum": {"$ifNull": ["$acceptable_count", 0]}},
+                "poor": {"$sum": {"$ifNull": ["$poor_count", 0]}},
+                "total_questions": {"$sum": {"$size": {"$ifNull": ["$situations", []]}}},
+                "total_score_sum": {"$sum": "$total_score"},
+                "max_score_sum": {"$sum": {"$multiply": [{"$size": {"$ifNull": ["$situations", []]}}, 100]}}
+            }},
+            {"$project": {"_id": 0, "perfect": 1, "acceptable": 1, "poor": 1, "total_questions": 1, "total_score_sum": 1, "max_score_sum": 1}}
+        ]
+        sit_res = await db.situation_attempts.aggregate(sit_counts_pipeline).to_list(None)
+
+        # 9. All-time global accuracy (Pronunciation)
+        overall_pron_res = await db.pronunciation_attempts.aggregate([
+            {"$group": {"_id": None, "avg_score": {"$avg": "$assessment.total_score"}}}
+        ]).to_list(None)
+        avg_pron_score = round(overall_pron_res[0]["avg_score"], 1) if overall_pron_res else 0
+
+        # Aggregated stats for frontend
         return {
             "success": True,
             "data": {
                 "overview": {
                     "total_users": users_count,
-                    "total_pronunciation_attempts": len(pronunciation_attempts),
-                    "total_quizzes_completed": len(situation_attempts),
-                    "active_users_today": len(set([str(a["user_id"]) for a in pronunciation_attempts if (a.get("created_at") if isinstance(a.get("created_at"), datetime) else datetime.min).replace(tzinfo=None).date() == now_naive.date()]))
+                    "total_pronunciation_attempts": pronunciation_attempts_count,
+                    "total_quizzes_completed": total_quizzes_count,
+                    "active_users_today": active_users_today
                 },
                 "activity_timeline": activity_timeline,
-                "user_growth_timeline": growth_timeline,
-                "group_performance": group_performance,
-                "top_users": top_users_data,
-                "pronunciation": {
-                    "average_score": round(sum(pron_scores) / len(pron_scores), 1) if pron_scores else 0,
-                    "average_mastery": round(avg_mastery, 1),
+                "user_growth_timeline": user_growth_timeline,
+                "group_performance": {
+                    "pronunciation_top": group_performance # Used by frontend
+                },
+                "top_users": top_users,
+                "pronunciation_metrics": {
+                    "avg_score": avg_pron_score,
                     "error_distribution": error_distribution
                 },
-                "situations": {
-                    "average_accuracy": round(sum(situation_scores_sums) / len(situation_scores_sums), 1) if situation_scores_sums else 0,
-                    "total_questions": total_questions,
-                    "perfect_answers": perfect_answers,
-                    "acceptable_answers": acceptable_answers,
-                    "poor_answers": poor_answers
+                "situation_metrics": {
+                    "avg_accuracy": round((sit_res[0]["total_score_sum"] / (sit_res[0]["max_score_sum"] or 1) * 100) if sit_res else 0, 1),
+                    "total_answered": sit_res[0]["total_questions"] if sit_res else 0,
+                    "perfect_count": sit_res[0]["perfect"] if sit_res else 0,
+                    "acceptable_count": sit_res[0]["acceptable"] if sit_res else 0,
+                    "poor_count": sit_res[0]["poor"] if sit_res else 0
                 }
             }
         }
@@ -690,17 +672,26 @@ async def get_global_dashboard_stats(
 # --- Content Management System (CMS) Endpoints ---
 
 # 1. Groups Management
+@router.get("/content/groups")
+async def get_all_groups(db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Fetch all groups including inactive ones for management."""
+    groups = await db.groups.find().sort("group_number", 1).to_list(length=1000)
+    for g in groups:
+        g["id"] = str(g.pop("_id"))
+    return {"success": True, "data": groups}
+
+
 @router.post("/content/groups")
-async def create_group(group: dict, db=Depends(get_database)):
+async def create_group(group: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
     """Create a new instruction group."""
-    group["created_at"] = datetime.utcnow()
+    group["created_at"] = datetime.now(timezone.utc).replace(tzinfo=None)
     group["is_active"] = True
     result = await db.groups.insert_one(group)
     return {"success": True, "id": str(result.inserted_id)}
 
 
 @router.patch("/content/groups/{group_id}")
-async def update_group(group_id: str, group_update: dict, db=Depends(get_database)):
+async def update_group(group_id: str, group_update: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
     """Update instruction group."""
     result = await db.groups.update_one(
         {"_id": ObjectId(group_id)},
@@ -712,7 +703,7 @@ async def update_group(group_id: str, group_update: dict, db=Depends(get_databas
 
 
 @router.delete("/content/groups/{group_id}")
-async def delete_group(group_id: str, db=Depends(get_database)):
+async def delete_group(group_id: str, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
     """Delete instruction group (soft delete)."""
     await db.groups.update_one(
         {"_id": ObjectId(group_id)},
@@ -723,13 +714,13 @@ async def delete_group(group_id: str, db=Depends(get_database)):
 
 # 2. Instructions Management
 @router.get("/content/instructions")
-async def get_instructions(group_id: str = None, db=Depends(get_database)):
+async def get_instructions(group_id: str = None, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
     """Fetch instructions, optionally filtered by group."""
-    query = {"is_active": True}
+    query = {}
     if group_id:
         query["group_id"] = ObjectId(group_id)
     
-    instructions = await db.instructions.find(query).sort("instruction_number", 1).to_list(length=1000)
+    instructions = await db.instructions.find(query).sort("instruction_number", 1).to_list(length=2000)
     for inst in instructions:
         inst["id"] = str(inst.pop("_id"))
         inst["group_id"] = str(inst["group_id"])
@@ -737,17 +728,17 @@ async def get_instructions(group_id: str = None, db=Depends(get_database)):
 
 
 @router.post("/content/instructions")
-async def create_instruction(inst: dict, db=Depends(get_database)):
+async def create_instruction(inst: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
     """Create a new instruction."""
     inst["group_id"] = ObjectId(inst["group_id"])
-    inst["created_at"] = datetime.utcnow()
-    inst["is_active"] = True
+    inst["created_at"] = datetime.now(timezone.utc).replace(tzinfo=None)
+    if "is_active" not in inst: inst["is_active"] = True
     result = await db.instructions.insert_one(inst)
     return {"success": True, "id": str(result.inserted_id)}
 
 
 @router.patch("/content/instructions/{id}")
-async def update_instruction(id: str, inst_update: dict, db=Depends(get_database)):
+async def update_instruction(id: str, inst_update: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
     """Update instruction."""
     if "group_id" in inst_update:
         inst_update["group_id"] = ObjectId(inst_update["group_id"])
@@ -762,8 +753,8 @@ async def update_instruction(id: str, inst_update: dict, db=Depends(get_database
 
 
 @router.delete("/content/instructions/{id}")
-async def delete_instruction(id: str, db=Depends(get_database)):
-    """Delete instruction."""
+async def delete_instruction(id: str, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Delete instruction (soft delete)."""
     await db.instructions.update_one(
         {"_id": ObjectId(id)},
         {"$set": {"is_active": False}}
@@ -771,52 +762,129 @@ async def delete_instruction(id: str, db=Depends(get_database)):
     return {"success": True}
 
 
-# 3. Situations Management
-@router.get("/content/situations")
-async def get_situations(group_id: str = None, db=Depends(get_database)):
-    """Fetch situations, optionally filtered by group."""
-    query = {"is_active": True}
+# 3. Lessons Management
+@router.get("/content/lessons")
+async def get_lessons(group_id: str = None, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Fetch lessons, optionally filtered by group."""
+    query = {}
     if group_id:
         query["group_id"] = ObjectId(group_id)
     
-    situations = await db.situations.find(query).sort("situation_number", 1).to_list(length=1000)
-    for sit in situations:
-        sit["id"] = str(sit.pop("_id"))
-        sit["group_id"] = str(sit["group_id"])
-    return {"success": True, "data": situations}
+    lessons = await db.lessons.find(query).sort("lesson_number", 1).to_list(length=1000)
+    for l in lessons:
+        l["id"] = str(l.pop("_id"))
+        if "group_id" in l: l["group_id"] = str(l["group_id"])
+    return {"success": True, "data": lessons}
 
 
-@router.post("/content/situations")
-async def create_situation(sit: dict, db=Depends(get_database)):
-    """Create a new situation."""
-    sit["group_id"] = ObjectId(sit["group_id"])
-    sit["created_at"] = datetime.utcnow()
-    sit["is_active"] = True
-    result = await db.situations.insert_one(sit)
+@router.post("/content/lessons")
+async def create_lesson(lesson: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Create a new lesson content."""
+    if "group_id" in lesson: lesson["group_id"] = ObjectId(lesson["group_id"])
+    lesson["created_at"] = datetime.now(timezone.utc).replace(tzinfo=None)
+    if "is_active" not in lesson: lesson["is_active"] = True
+    result = await db.lessons.insert_one(lesson)
     return {"success": True, "id": str(result.inserted_id)}
 
 
-@router.patch("/content/situations/{id}")
-async def update_situation(id: str, sit_update: dict, db=Depends(get_database)):
-    """Update situation."""
-    if "group_id" in sit_update:
-        sit_update["group_id"] = ObjectId(sit_update["group_id"])
+@router.patch("/content/lessons/{id}")
+async def update_lesson(id: str, lesson_update: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Update lesson content."""
+    if "group_id" in lesson_update:
+        lesson_update["group_id"] = ObjectId(lesson_update["group_id"])
     
-    result = await db.situations.update_one(
+    result = await db.lessons.update_one(
         {"_id": ObjectId(id)},
-        {"$set": sit_update}
+        {"$set": lesson_update}
     )
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Situation not found")
+        raise HTTPException(status_code=404, detail="Lesson not found")
     return {"success": True}
 
 
-@router.delete("/content/situations/{id}")
-async def delete_situation(id: str, db=Depends(get_database)):
-    """Delete situation."""
-    await db.situations.update_one(
+@router.delete("/content/lessons/{id}")
+async def delete_lesson(id: str, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Delete lesson content (soft delete)."""
+    await db.lessons.update_one(
         {"_id": ObjectId(id)},
         {"$set": {"is_active": False}}
     )
     return {"success": True}
+
+
+# 4. Questions/Situations Management (Unified in quizzes collection)
+@router.get("/content/quizzes")
+async def get_quizzes(group_id: str = None, global_only: bool = False, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Fetch questions/quizzes from the unified 'quizzes' collection."""
+    query = {}
+    if global_only:
+        query["group_id"] = None
+    elif group_id:
+        query["group_id"] = ObjectId(group_id)
+    
+    quizzes = await db.quizzes.find(query).sort("quiz_number", 1).to_list(length=2000)
+    for q in quizzes:
+        q["id"] = str(q.pop("_id"))
+        if q.get("group_id"):
+            q["group_id"] = str(q["group_id"])
+    return {"success": True, "data": quizzes}
+
+
+@router.post("/content/quizzes")
+async def create_quiz(quiz: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Create a new question/situation in the quizzes collection."""
+    if quiz.get("group_id"):
+        quiz["group_id"] = ObjectId(quiz["group_id"])
+    else:
+        quiz["group_id"] = None
+        
+    quiz["created_at"] = datetime.now(timezone.utc).replace(tzinfo=None)
+    if "is_active" not in quiz: quiz["is_active"] = True
+    
+    result = await db.quizzes.insert_one(quiz)
+    return {"success": True, "id": str(result.inserted_id)}
+
+
+@router.patch("/content/quizzes/{id}")
+async def update_quiz(id: str, quiz_update: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Update quiz/question."""
+    if quiz_update.get("group_id"):
+        quiz_update["group_id"] = ObjectId(quiz_update["group_id"])
+    
+    result = await db.quizzes.update_one(
+        {"_id": ObjectId(id)},
+        {"$set": quiz_update}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return {"success": True}
+
+
+@router.delete("/content/quizzes/{id}")
+async def delete_quiz(id: str, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    """Delete quiz/question (soft delete)."""
+    await db.quizzes.update_one(
+        {"_id": ObjectId(id)},
+        {"$set": {"is_active": False}}
+    )
+    return {"success": True}
+
+
+# Legacy Situation endpoints (pointing to quizzes collection now)
+@router.get("/content/situations")
+async def get_situations_legacy(group_id: str = None, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    return await get_quizzes(group_id=group_id, db=db, current_admin=current_admin)
+
+@router.post("/content/situations")
+async def create_situation_legacy(sit: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    return await create_quiz(quiz=sit, db=db, current_admin=current_admin)
+
+@router.patch("/content/situations/{id}")
+async def update_situation_legacy(id: str, sit_update: dict, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    return await update_quiz(id=id, quiz_update=sit_update, db=db, current_admin=current_admin)
+
+@router.delete("/content/situations/{id}")
+async def delete_situation_legacy(id: str, db=Depends(get_database), current_admin: dict = Depends(require_admin)):
+    return await delete_quiz(id=id, db=db, current_admin=current_admin)
+
     

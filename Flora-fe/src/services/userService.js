@@ -92,6 +92,13 @@ const userService = {
   // Content Management (Admin Only)
 
   // Groups
+  getAdminGroups: async () => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.get(`${API_BASE_URL}/admin/content/groups`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
   createGroup: async (groupData) => {
     const token = localStorage.getItem("access_token");
     const response = await axios.post(
@@ -114,6 +121,45 @@ const userService = {
     const token = localStorage.getItem("access_token");
     const response = await axios.delete(
       `${API_BASE_URL}/admin/content/groups/${groupId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // Lessons
+  getAdminLessons: async (groupId) => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.get(
+      `${API_BASE_URL}/admin/content/lessons`,
+      {
+        params: { group_id: groupId },
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  },
+  createLesson: async (lessonData) => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.post(
+      `${API_BASE_URL}/admin/content/lessons`,
+      lessonData,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+  updateLesson: async (id, lessonData) => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.patch(
+      `${API_BASE_URL}/admin/content/lessons/${id}`,
+      lessonData,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+  deleteLesson: async (id) => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.delete(
+      `${API_BASE_URL}/admin/content/lessons/${id}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
@@ -192,6 +238,42 @@ const userService = {
     const token = localStorage.getItem("access_token");
     const response = await axios.delete(
       `${API_BASE_URL}/admin/content/situations/${id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // Unified Quizzes (Questions)
+  getAdminQuizzes: async (groupId = null, globalOnly = false) => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.get(`${API_BASE_URL}/admin/content/quizzes`, {
+      params: { group_id: groupId, global_only: globalOnly },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+  createQuiz: async (quizData) => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.post(
+      `${API_BASE_URL}/admin/content/quizzes`,
+      quizData,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+  updateQuiz: async (id, quizData) => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.patch(
+      `${API_BASE_URL}/admin/content/quizzes/${id}`,
+      quizData,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+  deleteQuiz: async (id) => {
+    const token = localStorage.getItem("access_token");
+    const response = await axios.delete(
+      `${API_BASE_URL}/admin/content/quizzes/${id}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;

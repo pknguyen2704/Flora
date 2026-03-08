@@ -296,11 +296,11 @@ async def get_group_progress(
         situation_progress = []
         for sit in situations:
             sit_id = str(sit["_id"])
-            stats = situation_stats.get(sit_id, {"perfect": 0, "acceptable": 0, "poor": 0, "total": 0})
+            stats = situation_stats.get(sit_id, {"correct": 0, "incorrect": 0, "total": 0})
             
             situation_progress.append({
-                "situation_number": sit["situation_number"],
-                "title": sit["title"],
+                "situation_number": sit.get("situation_number"),
+                "title": sit.get("title", "Untitled"),
                 "times_answered": stats["total"],
                 "correct_count": stats["correct"],
                 "incorrect_count": stats["incorrect"]

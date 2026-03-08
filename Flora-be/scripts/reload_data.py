@@ -63,8 +63,7 @@ async def reload_database():
     print("\n⚠️  Clearing existing data...")
     await db.users.delete_many({})
     await db.groups.delete_many({})
-    await db.instructions.delete_many({})
-    await db.situations.delete_many({})
+    await db.quizzes.delete_many({})
     print("   ✓ Data cleared")
     
     # 1. Create Users
@@ -102,46 +101,14 @@ async def reload_database():
             "color_hex": group["color_hex"],
             "is_active": True,
             "created_at": datetime.utcnow(),
-            "instruction_count": 0,
-            "situation_count": 0
+            "quiz_count": 0
         })
     
     group_result = await db.groups.insert_many(groups_data)
     group_ids = list(group_result.inserted_ids)
     print(f"   ✓ Created {len(groups_data)} groups")
     
-    # 3. Create Instructions
-    print("\n💬 Creating instructions...")
-    instructions_by_group = data.get('instructionsByGroup', {})
-    instructions = []
-    
-    for idx, group_id in enumerate(group_ids, 1):
-        group_instructions = instructions_by_group.get(str(idx), [])
-        for i, text in enumerate(group_instructions, 1):
-            instructions.append({
-                "group_id": group_id,
-                "instruction_number": i,
-                "text": text,
-                "difficulty_level": ["easy", "medium", "hard"][i % 3],
-                "phonetic_focus": ["th-sound", "r-sound", "consonant-cluster", "vowel-sounds"][i % 4],
-                "audio_url": f"/audio/reference/group{idx}_inst{i}.mp3",
-                "created_at": datetime.utcnow(),
-                "is_active": True
-            })
-    
-    if instructions:
-        await db.instructions.insert_many(instructions)
-        print(f"   ✓ Created {len(instructions)} instructions")
-        
-        # Update group instruction counts
-        for idx, group_id in enumerate(group_ids, 1):
-            group_instructions = instructions_by_group.get(str(idx), [])
-            await db.groups.update_one(
-                {"_id": group_id},
-                {"$set": {"instruction_count": len(group_instructions)}}
-            )
-    
-    # 4. Create Quizzes
+    # 5. Create Quizzes
     print("\n🎭 Creating group quizzes...")
     
     quizzes_by_group = data.get('quizzes', {})
@@ -166,20 +133,19 @@ async def reload_database():
         await db.quizzes.insert_many(quizzes)
         print(f"   ✓ Created {len(quizzes)} group quizzes")
         
-        # Update group situation_count (quizzes)
+        # Update group quiz_count
         for idx, group_id in enumerate(group_ids, 1):
             group_quizzes = quizzes_by_group.get(str(idx), [])
             await db.groups.update_one(
                 {"_id": group_id},
-                {"$set": {"situation_count": len(group_quizzes)}}
+                {"$set": {"quiz_count": len(group_quizzes)}}
             )
-    
+
     print("\n" + "=" * 50)
     print("✅ Database reloaded successfully!")
     print("\n📌 Summary:")
     print(f"   Users: {len(users)}")
     print(f"   Groups: {len(groups_data)}")
-    print(f"   Instructions: {len(instructions)}")
     print(f"   Quizzes: {len(quizzes)}")
     print("\n")
     

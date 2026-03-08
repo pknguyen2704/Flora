@@ -49,6 +49,7 @@ function Overview({ stats }) {
           <Typography variant="h6" fontWeight="700" gutterBottom>
             Instruction Practice Groups
           </Typography>
+
           <Grid container spacing={2.5}>
             {groupsProgress.map((group) => (
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`group-${group.group_id}`}>
@@ -68,7 +69,7 @@ function Overview({ stats }) {
                   onClick={() => handleGroupClick(group.group_id)}
                   sx={{
                     height: "100%",
-                    borderRadius: 2.5,
+                    borderRadius: 2,
                     border: "1px solid",
                     borderColor: group.color_hex ? alpha(group.color_hex, 0.4) : "divider",
                     bgcolor: group.color_hex ? alpha(group.color_hex, 0.05) : "background.paper",
