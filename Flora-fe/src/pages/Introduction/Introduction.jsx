@@ -25,6 +25,7 @@ import logo_white from "~/assets/images/Flora.svg";
 import Footer from "~/components/Footer/Footer";
 import linhhuong from "~/assets/images/linhhuong.jpg";
 import mytam from "~/assets/images/mytam.jpg";
+import thuychi from "~/assets/images/thuychi.png";
 function Introduction() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -83,6 +84,13 @@ function Introduction() {
   ];
 
   const team = [
+    {
+      name: "Khuất Thị Thủy Chi",
+      faculty: "Faculty of English",
+      university: "Hanoi National University of Education",
+      email: "khuatchi04@gmail.com",
+      avatar: thuychi,
+    },
     {
       name: "Tô Linh Hương",
       faculty: "Faculty of English",
