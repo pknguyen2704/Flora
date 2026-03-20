@@ -84,12 +84,20 @@ export default function CustomPronunciation() {
     // Create speech utterance
     const utterance = new SpeechSynthesisUtterance(customText);
     utterance.lang = "en-US";
-    utterance.rate = 1.0; // Slightly slower for clarity
+    utterance.rate = 0.8; // Controlled speed for clarity
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
     // Speak the text
     window.speechSynthesis.speak(utterance);
+  };
+
+  const playRecordedAudio = () => {
+    if (recordedAudio) {
+      const audioUrl = URL.createObjectURL(recordedAudio);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
   };
 
   // Called when user clicks "Submit for Analysis"
@@ -912,7 +920,7 @@ export default function CustomPronunciation() {
                     )}
 
                     {/* Try Again Button */}
-                    <Box sx={{ textAlign: "center" }}>
+                    <Box sx={{ textAlign: "center", display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
                       <Button
                         variant="contained"
                         startIcon={<Mic />}
@@ -938,6 +946,39 @@ export default function CustomPronunciation() {
                         }}
                       >
                         Try Again
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        startIcon={<VolumeUp />}
+                        onClick={handleListenText}
+                        size="large"
+                        sx={{
+                          py: 1.5,
+                          px: 4,
+                          fontSize: "1rem",
+                          fontWeight: 700,
+                          borderRadius: 2,
+                          textTransform: "none",
+                        }}
+                      >
+                        Listen Again
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        startIcon={<RecordVoiceOver />}
+                        onClick={playRecordedAudio}
+                        size="large"
+                        sx={{
+                          py: 1.5,
+                          px: 4,
+                          fontSize: "1rem",
+                          fontWeight: 700,
+                          borderRadius: 2,
+                          textTransform: "none",
+                        }}
+                      >
+                        Your Voice
                       </Button>
                     </Box>
                   </CardContent>

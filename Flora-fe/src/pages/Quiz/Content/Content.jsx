@@ -18,6 +18,8 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    alpha,
+    useTheme,
 } from "@mui/material";
 import {
     CheckCircle,
@@ -39,6 +41,7 @@ function Content() {
     const navigate = useNavigate();
     const { showNotification } = useNotification();
     const { collapsed: sidebarCollapsed, toggleSidebar } = useSidebar();
+    const theme = useTheme();
 
     const [loading, setLoading] = useState(true);
     const [quiz, setQuiz] = useState(null);
@@ -51,7 +54,7 @@ function Content() {
     const [questionTimes, setQuestionTimes] = useState({});
     const [error, setError] = useState(null);
     const [currentAnswerResult, setCurrentAnswerResult] = useState(null); // stores intermediate result after answering
-    const [timeLeft, setTimeLeft] = useState(10);
+    const [timeLeft, setTimeLeft] = useState(15);
     const [choicesVisible, setChoicesVisible] = useState(false);
     const [countdownActive, setCountdownActive] = useState(false);
     const [showTimeoutScreen, setShowTimeoutScreen] = useState(false);
@@ -121,7 +124,7 @@ function Content() {
         setStartTime(Date.now());
         setChoicesVisible(false);
         setCountdownActive(false);
-        setTimeLeft(10);
+        setTimeLeft(15);
 
         const timer = setTimeout(() => {
             setChoicesVisible(true);
@@ -151,7 +154,7 @@ function Content() {
 
     const handleRetryQuestion = () => {
         setShowTimeoutScreen(false);
-        setTimeLeft(10);
+        setTimeLeft(15);
         setCountdownActive(true);
     };
 
@@ -408,11 +411,25 @@ function Content() {
                                     <AnimatePresence>
                                         {choicesVisible && !currentAnswerResult && !answers[currentQuestion + 1] && (
                                             <Box component={motion.div} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-                                                <Chip
-                                                    label={`⏳ Time left: ${timeLeft}s`}
-                                                    color={timeLeft <= 2 ? "error" : "warning"}
-                                                    sx={{ fontWeight: 'bold', fontSize: '1rem', py: 2 }}
-                                                />
+                                                    <Chip
+                                                        label={`⏳ Time left: ${timeLeft}s`}
+                                                        sx={{ 
+                                                          fontWeight: '900', 
+                                                          fontSize: '1.2rem', 
+                                                          py: 2.5,
+                                                          px: 1,
+                                                          bgcolor: timeLeft <= 5 ? alpha(theme.palette.error.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
+                                                          color: timeLeft <= 5 ? 'error.main' : 'warning.main',
+                                                          border: '2px solid',
+                                                          borderColor: timeLeft <= 5 ? 'error.main' : 'warning.main',
+                                                          animation: timeLeft <= 5 ? 'pulse 0.8s infinite' : 'none',
+                                                          '@keyframes pulse': {
+                                                            '0%': { opacity: 1, transform: 'scale(1)', boxShadow: `0 0 0 0 ${alpha(theme.palette.error.main, 0.4)}` },
+                                                            '70%': { opacity: 0.8, transform: 'scale(1.05)', boxShadow: `0 0 20px 10px ${alpha(theme.palette.error.main, 0)}` },
+                                                            '100%': { opacity: 1, transform: 'scale(1)', boxShadow: `0 0 0 0 ${alpha(theme.palette.error.main, 0)}` },
+                                                          }
+                                                        }}
+                                                    />
                                             </Box>
                                         )}
                                     </AnimatePresence>

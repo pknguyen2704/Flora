@@ -198,7 +198,7 @@ export default function Quiz() {
                                                 elevation={0}
                                                 sx={{
                                                     height: "100%",
-                                                    borderRadius: 2.5,
+                                                    borderRadius: 2,
                                                     border: "1px solid",
                                                     borderColor: group.color_hex ? alpha(group.color_hex, 0.4) : "divider",
                                                     bgcolor: group.color_hex ? alpha(group.color_hex, 0.05) : "background.paper",

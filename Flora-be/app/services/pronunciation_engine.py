@@ -30,7 +30,7 @@ class PronunciationEngine:
             compute_type="int8"
         )
 
-        print("Loading wav2vec2 phoneme scorer...")
+        print("Loading wav2vec2 stable character model...")
 
         self.processor = Wav2Vec2Processor.from_pretrained(
             "facebook/wav2vec2-base-960h"
@@ -88,11 +88,28 @@ class PronunciationEngine:
     # -------------------------
 
     def phonemes(self, word):
+        # Normalize and strip punctuation
+        w = word.lower().replace("’", "'").strip(".,!?\"'()[]:;")
+        
+        # Handle common contractions
+        if w.endswith("'s"):
+            w_root = w[:-2]
+            p_root = self.cmu.get(w_root, [[]])[0]
+            if p_root: return [p.rstrip("012") for p in p_root] + ["S"]
+        if w.endswith("n't"):
+            w_root = w[:-3]
+            p_root = self.cmu.get(w_root, [[]])[0]
+            if p_root: return [p.rstrip("012") for p in p_root] + ["N", "T"]
 
-        if word not in self.cmu:
+        # Special casing for frequent short words to ensure accuracy
+        if w == "the": return ["DH", "AH"]
+        if w == "ai": return ["EY", "AY"]
+        if w == "check": return ["CH", "EH", "K"]
+
+        if w not in self.cmu:
             return []
 
-        return [p.rstrip("012") for p in self.cmu[word][0]]
+        return [p.rstrip("012") for p in self.cmu[w][0]]
 
     # -------------------------
     # extract word audio
@@ -129,45 +146,49 @@ class PronunciationEngine:
     # phoneme alignment
     # -------------------------
 
-    def align(self, target, predicted):
-
-        matcher = difflib.SequenceMatcher(None, target, predicted)
-
+    def align(self, target_phones, predicted_chars, word_match_ratio=0):
+        # target_phones: list of CMU phonemes (e.g. ['CH', 'EH', 'K'])
+        # predicted_chars: string of characters from Wav2Vec2 (e.g. 'CHECK')
+        
+        predicted_str = str(predicted_chars).upper()
+        
+        # Phone-to-Char mapping for better fuzzy matching
+        phone_to_char = {
+            "CH": "CH", "SH": "SH", "TH": "TH", "DH": "DH", "ZH": "ZH", "NG": "NG",
+            "EY": "AY", "IY": "EE", "AY": "I", "OW": "O", "UW": "OO", "AW": "OW",
+            "ER": "ER", "OY": "OY", "AE": "A", "AA": "A", "AH": "A", "AO": "O",
+            "EH": "E", "IH": "I", "UH": "U"
+        }
+        
         phones = []
-
-        for op,i1,i2,j1,j2 in matcher.get_opcodes():
-
-            if op == "equal":
-
-                for p in target[i1:i2]:
-
-                    phones.append({
-                        "phone":p,
-                        "correct":True,
-                        "score":100
-                    })
-
-            elif op == "replace":
-
-                for t,s in zip(target[i1:i2], predicted[j1:j2]):
-
-                    phones.append({
-                        "phone":t,
-                        "heard":s,
-                        "correct":False,
-                        "score":40
-                    })
-
-            elif op == "delete":
-
-                for t in target[i1:i2]:
-
-                    phones.append({
-                        "phone":t,
-                        "correct":False,
-                        "score":0
-                    })
-
+        
+        # If the word match is perfect, we can be much more lenient on the phoneme level
+        min_threshold = 0.6 if word_match_ratio < 0.8 else 0.4
+        
+        for p in target_phones:
+            char_rep = phone_to_char.get(p, p).upper()
+            
+            best_sub_ratio = 0
+            if char_rep in predicted_str:
+                best_sub_ratio = 1.0
+            else:
+                for i in range(len(predicted_str) - len(char_rep) + 1):
+                    sub = predicted_str[i:i+len(char_rep)]
+                    ratio = difflib.SequenceMatcher(None, char_rep, sub).ratio()
+                    best_sub_ratio = max(best_sub_ratio, ratio)
+            
+            # If Whisper heard the word clearly, and we find even a faint trace of the phonemes, we mark it green
+            is_correct = best_sub_ratio > min_threshold
+            # Special case: if word match is very high (>0.9), assume phonemes are mostly correct
+            if word_match_ratio > 0.9 and best_sub_ratio > 0.3:
+                is_correct = True
+                
+            phones.append({
+                "phone": p, 
+                "correct": is_correct, 
+                "score": 100 if is_correct else 25
+            })
+                    
         return phones
 
     # -------------------------
@@ -197,59 +218,63 @@ class PronunciationEngine:
         return issues
 
     def vowel_length(self, audio):
-
         dur=len(audio)/16000
-
-        if dur < 0.08:
+        # A word segment should be at least 0.05s and less than 1.5s for modern flow
+        if dur < 0.05:
             return "vowel too short"
-
-        if dur > 0.3:
+        if dur > 1.2:
             return "vowel too long"
-
         return None
 
     def stress_detector(self, audio):
-
         energy=np.mean(audio**2)
-
-        if energy<0.001:
+        # Highly sensitive to detect even whispered voices
+        if energy < 0.0001:
             return "weak stress"
-
         return None
 
     # -------------------------
     # score word
     # -------------------------
 
-    def score_word(self, word, audio, sr):
-
+    def score_word(self, word, audio, sr, asr_word=None):
         target=self.phonemes(word)
 
-        if not target:
-            return {"word":word,"score":100,"phones":[]}
+        if not target or audio is None or len(audio) < 100:
+            return {"word":word,"score":0,"phones":[],"issues":["Could not analyze word"]}
 
+        # 1. Base Score based on Whisper accuracy
+        # If Whisper (the specialized ASR) heard the word correctly, it's a very good sign.
+        match_ratio = 0
+        if asr_word:
+            w_clean = word.lower().replace("’", "'").strip(".,!?\"'()[]:;")
+            asr_clean = asr_word.lower().replace("’", "'").strip(".,!?\"'()[]:;")
+            match_ratio = difflib.SequenceMatcher(None, w_clean, asr_clean).ratio()
+        
+        base_score = 70 * match_ratio
+
+        # 2. Character-to-Phoneme accuracy
         logits=self.wav2vec_logits(audio,sr)
-
         pred_ids=torch.argmax(logits,dim=-1)
+        # Using the base model which outputs text characters
+        predicted_text = self.processor.batch_decode(pred_ids)[0]
+        
+        aligned=self.align(target, predicted_text, word_match_ratio=match_ratio)
+        
+        phone_scores=[p["score"] for p in aligned]
+        phone_avg = np.mean(phone_scores) if phone_scores else 0
 
-        predicted=self.processor.batch_decode(pred_ids)[0]
-
-        predicted=list(predicted.replace(" ",""))
-
-        aligned=self.align(target,predicted)
-
-        scores=[p["score"] for p in aligned]
-
-        phone_score=np.mean(scores) if scores else 0
-
-        probs=torch.softmax(logits,dim=-1)
-
-        confidence=float(torch.max(probs))*100
-
-        total=0.7*phone_score+0.3*confidence
+        # Weighted final score: prioritizing phoneme accuracy but with a Whisper safety net
+        # 30% from Whisper word detection, 70% from phoneme-level check
+        total = (0.3 * base_score) + (0.7 * phone_avg)
+        
+        # Safety net: If Whisper is 100% sure it's the right word, don't let the score drop too low
+        if match_ratio > 0.95:
+            total = max(total, 85)
+        elif match_ratio > 0.8:
+            total = max(total, 70)
 
         detectors=[]
-
         detectors+=self.rl_detector(aligned)
         detectors+=self.th_detector(aligned)
 
@@ -261,7 +286,7 @@ class PronunciationEngine:
 
         return{
             "word":word,
-            "score":round(total),
+            "score":min(100, round(total)),
             "phones":aligned,
             "issues":detectors
         }
@@ -283,22 +308,32 @@ class PronunciationEngine:
         results=[]
         total=0
 
-        for i,w in enumerate(words):
+        # Map target words to ASR transcript words using fuzzy matching
+        for i, w in enumerate(words):
+            target_clean = w.lower().strip(".,!?\"'()[]:;")
+            
+            # Find best match in ASR results
+            found_seg = None
+            best_ratio = 0
+            
+            # Increase window to 5 and relax ratio to 0.5
+            window = 5
+            start_search = max(0, i - window)
+            end_search = min(len(words_ts), i + window + 1)
+            
+            for j in range(start_search, end_search):
+                asr_w = words_ts[j]["word"].replace("’", "'").strip(".,!?\"'()[]:;")
+                ratio = difflib.SequenceMatcher(None, target_clean, asr_w).ratio()
+                if ratio > 0.45 and ratio > best_ratio:
+                    best_ratio = ratio
+                    found_seg = words_ts[j]
 
-            if i<len(words_ts):
-
-                seg=self.segment(
-                    audio,
-                    sr,
-                    words_ts[i]["start"],
-                    words_ts[i]["end"]
-                )
-
-                r=self.score_word(w,seg,sr)
-
+            if found_seg:
+                seg = self.segment(audio, sr, found_seg["start"], found_seg["end"])
+                # Pass the detected word from ASR to help with base scoring
+                r = self.score_word(target_clean, seg, sr, asr_word=found_seg["word"])
             else:
-
-                r={"word":w,"score":0,"phones":[]}
+                r={"word":w,"score":0,"phones":[],"issues":["Word not detected in audio"]}
 
             results.append(r)
             total+=r["score"]

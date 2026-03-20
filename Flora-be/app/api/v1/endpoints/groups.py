@@ -15,12 +15,33 @@ async def get_groups(
     current_user: Dict[str, Any] = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
-    """Get all active groups."""
-    groups = await db.groups.find({"is_active": True}).sort("group_number", 1).to_list(length=100)
+    """Get all active groups with their counts."""
+    # Get all groups (wide fetch to match dashboard)
+    groups = await db.groups.find().sort("group_number", 1).to_list(length=100)
     
-    # Convert ObjectId to string
+    # Get all education counts efficiently
+    # 1. Quizzes count (Formerly situations)
+    quiz_counts = await db.quizzes.aggregate([
+        {"$match": {"is_active": True}},
+        {"$group": {"_id": "$group_id", "count": {"$sum": 1}}}
+    ]).to_list(None)
+    quiz_count_map = {str(r["_id"]): r["count"] for r in quiz_counts}
+    
+    # 2. Instructions count (Pronunciation)
+    inst_counts = await db.instructions.aggregate([
+        {"$match": {"is_active": True}},
+        {"$group": {"_id": "$group_id", "count": {"$sum": 1}}}
+    ]).to_list(None)
+    inst_count_map = {str(r["_id"]): r["count"] for r in inst_counts}
+    
+    # Convert ObjectId to string and populate counts
     for group in groups:
+        gid = str(group["_id"])
         group["id"] = str(group.pop("_id"))
+        
+        # Populate counts for the GroupResponse model
+        group["situation_count"] = group.get("quiz_count") or quiz_count_map.get(gid, 0)
+        group["instruction_count"] = inst_count_map.get(gid, 0)
     
     return APIResponse(
         success=True,

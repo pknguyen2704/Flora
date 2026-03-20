@@ -26,6 +26,7 @@ import Footer from "~/components/Footer/Footer";
 import linhhuong from "~/assets/images/linhhuong.jpg";
 import mytam from "~/assets/images/mytam.jpg";
 import thuychi from "~/assets/images/thuychi.png";
+import hongminh from "~/assets/images/hongminh.jpg";
 function Introduction() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -90,6 +91,7 @@ function Introduction() {
       university: "Hanoi National University of Education",
       email: "khuatchi04@gmail.com",
       avatar: thuychi,
+      role: "Project Leader",
     },
     {
       name: "Tô Linh Hương",
@@ -105,6 +107,13 @@ function Introduction() {
       email: "nmytam52@gmail.com",
       avatar: mytam,
     },
+    {
+      name: "Lưu Hồng Minh",
+      faculty: "Faculty of English",
+      university: "Hanoi National University of Education",
+      email: "hongminhluw@gmail.com",
+      avatar: hongminh,
+    }
   ];
 
   const containerVariants = {
@@ -207,7 +216,7 @@ function Introduction() {
                     WebkitMask: `url(${logo_white}) no-repeat center / contain`,
                     backgroundColor: "white", // Change to "blue" or any tone here
                   }}
-                  title="Flora"
+                  title="MoClass"
                 />
               </Box>
             </Box>
@@ -376,7 +385,7 @@ function Introduction() {
         >
           <img
             src={logo_white}
-            alt="Flora Logo"
+            alt="MoClass Logo"
             style={{ height: "200px", marginBottom: "2rem" }}
           />
           <Typography
@@ -392,7 +401,7 @@ function Introduction() {
               mb: 6,
             }}
           >
-            Flora
+            MoClass
           </Typography>
           <Typography
             variant="h5"
@@ -473,7 +482,7 @@ function Introduction() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            Why Choose Flora?
+            Why Choose MoClass?
           </Typography>
           <Typography
             variant="h6"
@@ -641,7 +650,7 @@ function Introduction() {
                 opacity: 0.9,
               }}
             >
-              Flora is built by a dedicated team of educators about transforming language learning through technology.
+              MoClass is built by a dedicated team of educators about transforming language learning through technology.
             </Typography>
           </Box>
 
@@ -814,7 +823,7 @@ function Introduction() {
               Have Questions?
             </Typography>
             <Typography variant="body2" sx={{ mb: 3, opacity: 0.6 }}>
-              Reach out to our project lead
+              Reach out to our project leader
             </Typography>
             <Button
               variant="contained"

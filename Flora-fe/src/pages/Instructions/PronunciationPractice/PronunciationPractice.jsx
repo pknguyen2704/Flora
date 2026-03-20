@@ -117,7 +117,7 @@ export default function PronunciationPractice() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(selectedInstruction.text);
     utterance.lang = "en-US";
-    utterance.rate = 1.0;
+    utterance.rate = 0.8;
     window.speechSynthesis.speak(utterance);
   };
 
@@ -191,6 +191,14 @@ export default function PronunciationPractice() {
     setShowRecorder(false);
     setRecordedAudio(null);
     setAssessment(null);
+  };
+
+  const playRecordedAudio = () => {
+    if (recordedAudio) {
+      const audioUrl = URL.createObjectURL(recordedAudio);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
   };
 
   const getScoreGradient = (score) => {
@@ -1212,7 +1220,7 @@ export default function PronunciationPractice() {
                           flexWrap: "wrap",
                         }}
                       >
-                        <Button
+                         <Button
                           variant="contained"
                           onClick={handleTryAgain}
                           startIcon={<Mic />}
@@ -1237,6 +1245,45 @@ export default function PronunciationPractice() {
                           }}
                         >
                           Practice Again
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            window.speechSynthesis.cancel();
+                            const utterance = new SpeechSynthesisUtterance(selectedInstruction.text);
+                            utterance.lang = "en-US";
+                            utterance.rate = 0.8;
+                            window.speechSynthesis.speak(utterance);
+                          }}
+                          startIcon={<VolumeUp />}
+                          size="large"
+                          sx={{
+                            py: 1.5,
+                            px: 4,
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            borderRadius: 3,
+                            textTransform: "none",
+                          }}
+                        >
+                          Listen Again
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={playRecordedAudio}
+                          startIcon={<RecordVoiceOver />}
+                          size="large"
+                          color="secondary"
+                          sx={{
+                            py: 1.5,
+                            px: 4,
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            borderRadius: 3,
+                            textTransform: "none",
+                          }}
+                        >
+                          Your Voice
                         </Button>
 
                       </Box>

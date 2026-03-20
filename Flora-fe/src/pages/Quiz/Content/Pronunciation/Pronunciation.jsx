@@ -15,7 +15,9 @@ import {
   Mic,
   VolumeUp,
   Assessment,
-  CheckCircle
+  CheckCircle,
+  Replay,
+  PlayArrow
 } from "@mui/icons-material";
 
 import AudioRecorder from "~/components/shared/AudioRecorder";
@@ -124,6 +126,20 @@ export default function Pronunciation({ text }) {
 
   const [sessionId] = useState(`session_${Date.now()}`);
 
+  const commonButtonStyle = {
+    borderRadius: 3,
+    px: 4,
+    py: 1.5,
+    fontWeight: 800,
+    textTransform: 'none',
+    boxShadow: '0 4px 14px 0 rgba(0,118,255,0.15)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 6px 20px rgba(0,118,255,0.23)',
+    }
+  }
+
 
   /* ---------------------------------------- */
   /* Listen example */
@@ -137,9 +153,9 @@ export default function Pronunciation({ text }) {
 
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "en-US";
+    u.rate = 0.6;
 
     window.speechSynthesis.speak(u);
-
   };
 
 
@@ -235,6 +251,14 @@ export default function Pronunciation({ text }) {
 
   }
 
+  const playRecordedAudio = () => {
+    if (recordedAudio) {
+      const audioUrl = URL.createObjectURL(recordedAudio);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
+  }
+
 
   /* ------------------------------------------------ */
   /* UI */
@@ -274,24 +298,23 @@ export default function Pronunciation({ text }) {
                 </Typography>
 
                 <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-
                   <Button
                     variant="contained"
                     startIcon={<VolumeUp />}
                     onClick={listenText}
+                    sx={{ ...commonButtonStyle, bgcolor: 'primary.main' }}
                   >
                     Listen
                   </Button>
-
                   <Button
                     variant="contained"
                     startIcon={<Mic />}
                     color="error"
                     onClick={startRecording}
+                    sx={{ ...commonButtonStyle, bgcolor: 'error.main' }}
                   >
                     Record
                   </Button>
-
                 </Box>
               </>
             )}
@@ -400,7 +423,7 @@ export default function Pronunciation({ text }) {
               const color = scoreColor(w.score);
 
               return (
-                <Box key={i} sx={{ textAlign: "center", width: { xs: '100%', sm: 'calc(50% - 16px)', md: 200 } }}>
+                <Box key={i} sx={{ textAlign: "center", width: { xs: '100%', sm: 'calc(50% - 16px)', md: 210 }, display: 'flex' }}>
                   <Paper
                     elevation={0}
                     sx={{
@@ -412,6 +435,10 @@ export default function Pronunciation({ text }) {
                       position: 'relative',
                       overflow: 'visible',
                       transition: 'transform 0.2s',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      width: '100%',
                       "&:hover": { transform: 'translateY(-4px)' }
                     }}
                   >
@@ -442,7 +469,7 @@ export default function Pronunciation({ text }) {
                       {Math.round(w.score / 10)} pts
                     </Typography>
 
-                    <Typography variant="caption" color="text.secondary" fontWeight="600">
+                    <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ mb: 'auto' }}>
                       Accuracy: {w.score}%
                     </Typography>
 
@@ -464,13 +491,12 @@ export default function Pronunciation({ text }) {
           </Box>
 
           {/* Action Buttons */}
-          <Box sx={{ display: "flex", gap: 2, justifyContent: "center", mt: 4 }}>
+          <Box sx={{ display: "flex", gap: 2, justifyContent: "center", mt: 4, flexWrap: "wrap" }}>
             <Button
-              startIcon={<Mic />}
+              startIcon={<Replay />}
               onClick={retry}
               variant="contained"
-              size="large"
-              sx={{ borderRadius: 3, px: 4, py: 1.5, fontWeight: 700 }}
+              sx={{ ...commonButtonStyle, bgcolor: 'error.main' }}
             >
               Try Again
             </Button>
@@ -478,10 +504,17 @@ export default function Pronunciation({ text }) {
               startIcon={<VolumeUp />}
               onClick={listenText}
               variant="outlined"
-              size="large"
-              sx={{ borderRadius: 3, px: 4, py: 1.5, fontWeight: 700 }}
+              sx={{ ...commonButtonStyle, color: 'primary.main', border: '2px solid' }}
             >
               Listen Again
+            </Button>
+            <Button
+              startIcon={<PlayArrow />}
+              onClick={playRecordedAudio}
+              variant="contained"
+              sx={{ ...commonButtonStyle, bgcolor: 'primary.main' }}
+            >
+              Play Your Voice
             </Button>
           </Box>
         </Box>

@@ -119,38 +119,57 @@ async def get_user_stats(
             if gid not in group_pron_map: group_pron_map[gid] = []
             group_pron_map[gid].append(r)
 
+        # Get total quizzes count for each group from the quizzes collection
+        # This is more reliable as it's where the questions actually live
+        quiz_counts_res = await db.quizzes.aggregate([
+            {"$match": {"is_active": True}},
+            {"$group": {"_id": "$group_id", "count": {"$sum": 1}}}
+        ]).to_list(None)
+        quiz_count_map = {str(r["_id"]): r["count"] for r in quiz_counts_res}
+
         groups_progress = []
         for g in groups:
             gid_str = str(g["_id"])
             
-            # Situations
+            # Situations/Quizzes
+            total_situations = g.get("quiz_count") or quiz_count_map.get(gid_str, 0)
+            
             g_sit_atts = group_sit_stats.get(gid_str, [])
-            total_sit_answered = 0
             avg_sit_score = 0.0
-            highest_sit_score = {"point": 0, "total": 0, "percentage": 0.0}
-            latest_sit_score = {"point": 0, "total": 0}
+            highest_points = 0
+            latest_points = 0
+            
+            # Calculate unique situations answered from these attempts (Số câu đã làm qua)
+            unique_sits = set()
+            for ga in g_sit_atts:
+                for sit_item in ga.get("situations", []):
+                    sid = str(sit_item.get("situation_id"))
+                    if sid: unique_sits.add(sid)
+            
+            unique_answered = len(unique_sits)
             
             if g_sit_atts:
                 g_sit_atts = sorted(g_sit_atts, key=lambda x: x.get("submitted_at", datetime.min), reverse=True)
                 total_pct = 0.0
                 for ga in g_sit_atts:
                     n = len(ga.get("situations", []))
-                    total_sit_answered += n
                     if n > 0:
                         s = ga.get("total_score", 0)
                         if s > 100 or (s > 0 and s % 100 == 0): s /= 100
                         p = (s / n) * 100
                         total_pct += p
-                        if s > highest_sit_score["point"] or (s == highest_sit_score["point"] and p > highest_sit_score["percentage"]):
-                            highest_sit_score = {"point": int(s), "total": n, "percentage": p}
+                        if int(s) > highest_points:
+                            highest_points = int(s)
+                
                 avg_sit_score = total_pct / len(g_sit_atts)
+                
+                # Latest result
                 latest_ga = g_sit_atts[0]
-                n_latest = len(latest_ga.get("situations", []))
                 s_latest = latest_ga.get("total_score", 0)
                 if s_latest > 100 or (s_latest > 0 and s_latest % 100 == 0): s_latest /= 100
-                latest_sit_score = {"point": int(s_latest), "total": n_latest}
+                latest_points = int(s_latest)
 
-            # Pronunciation
+            # Pronunciation attempts count for group
             g_pron_atts = group_pron_map.get(gid_str, [])
             avg_p_score = 0.0; latest_p_score = 0.0; highest_p_score = 0.0
             if g_pron_atts:
@@ -162,8 +181,13 @@ async def get_user_stats(
             groups_progress.append({
                 "group_id": gid_str, "group_number": g.get("group_number"), "name": g["name"],
                 "description": g.get("description", ""), "color": g.get("color_hex", "#0052D4"),
-                "total_answers": total_sit_answered + len(g_pron_atts),
-                "situation_score": {"average": round(float(avg_sit_score), 1), "highest": highest_sit_score, "latest": latest_sit_score},
+                "total_answers": unique_answered + len(g_pron_atts),
+                "situation_score": {
+                    "average": round(float(avg_sit_score), 1), 
+                    "highest": {"point": highest_points, "total": total_situations}, 
+                    "completed": unique_answered,
+                    "latest": {"point": latest_points, "total": total_situations}
+                },
                 "pronunciation_score": {
                     "average": round(float(avg_p_score/10 if avg_p_score > 10 else avg_p_score), 1),
                     "highest": round(float(highest_p_score/10 if highest_p_score > 10 else highest_p_score), 1),

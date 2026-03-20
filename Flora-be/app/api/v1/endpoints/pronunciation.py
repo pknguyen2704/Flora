@@ -96,12 +96,16 @@ async def assess_pronunciation(
             )
         
         # Get target text
-        if instruction_id:
-            instruction = await db.instructions.find_one({"_id": ObjectId(instruction_id)})
+        if instruction_id and instruction_id != "null" and len(instruction_id) >= 12:
+            try:
+                instruction = await db.instructions.find_one({"_id": ObjectId(instruction_id)})
+            except Exception:
+                instruction = None
+                
             if not instruction:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Instruction not found"
+                    detail=f"Instruction {instruction_id} not found"
                 )
             target_text = instruction["text"]
             group_id = instruction["group_id"]
@@ -123,7 +127,12 @@ async def assess_pronunciation(
             
         try:
             # Use Rule-based Engine (Whisper + MFA)
-            engine = request.app.state.pronunciation_engine
+            engine = getattr(request.app.state, "pronunciation_engine", None)
+            if not engine:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Pronunciation engine is still preloading. Please wait a moment and try again."
+                )
 
             assessment_result = await engine.assess(
                 audio_path=tmp_audio_path,

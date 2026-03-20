@@ -328,9 +328,17 @@ export default function UserManagement() {
     return (
       <Chip
         label={isAdmin ? "Admin" : "User"}
-        color={isAdmin ? "primary" : "default"}
         size="small"
-        sx={{ fontWeight: 600, minWidth: 80 }}
+        sx={{ 
+          fontWeight: 800, 
+          minWidth: 80,
+          bgcolor: isAdmin ? "#EBF5FF" : "#F1F5F9",
+          color: isAdmin ? "#1E40AF" : "#475569",
+          border: '1px solid',
+          borderColor: isAdmin ? "#BFDBFE" : "#E2E8F0",
+          fontSize: '0.65rem',
+          textTransform: 'uppercase'
+        }}
       />
     );
   };

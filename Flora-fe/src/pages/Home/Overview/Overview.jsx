@@ -83,17 +83,19 @@ function Overview({ stats }) {
                     borderColor: 'divider',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    minHeight: 100, // Make headers equal height
+                    width: '100%'
                   }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, overflow: 'hidden' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
                       <Box sx={{
-                        width: 8,
-                        height: 8,
+                        width: 10,
+                        height: 10,
                         borderRadius: '50%',
                         bgcolor: group.color || 'primary.main',
                         flexShrink: 0
                       }} />
-                      <Typography variant="subtitle2" fontWeight="800" noWrap>
+                      <Typography variant="subtitle2" fontWeight="800" sx={{ wordBreak: 'break-word', lineHeight: 1.2 }}>
                         {group.name}
                       </Typography>
                     </Box>
@@ -112,38 +114,48 @@ function Overview({ stats }) {
 
                   <CardContent sx={{ p: 2, flex: 1 }}>
                     <Grid container spacing={1.5}>
-                      {/* Situation Handling Score */}
+                      {/* Quiz Score */}
                       <Grid size={{ xs: 6 }}>
-                        <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(79, 70, 229, 0.03)', border: '1px solid rgba(79, 70, 229, 0.05)' }}>
-                          <Typography variant="caption" fontWeight="700" color="primary.main" sx={{ display: 'block', mb: 0.5, fontSize: '0.6rem', textTransform: 'uppercase' }}>
-                            Situation
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                            <Typography variant="h6" fontWeight="800" sx={{ fontSize: '1.1rem' }}>
-                              {group.situation_score?.highest?.point || 0}/{group.situation_score?.highest?.total || 0}
+                        <Box sx={{ p: 1.5, borderRadius: 1, bgcolor: 'rgba(79, 70, 229, 0.04)', border: '1px solid rgba(79, 70, 229, 0.1)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                          <Box>
+                            <Typography variant="caption" fontWeight="800" color="primary.main" sx={{ display: 'block', mb: 0.5, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                              Quiz
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', display: 'block', mb: -0.5 }}>Best Score</Typography>
+                            <Typography variant="h6" fontWeight="900" sx={{ fontSize: '1.2rem', color: 'primary.dark' }}>
+                              {group.situation_score?.highest?.point || 0}/{group.situation_score?.highest?.total || 10}
                             </Typography>
                           </Box>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                            Latest: {group.situation_score?.latest?.point || 0}/{group.situation_score?.latest?.total || 0}
-                          </Typography>
+
+                          <Box sx={{ mt: 1, pt: 0.5, borderTop: '1px dashed rgba(79, 70, 229, 0.2)' }}>
+                            <Typography variant="caption" fontWeight="700" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
+                              Completed: {group.situation_score?.completed || 0}/{group.situation_score?.highest?.total || 10}
+                            </Typography>
+                          </Box>
                         </Box>
                       </Grid>
 
                       {/* Pronunciation Score */}
                       <Grid size={{ xs: 6 }}>
-                        <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(16, 185, 129, 0.03)', border: '1px solid rgba(16, 185, 129, 0.05)' }}>
-                          <Typography variant="caption" fontWeight="700" color="success.main" sx={{ display: 'block', mb: 0.5, fontSize: '0.6rem', textTransform: 'uppercase' }}>
-                            Pronunciation
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                            <Typography variant="h6" fontWeight="800" sx={{ fontSize: '1.1rem', color: 'success.main' }}>
-                              {group.pronunciation_score?.highest || 0}
+                        <Box sx={{ p: 1.5, borderRadius: 1, bgcolor: 'rgba(16, 185, 129, 0.04)', border: '1px solid rgba(16, 185, 129, 0.1)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                          <Box>
+                            <Typography variant="caption" fontWeight="800" color="success.main" sx={{ display: 'block', mb: 0.5, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                              Pronunciation
                             </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>/10</Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', display: 'block', mb: -0.5 }}>Best Score</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.2 }}>
+                              <Typography variant="h6" fontWeight="900" sx={{ fontSize: '1.2rem', color: 'success.dark' }}>
+                                {group.pronunciation_score?.highest || 0}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 700 }}>/10</Typography>
+                            </Box>
                           </Box>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                            Latest: {group.pronunciation_score?.latest || 0}
-                          </Typography>
+
+                          <Box sx={{ mt: 1, pt: 0.5, borderTop: '1px dashed rgba(16, 185, 129, 0.2)' }}>
+                            <Typography variant="caption" fontWeight="700" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
+                              Latest: {group.pronunciation_score?.latest || 0}/10
+                            </Typography>
+                          </Box>
                         </Box>
                       </Grid>
                     </Grid>

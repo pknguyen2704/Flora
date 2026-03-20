@@ -27,7 +27,7 @@ export default function Footer() {
         >
           {/* Copyright */}
           <Typography variant="body2" color="text.secondary">
-            © {currentYear} Flora. All rights reserved.
+            © {currentYear} MoClass. All rights reserved.
           </Typography>
 
           {/* Developer */}

@@ -78,12 +78,9 @@ export default function ContentManagement() {
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [isGlobalView, setIsGlobalView] = useState(false);
-  const [activeTab, setActiveTab] = useState(0); // 0: Situations/Questions
-  const [topTab, setTopTab] = useState(0); // 0: Groups, 1: Global Quizzes
+  const [activeTab, setActiveTab] = useState(0); // 0: Quizzes
 
   const [situations, setSituations] = useState([]);
-  const [globalQuizzes, setGlobalQuizzes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -95,6 +92,7 @@ export default function ContentManagement() {
     group_number: "",
     description: "",
     color_hex: "#2196F3",
+    is_active: true,
     text: "",
     title: "",
     explanation: "",
@@ -125,17 +123,7 @@ export default function ContentManagement() {
     }
   }, [showNotification]);
 
-  const fetchGlobalQuizzes = useCallback(async () => {
-    setLoading(true);
-    try {
-      const qRes = await userService.getAdminQuizzes(null, true);
-      setGlobalQuizzes(qRes.data || []);
-    } catch (error) {
-      showNotification("Failed to fetch global quizzes", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [showNotification]);
+
 
   const fetchGroupDetails = useCallback(
     async (groupId) => {
@@ -154,9 +142,8 @@ export default function ContentManagement() {
   );
 
   useEffect(() => {
-    if (topTab === 0) fetchGroups();
-    else fetchGlobalQuizzes();
-  }, [topTab, fetchGroups, fetchGlobalQuizzes]);
+    fetchGroups();
+  }, [fetchGroups]);
 
   const handleGroupClick = (group) => {
     setSelectedGroup(group);
@@ -179,7 +166,7 @@ export default function ContentManagement() {
         ...item,
         title: item.title || "",
         explanation: item.explanation || "",
-        quiz_number: item.quiz_number || item.situation_number || (type === "quiz" ? globalQuizzes.length + 1 : situations.length + 1),
+        quiz_number: item.quiz_number || item.situation_number || situations.length + 1,
         best_choice_id: item.best_choice_id || "A",
         detailed_explanation: item.detailed_explanation || item.explanation || "",
         choices: item.choices || [
@@ -194,12 +181,13 @@ export default function ContentManagement() {
         group_number: groups.length + 1,
         description: "",
         color_hex: "#2196F3",
+        is_active: true,
         text: "",
         title: "",
         explanation: "",
         group_id: selectedGroup?.id || null,
         question: "",
-        quiz_number: type === "quiz" ? globalQuizzes.length + 1 : situations.length + 1,
+        quiz_number: situations.length + 1,
         best_choice_id: "A",
         detailed_explanation: "",
         choices: [
@@ -223,10 +211,10 @@ export default function ContentManagement() {
         if (editItem) await userService.updateGroup(editItem.id, formData);
         else await userService.createGroup(formData);
         fetchGroups();
-      } else if (dialogType === "situation" || dialogType === "quiz") {
+      } else if (dialogType === "situation") {
         const payload = {
           ...formData,
-          group_id: dialogType === "quiz" ? null : selectedGroup.id,
+          group_id: selectedGroup.id,
           // Sync legacy naming if needed
           situation_number: formData.quiz_number,
           explanation: formData.detailed_explanation || formData.explanation
@@ -234,8 +222,7 @@ export default function ContentManagement() {
         if (editItem) await userService.updateQuiz(editItem.id, payload);
         else await userService.createQuiz(payload);
 
-        if (dialogType === "quiz") fetchGlobalQuizzes();
-        else fetchGroupDetails(selectedGroup.id);
+        fetchGroupDetails(selectedGroup.id);
       }
 
       showNotification("Saved successfully", "success");
@@ -246,15 +233,30 @@ export default function ContentManagement() {
     }
   };
 
-  const handleDelete = async (type, id) => {
-    if (!window.confirm(`Are you sure? Soft delete will hide this ${type}.`)) return;
+  const handleToggleActive = async (type, item) => {
+    try {
+      const newStatus = !item.is_active;
+      if (type === "group") {
+        await userService.updateGroup(item.id, { is_active: newStatus });
+        fetchGroups();
+      } else if (type === "situation") {
+        await userService.updateQuiz(item.id, { is_active: newStatus });
+        fetchGroupDetails(selectedGroup.id);
+      }
+      showNotification(`Set to ${newStatus ? "Active" : "Inactive"}`, "success");
+    } catch (error) {
+      showNotification("Failed to toggle status", "error");
+    }
+  };
+
+  const handleHardDelete = async (type, id) => {
+    if (!window.confirm(`WARNING: This is a HARD DELETE. It will permanently remove this ${type} and all its content from the database. Are you sure?`)) return;
     try {
       if (type === "group") await userService.deleteGroup(id);
-      else if (type === "situation" || type === "quiz") await userService.deleteQuiz(id);
+      else if (type === "situation") await userService.deleteQuiz(id);
 
-      showNotification("Soft-deleted successfully", "success");
+      showNotification("Deleted permanently", "success");
       if (type === "group") fetchGroups();
-      else if (type === "quiz") fetchGlobalQuizzes();
       else fetchGroupDetails(selectedGroup.id);
     } catch (error) {
       showNotification(`Failed to delete ${type}`, "error");
@@ -262,11 +264,10 @@ export default function ContentManagement() {
   };
 
   const filteredSituations = useMemo(() => {
-    const list = topTab === 1 ? globalQuizzes : situations;
-    return list.filter(s =>
+    return situations.filter(s =>
       s.question.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [topTab, globalQuizzes, situations, searchTerm]);
+  }, [situations, searchTerm]);
 
   return (
     <Box>
@@ -290,93 +291,98 @@ export default function ContentManagement() {
             )}
           </Breadcrumbs>
           <Typography variant="h4" fontWeight="900" sx={{ mt: 1, color: "text.primary" }}>
-            {selectedGroup ? selectedGroup.name : "Curriculum & Challenges"}
+            {selectedGroup ? selectedGroup.name : "Content Management"}
           </Typography>
         </Box>
-
-        {!selectedGroup && (
-          <Tabs value={topTab} onChange={(_, val) => setTopTab(val)} sx={{ bgcolor: alpha(theme.palette.divider, 0.05), borderRadius: 2, px: 2 }}>
-            <Tab label="Course Groups" sx={{ fontWeight: 700 }} />
-            <Tab label="Global Challenge Quizzes" sx={{ fontWeight: 700 }} />
-          </Tabs>
-        )}
       </Box>
 
       <AnimatePresence mode="wait">
         {!selectedGroup ? (
-          <motion.div key={topTab === 0 ? "groups" : "global"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            {topTab === 0 ? (
-              <>
-                <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body1" color="text.secondary">Manage structured curriculum groups and their contents.</Typography>
-                  <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog("group")} sx={{ borderRadius: 2, fontWeight: 700 }}>New Group</Button>
-                </Box>
-                <Grid container spacing={3}>
-                  {groups.map((group, idx) => (
-                    <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={group.id}>
-                      <GlassPaper sx={{ p: 0, overflow: "hidden", position: "relative", opacity: group.is_active ? 1 : 0.6 }}>
-                        {!group.is_active && <Chip label="Inactive" size="small" sx={{ position: "absolute", top: 10, right: 10, zIndex: 1 }} />}
-                        <Box sx={{ h: 100, bgcolor: alpha(group.color_hex || "#000", 0.1), p: 3, display: "flex", alignItems: "center", gap: 2 }}>
-                          <Avatar sx={{ bgcolor: group.color_hex, fontWeight: 900 }}>{group.group_number}</Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="h6" fontWeight="800" noWrap>{group.name}</Typography>
-                            <Typography variant="caption" color="text.secondary">{group.description?.substring(0, 40)}...</Typography>
-                          </Box>
-                          <IconButton size="small" onClick={() => handleOpenDialog("group", group)}><Edit fontSize="small" /></IconButton>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between" }}>
+              <Typography variant="body1" color="text.secondary">Manage structured curriculum groups and their contents.</Typography>
+              <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog("group")} sx={{ borderRadius: 2, fontWeight: 700 }}>New Group</Button>
+            </Box>
+            <Grid container spacing={3}>
+              {groups.map((group, idx) => (
+                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={group.id}>
+                  <GlassPaper sx={{ p: 0, overflow: "hidden", position: "relative", border: group.is_active ? `1px solid ${alpha(theme.palette.primary.main, 0.2)}` : `1px solid ${theme.palette.divider}` }}>
+                    <Box sx={{
+                      bgcolor: group.is_active ? alpha(group.color_hex || theme.palette.primary.main, 0.08) : alpha(theme.palette.grey[500], 0.05),
+                      p: 2.5,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+                    }}>
+                      <Avatar sx={{ bgcolor: group.is_active ? (group.color_hex || theme.palette.primary.main) : theme.palette.grey[400], fontWeight: 900, width: 40, height: 40 }}>{group.group_number}</Avatar>
+                      <Box sx={{ flex: 1, overflow: "hidden" }}>
+                        <Typography variant="h6" fontWeight="800" sx={{ lineHeight: 1.2, wordBreak: 'break-word', mb: 0.5 }}>{group.name}</Typography>
+                        <Chip
+                          label={group.is_active ? "Active" : "Inactive"}
+                          size="small"
+                          sx={{ 
+                            height: 20, 
+                            fontSize: '0.65rem', 
+                            fontWeight: 800, 
+                            textTransform: 'uppercase',
+                            bgcolor: group.is_active ? 'primary.main' : 'grey.400',
+                            color: 'white',
+                            border: 'none',
+                          }}
+                        />
+                      </Box>
+                      <Tooltip title="Edit Group">
+                        <IconButton size="small" onClick={() => handleOpenDialog("group", group)} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}><Edit fontSize="small" /></IconButton>
+                      </Tooltip>
+                    </Box>
+                    <Box sx={{ p: 2.5, cursor: "pointer", "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.02) } }} onClick={() => handleGroupClick(group)}>
+                      <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', mb: 2, minHeight: 40 }}>
+                        {group.description || "No description provided."}
+                      </Typography>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <Chip icon={<Quiz sx={{ fontSize: '1rem !important' }} />} label={`${group.situation_count || group.quiz_count || 0} Quizzes`} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
                         </Box>
-                        <Box sx={{ p: 3, cursor: "pointer" }} onClick={() => handleGroupClick(group)}>
-                          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                            <Typography variant="body2" sx={{ opacity: 0.7 }}>Curriculum Content</Typography>
-                            <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleDelete("group", group.id); }}>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <Tooltip title={group.is_active ? "Soft Deactivate" : "Soft Activate"}>
+                            <IconButton 
+                              size="small" 
+                              color={group.is_active ? "primary" : "default"} 
+                              onClick={(e) => { e.stopPropagation(); handleToggleActive("group", group); }}
+                              sx={{ bgcolor: group.is_active ? alpha(theme.palette.primary.main, 0.1) : alpha(theme.palette.grey[500], 0.1) }}
+                            >
+                              <Settings fontSize="small" sx={{ animation: group.is_active ? 'spin 10s linear infinite' : 'none', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } }} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Hard Delete (Permanent)">
+                            <IconButton 
+                              size="small" 
+                              color="error" 
+                              onClick={(e) => { e.stopPropagation(); handleHardDelete("group", group.id); }}
+                            >
                               <Delete fontSize="small" />
                             </IconButton>
-                          </Box>
-                          <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                            <Chip label={`${group.situation_count || 0} Quizzes`} size="small" variant="outlined" />
-                          </Box>
+                          </Tooltip>
                         </Box>
-                      </GlassPaper>
-                    </Grid>
-                  ))}
+                      </Box>
+                    </Box>
+                  </GlassPaper>
                 </Grid>
-              </>
-            ) : (
-              <>
-                <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body1" color="text.secondary">Manage quizzes that are not tied to any specific group.</Typography>
-                  <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog("quiz")} sx={{ borderRadius: 2, fontWeight: 700 }}>New Global Quiz</Button>
-                </Box>
-                <Grid container spacing={3}>
-                  {globalQuizzes.map((quiz, idx) => (
-                    <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={quiz.id}>
-                      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, position: "relative", opacity: quiz.is_active ? 1 : 0.6 }}>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                          <Chip label={`Quiz #${quiz.quiz_number}`} size="small" color="primary" />
-                          <Box>
-                            <IconButton size="small" onClick={() => handleOpenDialog("quiz", quiz)}><Edit fontSize="small" /></IconButton>
-                            <IconButton size="small" color="error" onClick={() => handleDelete("quiz", quiz.id)}><Delete fontSize="small" /></IconButton>
-                          </Box>
-                        </Box>
-                        <Typography variant="h6" fontWeight="800" gutterBottom>{quiz.question}</Typography>
-                        <Typography variant="caption" color="text.secondary">Best Answer: {quiz.choices?.find(c => c.choice_id === quiz.best_choice_id)?.text || "N/A"}</Typography>
-                      </Paper>
-                    </Grid>
-                  ))}
-                </Grid>
-              </>
-            )}
+              ))}
+            </Grid>
           </motion.div>
         ) : (
           <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <GlassPaper sx={{ p: 0 }}>
               <Box sx={{ p: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-                  <Tab label="Situations/Quizzes" icon={<Quiz />} iconPosition="start" />
+                  <Tab label="Quizzes" icon={<Quiz />} iconPosition="start" />
                 </Tabs>
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField size="small" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog("situation")}>
-                    Add Situation
+                    Add New Quiz
                   </Button>
                 </Box>
               </Box>
@@ -399,9 +405,18 @@ export default function ContentManagement() {
 
                           {item.choices && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>{item.choices.length} choices available</Typography>}
                         </Box>
-                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Tooltip title={item.is_active ? "Deactivate" : "Activate"}>
+                            <IconButton 
+                              size="small" 
+                              color={item.is_active ? "primary" : "default"} 
+                              onClick={() => handleToggleActive("situation", item)}
+                              sx={{ border: '1px solid', borderColor: 'divider' }}
+                            >
+                              <CheckCircle fontSize="small" sx={{ opacity: item.is_active ? 1 : 0.3 }} />
+                            </IconButton>
+                          </Tooltip>
                           <IconButton size="small" onClick={() => handleOpenDialog("situation", item)}><Edit fontSize="small" /></IconButton>
-                          <IconButton size="small" color="error" onClick={() => handleDelete("situation", item.id)}><Delete fontSize="small" /></IconButton>
                         </Box>
                       </Paper>
                     </Grid>
@@ -420,15 +435,26 @@ export default function ContentManagement() {
           <Box sx={{ pt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
             {dialogType === "group" && (
               <>
-                <Box sx={{ display: "flex", gap: 2 }}>
-                  <TextField label="Group #" type="number" sx={{ w: 100 }} value={formData.group_number} onChange={(e) => setFormData({ ...formData, group_number: e.target.value })} />
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                  <TextField label="Group #" type="number" sx={{ width: 100 }} value={formData.group_number} onChange={(e) => setFormData({ ...formData, group_number: e.target.value })} />
                   <TextField label="Group Name" fullWidth value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                  <FormControl sx={{ minWidth: 120 }}>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      value={formData.is_active}
+                      label="Status"
+                      onChange={(e) => setFormData({ ...formData, is_active: e.target.value })}
+                    >
+                      <MenuItem value={true}>Active</MenuItem>
+                      <MenuItem value={false}>Inactive</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
                 <TextField label="Description" multiline rows={3} fullWidth value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
                 <TextField label="Color Hex" fullWidth value={formData.color_hex} onChange={(e) => setFormData({ ...formData, color_hex: e.target.value })} />
               </>
             )}
-            {(dialogType === "situation" || dialogType === "quiz") && (
+            {dialogType === "situation" && (
               <>
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField label="Quiz #" type="number" sx={{ w: 100 }} value={formData.quiz_number} onChange={(e) => setFormData({ ...formData, quiz_number: e.target.value })} />
